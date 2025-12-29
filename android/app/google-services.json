@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "91184701354",
+    "project_id": "aidea-90e12",
+    "storage_bucket": "aidea-90e12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91184701354:android:8f968608ceeb40c03e95d3",
+        "android_client_info": {
+          "package_name": "com.AIdeaApp.aidea"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPlZGNlf5yGCKB7UmbM8yX5VpZTEswjrM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
