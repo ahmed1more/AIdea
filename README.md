@@ -33,10 +33,14 @@ lib/
 # Run the App
 
 ### For Android
-```flutter run```
+```
+flutter run
+```
 
 ### For Web
-```flutter run -d chrome```
+```
+flutter run -d chrome
+```
 
 # 🔐 Firebase Authentication Flow
 
