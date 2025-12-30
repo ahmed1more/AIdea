@@ -4,8 +4,6 @@ AIdea is app that simplifies watching videos by beautiful well written notes.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
-
 # 📁 Project Structure
 
 ```
@@ -35,10 +33,10 @@ lib/
 # Run the App
 
 ### For Android
-flutter run
+```flutter run```
 
 ### For Web
-flutter run -d chrome
+```flutter run -d chrome```
 
 # 🔐 Firebase Authentication Flow
 
