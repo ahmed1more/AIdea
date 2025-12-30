@@ -6,6 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/note_editor_screen.dart';
+import 'screens/note_detail_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/splash_screen.dart';
