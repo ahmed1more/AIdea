@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.AIdeaApp" "\0"
-            VALUE "FileDescription", "aidea" "\0"
+            VALUE "FileDescription", "AIdea" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "aidea" "\0"
+            VALUE "InternalName", "AIdea" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.AIdeaApp. All rights reserved." "\0"
-            VALUE "OriginalFilename", "aidea.exe" "\0"
-            VALUE "ProductName", "aidea" "\0"
+            VALUE "OriginalFilename", "AIdea.exe" "\0"
+            VALUE "ProductName", "AIdea" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
