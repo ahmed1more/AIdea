@@ -8,8 +8,8 @@ This project is a starting point for a Flutter application.
 
 # 📁 Project Structure
 
-lib/
 ```
+lib/
 ├── main.dart                       # App entry point with Firebase init
 ├── firebase_options.dart           # Generated Firebase config
 ├── models/                         # Data models
