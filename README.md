@@ -6,9 +6,10 @@ AIdea is app that simplifies watching videos by beautiful well written notes.
 
 This project is a starting point for a Flutter application.
 
-📁 Project Structure
+# 📁 Project Structure
 
 lib/
+```
 ├── main.dart                       # App entry point with Firebase init
 ├── firebase_options.dart           # Generated Firebase config
 ├── models/                         # Data models
@@ -29,17 +30,17 @@ lib/
     ├── note_card.dart             # Note display card
     ├── search_bar_widget.dart     # Search input
     └── tag_input_widget.dart      # Tag management
-
+```
 
 # Run the App
 
-## For Android
+### For Android
 flutter run
 
-## For Web
+### For Web
 flutter run -d chrome
 
-🔐 Firebase Authentication Flow
+# 🔐 Firebase Authentication Flow
 
 Sign Up: User creates account with email/password
 Sign In: User logs in with credentials
@@ -48,10 +49,10 @@ Password Reset: Email-based password recovery
 Sign Out: User can log out from any device
 
 
-🗄️ Firestore Data Structure
+# 🗄️ Firestore Data Structure
 
-Collections
-users collection
+### users collection
+```
 json{
   "userId": {
     "email": "user@example.com",
@@ -60,8 +61,9 @@ json{
     "createdAt": Timestamp
   }
 }
-
-notes collection
+```
+### notes collection
+```
 json{
   "noteId": {
     "title": "Quantum Mechanics Basics",
@@ -74,9 +76,11 @@ json{
     "updatedAt": Timestamp
   }
 }
+```
 
-🌟 Key Features Implemented
-✅ Authentication
+# 🌟 Key Features Implemented
+
+### ✅ Authentication
 
 Email/password registration
 Login with validation
@@ -85,7 +89,7 @@ Auto sign-in
 Sign out
 Protected routes
 
-✅ Note Management
+### ✅ Note Management
 
 Create notes (saved to Firestore)
 Edit notes (real-time updates)
@@ -93,14 +97,14 @@ Delete notes
 Toggle favorites
 Real-time synchronization
 
-✅ Search & Filter
+### ✅ Search & Filter
 
 Search by title, content, tags
 Filter by category
 Show favorites only
 Real-time filtering
 
-✅ UI/UX
+### ✅ UI/UX
 
 Material Design 3
 Dark mode support
@@ -109,7 +113,7 @@ Loading states
 Error handling
 Pull to refresh
 
-✅ Offline Support
+### ✅ Offline Support
 
 Firestore caches data automatically
 Works offline
@@ -118,10 +122,9 @@ Conflict resolution
 
 
 
-📚 Learning Resources
+### 📚 Learning Resources
 
 Firebase Documentation
 FlutterFire Documentation
 Flutter Documentation
 Riverpod Documentation
-
