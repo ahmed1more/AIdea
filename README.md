@@ -8,26 +8,29 @@ aidea is app that simplifies watching videos by beautiful well written notes.
 
 ```
 lib/
-├── main.dart                       # App entry point with Firebase init
-├── firebase_options.dart           # Generated Firebase config
-├── models/                         # Data models
-│   └── note_model.dart            # Note & UserProfile models
-├── providers/                      # State management (Riverpod)
-│   ├── auth_provider.dart         # Firebase Auth logic
-│   └── notes_provider.dart        # Firestore CRUD operations
-├── screens/                        # UI screens
-│   ├── home_screen.dart           # Main notes list
-│   ├── note_editor_screen.dart    # Create/edit notes
-│   ├── note_detail_screen.dart    # View note details
-│   ├── settings_screen.dart       # App settings
-│   ├── splash_screen.dart         # Loading screen
-│   └── auth/
-│       ├── login_screen.dart      # Firebase sign in
-│       └── register_screen.dart   # Firebase sign up
-└── widgets/                        # Reusable widgets
-    ├── note_card.dart             # Note display card
-    ├── search_bar_widget.dart     # Search input
-    └── tag_input_widget.dart      # Tag management
+├── models/
+│   ├── app_user.dart
+│   └── video_note.dart
+├── providers/
+│   ├── auth_provider.dart
+│   └── notes_provider.dart
+├── screens/
+│   ├── auth/
+│   │   ├── login_screen.dart
+│   │   └── signup_screen.dart
+│   ├── home/
+│   │   ├── add_note_screen.dart
+│   │   ├── home_screen.dart
+│   │   └── note_detail_screen.dart
+│   └── splash_screen.dart
+├── services/
+│   ├── auth_service.dart
+│   └── database_service.dart
+├── widgets/
+│   └── note_card.dart
+├── firebase_options.dart
+└── main.dart
+
 ```
 
 # Run the App
