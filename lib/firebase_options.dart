@@ -70,6 +70,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '91184701354',
     projectId: 'aidea-90e12',
     storageBucket: 'aidea-90e12.firebasestorage.app',
-    iosBundleId: 'com.AIdeaApp.aidea',
+    iosBundleId: 'com.aideaApp.aidea',
   );
 }

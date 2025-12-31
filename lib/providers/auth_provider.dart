@@ -1,163 +1,141 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/note_model.dart';
+import '../models/app_user.dart';
+import '../services/auth_service.dart';
 
-// Auth state provider - listens to Firebase auth changes
-final authStateProvider = StreamProvider<User?>((ref) {
-  return FirebaseAuth.instance.authStateChanges();
-});
+class AuthProvider extends ChangeNotifier {
+  final AuthService _authService = AuthService();
 
-// Current user provider
-final currentUserProvider = Provider<User?>((ref) {
-  return ref.watch(authStateProvider).value;
-});
+  AppUser? _user;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-// User profile provider
-final userProfileProvider = StreamProvider<UserProfile?>((ref) {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return Stream.value(null);
+  AppUser? get user => _user;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get isAuthenticated => _user != null;
 
-  return FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .snapshots()
-      .map((doc) => doc.exists ? UserProfile.fromFirestore(doc) : null);
-});
+  AuthProvider() {
+    // Listen to auth state changes
+    _authService.authStateChanges.listen((User? firebaseUser) async {
+      if (firebaseUser != null) {
+        _user = await _authService.getUserData(firebaseUser.uid);
+        notifyListeners();
+      } else {
+        _user = null;
+        notifyListeners();
+      }
+    });
+  }
 
-// Auth service
-class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Sign up
+  Future<bool> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
 
-  // Get current user
-  User? get currentUser => _auth.currentUser;
-
-  // Sign in with email and password
-  Future<UserCredential> signInWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      _user = await _authService.signUp(
         email: email,
         password: password,
+        displayName: displayName,
       );
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      _isLoading = false;
+      notifyListeners();
+      return _user != null;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
     }
   }
 
-  // Register with email and password
-  Future<UserCredential> registerWithEmailAndPassword(
-    String email,
-    String password,
-    String name,
-  ) async {
+  // Sign in
+  Future<bool> signIn({required String email, required String password}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Create user profile in Firestore
-      await _firestore.collection('users').doc(credential.user!.uid).set({
-        'email': email,
-        'name': name,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Update display name
-      await credential.user!.updateDisplayName(name);
-
-      return credential;
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      _user = await _authService.signIn(email: email, password: password);
+      _isLoading = false;
+      notifyListeners();
+      return _user != null;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
     }
   }
 
   // Sign out
   Future<void> signOut() async {
-    await _auth.signOut();
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _authService.signOut();
+      _user = null;
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+    }
   }
 
   // Reset password
-  Future<void> resetPassword(String email) async {
+  Future<bool> resetPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
     try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      await _authService.resetPassword(email);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
     }
   }
 
-  // Update profile
-  Future<void> updateProfile({String? name, String? photoUrl}) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('No user logged in');
-
-    if (name != null) {
-      await user.updateDisplayName(name);
-      await _firestore.collection('users').doc(user.uid).update({'name': name});
-    }
-
-    if (photoUrl != null) {
-      await user.updatePhotoURL(photoUrl);
-      await _firestore.collection('users').doc(user.uid).update({
-        'avatarUrl': photoUrl,
-      });
-    }
+  // Clear error message
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 
-  // Delete account
-  Future<void> deleteAccount() async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('No user logged in');
-
-    // Delete user's notes
-    final notesQuery = await _firestore
-        .collection('notes')
-        .where('userId', isEqualTo: user.uid)
-        .get();
-
-    final batch = _firestore.batch();
-    for (var doc in notesQuery.docs) {
-      batch.delete(doc.reference);
+  // Convert Firebase errors to user-friendly messages
+  String _getErrorMessage(dynamic error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'user-not-found':
+          return 'No user found with this email.';
+        case 'wrong-password':
+          return 'Wrong password provided.';
+        case 'email-already-in-use':
+          return 'An account already exists with this email.';
+        case 'invalid-email':
+          return 'The email address is not valid.';
+        case 'weak-password':
+          return 'The password is too weak.';
+        case 'operation-not-allowed':
+          return 'Email/password accounts are not enabled.';
+        default:
+          return 'An error occurred. Please try again.';
+      }
     }
-    await batch.commit();
-
-    // Delete user profile
-    await _firestore.collection('users').doc(user.uid).delete();
-
-    // Delete auth account
-    await user.delete();
-  }
-
-  // Handle auth exceptions
-  String _handleAuthException(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return 'No user found with this email.';
-      case 'wrong-password':
-        return 'Wrong password provided.';
-      case 'email-already-in-use':
-        return 'An account already exists with this email.';
-      case 'weak-password':
-        return 'The password is too weak.';
-      case 'invalid-email':
-        return 'The email address is invalid.';
-      case 'user-disabled':
-        return 'This account has been disabled.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      case 'operation-not-allowed':
-        return 'Operation not allowed. Please contact support.';
-      default:
-        return 'An error occurred: ${e.message}';
-    }
+    return 'An unexpected error occurred.';
   }
 }
-
-// Auth service provider
-final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService();
-});

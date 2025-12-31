@@ -1,6 +1,6 @@
-# AIdea
+# aidea
 
-AIdea is app that simplifies watching videos by beautiful well written notes.
+aidea is app that simplifies watching videos by beautiful well written notes.
 
 ## Getting Started
 
