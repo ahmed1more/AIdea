@@ -1,8 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../models/video_note.dart';
+import '../../services/ai_service.dart';
+import '../settings/settings_screen.dart';
 
 class AddNoteScreen extends StatefulWidget {
   const AddNoteScreen({super.key});
@@ -45,38 +49,80 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   }
 
   Future<void> _simulateAIGeneration() async {
-    // This simulates AI note generation
-    // In a real app, you would call an API here (like OpenAI, Claude, etc.)
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+    if (!settings.isAiConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please configure your AI API key in Settings first.',
+          ),
+          action: SnackBarAction(
+            label: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isGenerating = true;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      String? idToken;
+      if (settings.aiModel == AiModel.aidea) {
+        idToken = await firebase_auth.FirebaseAuth.instance.currentUser
+            ?.getIdToken();
+        if (idToken == null) {
+          throw Exception('Authentication required for AIdea model.');
+        }
+      }
 
-    setState(() {
-      _notesController.text = '''
-This is a simulated AI-generated note from the video.
+      final result = await AiService.generateNotes(
+        videoUrl: _videoUrlController.text.trim(),
+        videoTitle: _videoTitleController.text.trim(),
+        model: settings.aiModel.name,
+        apiKey: settings.apiKey,
+        aideaUrl: settings.aideaUrl,
+        idToken: idToken,
+      );
 
-Key Concepts:
-- Main idea from the video content
-- Important details and explanations
-- Supporting arguments and examples
-
-Summary:
-The video provides valuable insights into the topic, explaining various concepts in detail and offering practical examples for better understanding.
-
-Conclusion:
-Overall, this content offers a comprehensive overview that can help viewers gain deeper knowledge of the subject matter.
-''';
-
-      _keyPoints.addAll([
-        'Main concept explained clearly',
-        'Practical examples provided',
-        'Detailed analysis included',
-      ]);
-
-      _isGenerating = false;
-    });
+      setState(() {
+        _notesController.text = result['notes'] as String;
+        _keyPoints.clear();
+        _keyPoints.addAll(List<String>.from(result['keyPoints']));
+        _isGenerating = false;
+      });
+    } catch (e) {
+      debugPrint('AI Generation Error Detail: $e');
+      setState(() {
+        _isGenerating = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${settings.aiModel.name.toUpperCase()} failed: ${e.toString().replaceAll('Exception: ', '')}',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            backgroundColor: Colors.red.shade800,
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _saveNote() async {

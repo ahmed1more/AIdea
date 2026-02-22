@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
-import '../auth/login_screen.dart';
 import 'add_note_screen.dart';
 import '../../widgets/note_card.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,18 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleLogout() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-
-    await authProvider.signOut();
-    notesProvider.clear();
-
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    }
+  void _openSettings() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
   }
 
   void _onItemTapped(int index) {
@@ -65,10 +57,49 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('AIdea'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
-            tooltip: 'Logout',
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                final user = auth.user;
+                return Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: _openSettings,
+                    customBorder: const CircleBorder(),
+                    hoverColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    splashColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.2),
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
+                      backgroundImage: user?.photoUrl != null
+                          ? NetworkImage(user!.photoUrl!)
+                          : null,
+                      child: user?.photoUrl == null
+                          ? Text(
+                              (user?.displayName ?? 'U')[0].toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
