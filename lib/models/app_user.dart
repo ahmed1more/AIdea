@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppUser {
@@ -59,4 +60,35 @@ class AppUser {
       notesCount: notesCount ?? this.notesCount,
     );
   }
+
+  // Convert to Map for local storage
+  Map<String, dynamic> toJsonMap() {
+    return {
+      'id': id,
+      'email': email,
+      'displayName': displayName,
+      'photoUrl': photoUrl,
+      'createdAt': createdAt.toIso8601String(),
+      'notesCount': notesCount,
+    };
+  }
+
+  // Create from local storage Map
+  factory AppUser.fromJsonMap(Map<String, dynamic> map) {
+    return AppUser(
+      id: map['id'] ?? '',
+      email: map['email'] ?? '',
+      displayName: map['displayName'] ?? '',
+      photoUrl: map['photoUrl'],
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'])
+          : DateTime.now(),
+      notesCount: map['notesCount'] ?? 0,
+    );
+  }
+
+  String toJson() => json.encode(toJsonMap());
+
+  factory AppUser.fromJson(String source) =>
+      AppUser.fromJsonMap(json.decode(source));
 }

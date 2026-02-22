@@ -46,6 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
+    if (index == 2) {
+      _openSettings();
+      return;
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -54,55 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AIdea'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Consumer<AuthProvider>(
-              builder: (context, auth, _) {
-                final user = auth.user;
-                return Material(
-                  color: Colors.transparent,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: _openSettings,
-                    customBorder: const CircleBorder(),
-                    hoverColor: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.1),
-                    splashColor: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.2),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
-                      backgroundImage: user?.photoUrl != null
-                          ? NetworkImage(user!.photoUrl!)
-                          : null,
-                      child: user?.photoUrl == null
-                          ? Text(
-                              (user?.displayName ?? 'U')[0].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('AIdea')),
       body: Column(
         children: [
           // Search Bar
@@ -146,11 +102,44 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'All Notes'),
-          BottomNavigationBarItem(
+        type: BottomNavigationBarType.fixed,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'All Notes',
+          ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                final user = auth.user;
+                return CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  backgroundImage: user?.photoUrl != null
+                      ? NetworkImage(user!.photoUrl!)
+                      : null,
+                  child: user?.photoUrl == null
+                      ? Text(
+                          (user?.displayName ?? 'U')[0].toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
+                          ),
+                        )
+                      : null,
+                );
+              },
+            ),
+            label: 'Account',
           ),
         ],
         currentIndex: _selectedIndex,

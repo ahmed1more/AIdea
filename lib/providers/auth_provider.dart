@@ -16,13 +16,24 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _user != null;
 
   AuthProvider() {
-    // Listen to auth state changes
+    _initAuth();
+  }
+
+  Future<void> _initAuth() async {
+    // 1. Try to load cached user first
+    _user = await _authService.getCachedUser();
+    if (_user != null) {
+      notifyListeners();
+    }
+
+    // 2. Listen to Firebase auth state changes
     _authService.authStateChanges.listen((User? firebaseUser) async {
       if (firebaseUser != null) {
         _user = await _authService.getUserData(firebaseUser.uid);
         notifyListeners();
       } else {
         _user = null;
+        await _authService.clearCachedUser();
         notifyListeners();
       }
     });

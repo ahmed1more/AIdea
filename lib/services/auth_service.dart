@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_user.dart';
 
 class AuthService {
@@ -40,6 +41,9 @@ class AuthService {
 
         await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
 
+        // Cache the user locally
+        await cacheUser(newUser);
+
         return newUser;
       }
       return null;
@@ -66,7 +70,12 @@ class AuthService {
             .collection('users')
             .doc(user.uid)
             .get();
-        return AppUser.fromFirestore(doc);
+        final appUser = AppUser.fromFirestore(doc);
+
+        // Cache the user locally
+        await cacheUser(appUser);
+
+        return appUser;
       }
       return null;
     } catch (e) {
@@ -79,6 +88,7 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+      await clearCachedUser();
     } catch (e) {
       print('Error signing out: $e');
       rethrow;
@@ -93,7 +103,9 @@ class AuthService {
           .doc(uid)
           .get();
       if (doc.exists) {
-        return AppUser.fromFirestore(doc);
+        final appUser = AppUser.fromFirestore(doc);
+        await cacheUser(appUser);
+        return appUser;
       }
       return null;
     } catch (e) {
@@ -109,6 +121,40 @@ class AuthService {
     } catch (e) {
       print('Error resetting password: $e');
       rethrow;
+    }
+  }
+
+  // Cache user data locally
+  Future<void> cacheUser(AppUser user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_user', user.toJson());
+    } catch (e) {
+      print('Error caching user: $e');
+    }
+  }
+
+  // Get cached user data
+  Future<AppUser?> getCachedUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userString = prefs.getString('cached_user');
+      if (userString != null) {
+        return AppUser.fromJson(userString);
+      }
+    } catch (e) {
+      print('Error getting cached user: $e');
+    }
+    return null;
+  }
+
+  // Clear cached user data
+  Future<void> clearCachedUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('cached_user');
+    } catch (e) {
+      print('Error clearing cached user: $e');
     }
   }
 }
