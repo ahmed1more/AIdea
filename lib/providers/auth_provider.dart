@@ -131,22 +131,32 @@ class AuthProvider extends ChangeNotifier {
   String _getErrorMessage(dynamic error) {
     if (error is FirebaseAuthException) {
       switch (error.code) {
+        // Modern Firebase SDK (v9+) consolidated error code
+        case 'invalid-credential':
+          return 'Invalid email or password. Please try again.';
+        // Legacy / still-used codes
         case 'user-not-found':
-          return 'No user found with this email.';
+          return 'No account found with this email.';
         case 'wrong-password':
-          return 'Wrong password provided.';
+          return 'Incorrect password. Please try again.';
         case 'email-already-in-use':
           return 'An account already exists with this email.';
         case 'invalid-email':
           return 'The email address is not valid.';
         case 'weak-password':
-          return 'The password is too weak.';
+          return 'The password is too weak (minimum 6 characters).';
         case 'operation-not-allowed':
           return 'Email/password accounts are not enabled.';
+        case 'user-disabled':
+          return 'This account has been disabled. Contact support.';
+        case 'too-many-requests':
+          return 'Too many failed attempts. Please wait a moment and try again.';
+        case 'network-request-failed':
+          return 'No internet connection. Please check your network.';
         default:
-          return 'An error occurred. Please try again.';
+          return error.message ?? 'An error occurred. Please try again.';
       }
     }
-    return 'An unexpected error occurred.';
+    return error.toString();
   }
 }

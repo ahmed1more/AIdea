@@ -58,29 +58,38 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    // Step 1: Authenticate with Firebase Auth (always requires network)
+    final UserCredential result = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    final User? user = result.user;
+    if (user == null) return null;
+
+    // Step 2: Try to fetch full profile from Firestore.
+    // If Firestore is offline, fall back to building a basic AppUser from
+    // the Firebase Auth data so the login still succeeds.
     try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      User? user = result.user;
-      if (user != null) {
-        DocumentSnapshot doc = await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .get();
-        final appUser = AppUser.fromFirestore(doc);
-
-        // Cache the user locally
-        await cacheUser(appUser);
-
-        return appUser;
-      }
-      return null;
+      final DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final appUser = AppUser.fromFirestore(doc);
+      await cacheUser(appUser);
+      return appUser;
     } catch (e) {
-      print('Error signing in: $e');
-      rethrow;
+      print('Firestore unavailable, falling back to Auth user data: $e');
+      // Build a minimal AppUser from what Firebase Auth gives us
+      final fallbackUser = AppUser(
+        id: user.uid,
+        email: user.email ?? email,
+        displayName: user.displayName ?? email.split('@').first,
+        createdAt: DateTime.now(),
+        notesCount: 0,
+      );
+      await cacheUser(fallbackUser);
+      return fallbackUser;
     }
   }
 
