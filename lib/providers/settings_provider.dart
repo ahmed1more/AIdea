@@ -14,7 +14,7 @@ class SettingsProvider extends ChangeNotifier {
   int _accentColorIndex = 0;
   AiModel _aiModel = AiModel.gemini;
   String _apiKey = '';
-  String _aideaUrl = 'https://a7maddev-aidea-server.hf.space';
+  String _aideaUrl = 'https://atinc1-aidea-server.hf.space';
 
   // Available accent colors
   static const List<({String name, Color color})> accentColors = [
@@ -55,8 +55,7 @@ class SettingsProvider extends ChangeNotifier {
     _aiModel = AiModel.values[aiModelIndex];
     _apiKey = prefs.getString(_apiKeyKey) ?? '';
     _aideaUrl =
-        prefs.getString(_aideaUrlKey) ??
-        'https://a7maddev-aidea-server.hf.space';
+        prefs.getString(_aideaUrlKey) ?? 'https://atinc1-aidea-server.hf.space';
     notifyListeners();
   }
 
