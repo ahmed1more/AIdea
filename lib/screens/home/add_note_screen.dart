@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,16 @@ import '../../services/ai_service.dart';
 import '../settings/settings_screen.dart';
 
 class AddNoteScreen extends StatefulWidget {
-  const AddNoteScreen({super.key});
+  final String? initialUrl;
+  final String? initialTitle;
+  final PlatformFile? pickedFile;
+
+  const AddNoteScreen({
+    super.key,
+    this.initialUrl,
+    this.initialTitle,
+    this.pickedFile,
+  });
 
   @override
   State<AddNoteScreen> createState() => _AddNoteScreenState();
@@ -23,6 +33,17 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   final _keyPointController = TextEditingController();
   final List<String> _keyPoints = [];
   bool _isGenerating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialUrl != null) {
+      _videoUrlController.text = widget.initialUrl!;
+    }
+    if (widget.initialTitle != null) {
+      _videoTitleController.text = widget.initialTitle!;
+    }
+  }
 
   @override
   void dispose() {

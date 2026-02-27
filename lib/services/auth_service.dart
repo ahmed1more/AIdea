@@ -119,6 +119,13 @@ class AuthService {
       return null;
     } catch (e) {
       print('Error getting user data: $e');
+      // Firestore is offline — return the locally cached user so the app
+      // keeps working without a network connection.
+      final cached = await getCachedUser();
+      if (cached != null) {
+        print('Falling back to cached user data.');
+        return cached;
+      }
       return null;
     }
   }
