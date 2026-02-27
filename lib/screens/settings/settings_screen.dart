@@ -414,16 +414,12 @@ class SettingsScreen extends StatelessWidget {
               ),
               items: const [
                 DropdownMenuItem(
-                  value: AiModel.gemini,
-                  child: Text('Google Gemini'),
-                ),
-                DropdownMenuItem(
-                  value: AiModel.openai,
-                  child: Text('OpenAI GPT'),
-                ),
-                DropdownMenuItem(
                   value: AiModel.aidea,
                   child: Text('AIdea (Hosted)'),
+                ),
+                DropdownMenuItem(
+                  value: AiModel.gemini,
+                  child: Text('Google Gemini'),
                 ),
               ],
               onChanged: (value) {

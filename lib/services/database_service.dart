@@ -9,12 +9,15 @@ class DatabaseService {
     try {
       DocumentReference docRef = await _firestore
           .collection('notes')
-          .add(note.toMap());
+          .add(note.toMap())
+          .timeout(const Duration(seconds: 4));
 
       // Update user's notes count
-      await _firestore.collection('users').doc(note.userId).update({
-        'notesCount': FieldValue.increment(1),
-      });
+      _firestore
+          .collection('users')
+          .doc(note.userId)
+          .update({'notesCount': FieldValue.increment(1)})
+          .catchError((e) => print('Error updating notes count: $e'));
 
       return docRef.id;
     } catch (e) {
@@ -74,7 +77,11 @@ class DatabaseService {
   Future<bool> updateNote(String noteId, Map<String, dynamic> updates) async {
     try {
       updates['updatedAt'] = Timestamp.fromDate(DateTime.now());
-      await _firestore.collection('notes').doc(noteId).update(updates);
+      await _firestore
+          .collection('notes')
+          .doc(noteId)
+          .update(updates)
+          .timeout(const Duration(seconds: 4));
       return true;
     } catch (e) {
       print('Error updating note: $e');
@@ -85,10 +92,14 @@ class DatabaseService {
   // Toggle favorite status
   Future<bool> toggleFavorite(String noteId, bool currentStatus) async {
     try {
-      await _firestore.collection('notes').doc(noteId).update({
-        'isFavorite': !currentStatus,
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      });
+      await _firestore
+          .collection('notes')
+          .doc(noteId)
+          .update({
+            'isFavorite': !currentStatus,
+            'updatedAt': Timestamp.fromDate(DateTime.now()),
+          })
+          .timeout(const Duration(seconds: 4));
       return true;
     } catch (e) {
       print('Error toggling favorite: $e');
@@ -99,12 +110,18 @@ class DatabaseService {
   // Delete a note
   Future<bool> deleteNote(String noteId, String userId) async {
     try {
-      await _firestore.collection('notes').doc(noteId).delete();
+      await _firestore
+          .collection('notes')
+          .doc(noteId)
+          .delete()
+          .timeout(const Duration(seconds: 4));
 
       // Update user's notes count
-      await _firestore.collection('users').doc(userId).update({
-        'notesCount': FieldValue.increment(-1),
-      });
+      _firestore
+          .collection('users')
+          .doc(userId)
+          .update({'notesCount': FieldValue.increment(-1)})
+          .catchError((e) => print('Error updating notes count: $e'));
 
       return true;
     } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 import '../models/app_user.dart';
 
 class AuthService {
@@ -39,10 +40,19 @@ class AuthService {
           notesCount: 0,
         );
 
-        await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
+        // Create user document in Firestore
+        try {
+          await _firestore
+              .collection('users')
+              .doc(user.uid)
+              .set(newUser.toMap())
+              .timeout(const Duration(seconds: 4));
+        } catch (e) {
+          print('Error creating user document: $e');
+        }
 
         // Cache the user locally
-        await cacheUser(newUser);
+        cacheUser(newUser);
 
         return newUser;
       }
@@ -74,12 +84,30 @@ class AuthService {
       final DocumentSnapshot doc = await _firestore
           .collection('users')
           .doc(user.uid)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 4));
+
+      if (!doc.exists) {
+        print('User document missing from Firestore.');
+        await _auth.signOut();
+        await clearCachedUser();
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'Account doesn\'t exist. Please sign up.',
+        );
+      }
+
       final appUser = AppUser.fromFirestore(doc);
       await cacheUser(appUser);
       return appUser;
     } catch (e) {
-      print('Firestore unavailable, falling back to Auth user data: $e');
+      if (e is FirebaseAuthException) rethrow; // Pass up our custom exception
+
+      if (e is FirebaseException && e.code == 'unavailable') {
+        print('Device is offline. Using fallback auth data.');
+      } else {
+        print('Firestore unreachable: $e');
+      }
       // Build a minimal AppUser from what Firebase Auth gives us
       final fallbackUser = AppUser(
         id: user.uid,
@@ -110,15 +138,24 @@ class AuthService {
       DocumentSnapshot doc = await _firestore
           .collection('users')
           .doc(uid)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 4));
       if (doc.exists) {
         final appUser = AppUser.fromFirestore(doc);
         await cacheUser(appUser);
         return appUser;
+      } else {
+        print('User document missing from Firestore. Signing out.');
+        await _auth.signOut();
+        await clearCachedUser();
+        return null;
       }
-      return null;
     } catch (e) {
-      print('Error getting user data: $e');
+      if (e is FirebaseException && e.code == 'unavailable') {
+        // Device is offline
+      } else {
+        print('Error getting user data: $e');
+      }
       // Firestore is offline — return the locally cached user so the app
       // keeps working without a network connection.
       final cached = await getCachedUser();
@@ -126,6 +163,27 @@ class AuthService {
         print('Falling back to cached user data.');
         return cached;
       }
+
+      // If no cache but we have the current user in Auth, build fallback
+      final user = _auth.currentUser;
+      if (user != null && user.uid == uid) {
+        if (e is FirebaseException && e.code == 'unavailable') {
+          print('Device is offline. Using fallback auth data.');
+        } else {
+          print('Firestore unavailable, falling back to Auth user data: $e');
+        }
+        final fallbackUser = AppUser(
+          id: user.uid,
+          email: user.email ?? '',
+          displayName:
+              user.displayName ?? user.email?.split('@').first ?? 'User',
+          createdAt: DateTime.now(),
+          notesCount: 0,
+        );
+        await cacheUser(fallbackUser);
+        return fallbackUser;
+      }
+
       return null;
     }
   }

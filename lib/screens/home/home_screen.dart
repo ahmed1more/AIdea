@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -275,64 +274,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               )
                             : const SizedBox.shrink(),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // ── OR divider ───────────────────────────────────
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'OR',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(ctx).colorScheme.outline,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-
-                      // ── Pick from files button ───────────────────────
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final result = await FilePicker.platform.pickFiles(
-                            type: FileType.video,
-                            allowMultiple: false,
-                          );
-                          if (result != null && result.files.isNotEmpty) {
-                            final file = result.files.first;
-                            final title = file.name
-                                .replaceAll(RegExp(r'\.[^.]+$'), '')
-                                .replaceAll(RegExp(r'[_-]'), ' ');
-                            // ignore: use_build_context_synchronously
-                            Navigator.of(ctx).pop();
-                            // ignore: use_build_context_synchronously
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => AddNoteScreen(
-                                  initialUrl: file.path ?? file.name,
-                                  initialTitle: title,
-                                  pickedFile: file,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.folder_open_rounded),
-                        label: const Text('Pick a video from your files'),
                       ),
 
                       const SizedBox(height: 20),

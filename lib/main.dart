@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
@@ -13,6 +14,11 @@ void main() async {
 
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Explicitly enable offline persistence for Firestore
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
 
   runApp(const aidea());
 }
@@ -37,12 +43,12 @@ class aidea extends StatelessWidget {
             theme: settings.getLightTheme().copyWith(
               textTheme: GoogleFonts.interTextTheme(
                 settings.getLightTheme().textTheme,
-              ).apply(fontFamilyFallback: ['Noto Sans']),
+              ),
             ),
             darkTheme: settings.getDarkTheme().copyWith(
               textTheme: GoogleFonts.interTextTheme(
                 settings.getDarkTheme().textTheme,
-              ).apply(fontFamilyFallback: ['Noto Sans']),
+              ),
             ),
             home: const SplashScreen(),
           );

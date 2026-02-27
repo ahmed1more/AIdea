@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,14 +11,8 @@ import '../settings/settings_screen.dart';
 class AddNoteScreen extends StatefulWidget {
   final String? initialUrl;
   final String? initialTitle;
-  final PlatformFile? pickedFile;
 
-  const AddNoteScreen({
-    super.key,
-    this.initialUrl,
-    this.initialTitle,
-    this.pickedFile,
-  });
+  const AddNoteScreen({super.key, this.initialUrl, this.initialTitle});
 
   @override
   State<AddNoteScreen> createState() => _AddNoteScreenState();
@@ -150,8 +143,10 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+      final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+      final String? userId = authProvider.user?.id ?? firebaseUser?.uid;
 
-      if (authProvider.user == null) {
+      if (userId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('You must be logged in to save notes'),
@@ -174,7 +169,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
       final note = VideoNote(
         id: '',
-        userId: authProvider.user!.id,
+        userId: userId,
         videoUrl: _videoUrlController.text.trim(),
         videoTitle: _videoTitleController.text.trim(),
         thumbnail: thumbnail,
