@@ -217,7 +217,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Note'),
+        title: const Text('Add Video Note'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -233,24 +233,74 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Video URL
-              TextFormField(
-                controller: _videoUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Video URL',
-                  hintText: 'https://youtube.com/watch?v=...',
-                  prefixIcon: Icon(Icons.link),
+              // Video URL / Local file indicator
+              if (widget.pickedFile != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.video_file_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Local video file',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                            ),
+                            Text(
+                              widget.pickedFile!.name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '${((widget.pickedFile!.size) / (1024 * 1024)).toStringAsFixed(1)} MB',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                TextFormField(
+                  controller: _videoUrlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Video URL',
+                    hintText: 'https://youtube.com/watch?v=...',
+                    prefixIcon: Icon(Icons.link),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a video URL';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a video URL';
-                  }
-                  if (!value.startsWith('http')) {
-                    return 'Please enter a valid URL';
-                  }
-                  return null;
-                },
-              ),
               const SizedBox(height: 16),
 
               // Video Title
