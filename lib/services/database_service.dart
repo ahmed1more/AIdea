@@ -10,7 +10,7 @@ class DatabaseService {
       DocumentReference docRef = await _firestore
           .collection('notes')
           .add(note.toMap())
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
 
       // Update user's notes count
       _firestore
@@ -81,7 +81,7 @@ class DatabaseService {
           .collection('notes')
           .doc(noteId)
           .update(updates)
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
       return true;
     } catch (e) {
       print('Error updating note: $e');
@@ -99,7 +99,7 @@ class DatabaseService {
             'isFavorite': !currentStatus,
             'updatedAt': Timestamp.fromDate(DateTime.now()),
           })
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
       return true;
     } catch (e) {
       print('Error toggling favorite: $e');
@@ -114,7 +114,7 @@ class DatabaseService {
           .collection('notes')
           .doc(noteId)
           .delete()
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
 
       // Update user's notes count
       _firestore

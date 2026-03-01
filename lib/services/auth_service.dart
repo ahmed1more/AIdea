@@ -46,9 +46,17 @@ class AuthService {
               .collection('users')
               .doc(user.uid)
               .set(newUser.toMap())
-              .timeout(const Duration(seconds: 4));
+              .timeout(const Duration(seconds: 10));
         } catch (e) {
           print('Error creating user document: $e');
+          try {
+            await user.delete(); // Rollback auth creation
+          } catch (deleteError) {
+            print('Error deleting orphaned user: $deleteError');
+          }
+          throw Exception(
+            'Failed to setup your database profile. Check Firestore rules or connection. Error: $e',
+          );
         }
 
         // Cache the user locally
@@ -85,7 +93,7 @@ class AuthService {
           .collection('users')
           .doc(user.uid)
           .get()
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
 
       if (!doc.exists) {
         print('User document missing from Firestore.');
@@ -139,7 +147,7 @@ class AuthService {
           .collection('users')
           .doc(uid)
           .get()
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
       if (doc.exists) {
         final appUser = AppUser.fromFirestore(doc);
         await cacheUser(appUser);

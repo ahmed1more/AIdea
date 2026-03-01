@@ -30,6 +30,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+.firebase/
 
 # Symbolication related
 app.*.symbols
@@ -43,5 +44,6 @@ app.*.map.json
 /android/app/release
 
 # self created files
-App-IDs
-
+/App-IDs
+/firebase.json
+.firebaserc
