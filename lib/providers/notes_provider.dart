@@ -72,6 +72,7 @@ class NotesProvider extends ChangeNotifier {
     try {
       String? noteId = await _databaseService.createNote(note);
       _isLoading = false;
+      notifyListeners();
       if (noteId != null) {
         // We no longer optimistically add the note here.
         // The Firestore snapshots() listener in DatabaseService will
@@ -79,7 +80,6 @@ class NotesProvider extends ChangeNotifier {
         // which will trigger loadUserNotes() and update the list.
         return true;
       }
-      notifyListeners();
       return false;
     } catch (e) {
       _isLoading = false;
