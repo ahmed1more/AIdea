@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -210,144 +213,375 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Add New Note'),
+        title: Text(
+          'Craft New Note',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveNote,
-            tooltip: 'Save Note',
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              icon: FaIcon(
+                FontAwesomeIcons.solidFloppyDisk,
+                size: 20,
+                color: settings.accentColor,
+              ),
+              onPressed: _saveNote,
+              tooltip: 'Save Note',
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Video URL
-              TextFormField(
-                controller: _videoUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Video URL',
-                  hintText: 'https://youtube.com/watch?v=...',
-                  prefixIcon: Icon(Icons.link),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a video URL';
-                  }
-                  if (!value.startsWith('http')) {
-                    return 'Please enter a valid URL';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+      body: Stack(
+        children: [
+          // Background Color
+          Positioned.fill(
+            child: Container(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            ),
+          ),
 
-              // Video Title
-              TextFormField(
-                controller: _videoTitleController,
-                decoration: const InputDecoration(
-                  labelText: 'Video Title',
-                  prefixIcon: Icon(Icons.title),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a video title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Input Card
+                    settings
+                        .glassMorphicContainer(
+                          context: context,
+                          padding: const EdgeInsets.all(20),
+                          opacity: isDark ? 0.05 : 0.7,
+                          borderRadius: BorderRadius.circular(24),
+                          child: Column(
+                            children: [
+                              _buildModernTextField(
+                                controller: _videoUrlController,
+                                label: 'Video Link',
+                                hint: 'Paste YouTube URL here...',
+                                icon: FontAwesomeIcons.link,
+                                isDark: isDark,
+                                accentColor: settings.accentColor,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty)
+                                    return 'Link is required';
+                                  if (!value.startsWith('http'))
+                                    return 'Invalid URL format';
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              _buildModernTextField(
+                                controller: _videoTitleController,
+                                label: 'Topic Title',
+                                hint: 'What is this video about?',
+                                icon: FontAwesomeIcons.heading,
+                                isDark: isDark,
+                                accentColor: settings.accentColor,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty)
+                                    return 'Title is required';
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        )
+                        .animate()
+                        .fadeIn()
+                        .slideY(begin: 0.1),
 
-              // Generate Button
-              ElevatedButton.icon(
-                onPressed: _isGenerating ? null : _simulateAIGeneration,
-                icon: _isGenerating
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome),
-                label: Text(
-                  _isGenerating ? 'Generating...' : 'Generate Notes with AI',
-                ),
-              ),
-              const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-              // Notes
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  hintText: 'Write or generate your notes here...',
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 10,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please add some notes';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
+                    // Generate Button with Gradient
+                    Container(
+                          height: 58,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: [
+                                settings.accentColor,
+                                settings.accentColor.withBlue(255),
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: settings.accentColor.withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _isGenerating
+                                ? null
+                                : _simulateAIGeneration,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (_isGenerating)
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                else
+                                  const FaIcon(
+                                    FontAwesomeIcons.wandSparkles,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _isGenerating
+                                      ? 'AI BRAINSTORMING...'
+                                      : 'ENHANCE WITH AI',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .shimmer(duration: 3.seconds, color: Colors.white12),
 
-              // Key Points Section
-              Text(
-                'Key Points',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
+                    const SizedBox(height: 32),
 
-              // Add Key Point
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _keyPointController,
-                      decoration: const InputDecoration(
-                        hintText: 'Add a key point',
-                      ),
-                      onSubmitted: (_) => _addKeyPoint(),
+                    // Notes Section Header
+                    Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.solidNoteSticky,
+                          size: 14,
+                          color: settings.accentColor,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'YOUR INSIGHTS',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                            color: isDark ? Colors.white60 : Colors.black45,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle),
-                    onPressed: _addKeyPoint,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-              // Key Points List
-              if (_keyPoints.isNotEmpty)
-                ...List.generate(_keyPoints.length, (index) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: const Icon(Icons.check_circle_outline),
-                      title: Text(_keyPoints[index]),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _removeKeyPoint(index),
+                    // Notes Area
+                    settings
+                        .glassMorphicContainer(
+                          context: context,
+                          padding: const EdgeInsets.all(4),
+                          opacity: isDark ? 0.05 : 0.7,
+                          borderRadius: BorderRadius.circular(24),
+                          child: TextFormField(
+                            controller: _notesController,
+                            maxLines: 12,
+                            style: GoogleFonts.inter(fontSize: 15, height: 1.6),
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Start typing or use AI to generate notes...',
+                              hintStyle: GoogleFonts.inter(
+                                color: isDark ? Colors.white24 : Colors.black26,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.all(20),
+                            ),
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(delay: 200.ms),
+
+                    const SizedBox(height: 32),
+
+                    // Key Points Header
+                    Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.listCheck,
+                          size: 14,
+                          color: settings.accentColor,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'KEY TAKEAWAYS',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                            color: isDark ? Colors.white60 : Colors.black45,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Add Takeaway
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: TextField(
+                        controller: _keyPointController,
+                        style: GoogleFonts.inter(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Add a pivotal point...',
+                          hintStyle: GoogleFonts.inter(
+                            color: isDark ? Colors.white24 : Colors.black26,
+                          ),
+                          border: InputBorder.none,
+                          suffixIcon: IconButton(
+                            icon: FaIcon(
+                              FontAwesomeIcons.circlePlus,
+                              color: settings.accentColor,
+                              size: 20,
+                            ),
+                            onPressed: _addKeyPoint,
+                          ),
+                        ),
+                        onSubmitted: (_) => _addKeyPoint(),
                       ),
                     ),
-                  );
-                }),
-            ],
+                    const SizedBox(height: 16),
+
+                    // Takeaways List
+                    if (_keyPoints.isNotEmpty)
+                      ...List.generate(_keyPoints.length, (index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: settings.glassMorphicContainer(
+                            context: context,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            opacity: isDark ? 0.03 : 0.5,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Row(
+                              children: [
+                                FaIcon(
+                                  FontAwesomeIcons.circleCheck,
+                                  size: 16,
+                                  color: settings.accentColor,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    _keyPoints[index],
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const FaIcon(
+                                    FontAwesomeIcons.trashCan,
+                                    size: 14,
+                                    color: Colors.redAccent,
+                                  ),
+                                  onPressed: () => _removeKeyPoint(index),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).animate().fadeIn().slideX(begin: 0.1);
+                      }),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required bool isDark,
+    required Color accentColor,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white54 : Colors.black45,
           ),
         ),
-      ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.06),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: TextFormField(
+            controller: controller,
+            validator: validator,
+            style: GoogleFonts.inter(fontSize: 14),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.inter(
+                color: isDark ? Colors.white24 : Colors.black26,
+              ),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: FaIcon(icon, size: 14, color: accentColor),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
