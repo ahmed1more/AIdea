@@ -128,12 +128,13 @@ class NoteCard extends StatelessWidget {
                         children: [
                           Image.network(
                             note.thumbnail,
-                            height: 200,
+                            height:
+                                140, // Reduced height to fit better in grids
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                height: 200,
+                                height: 140,
                                 color: settings.accentColor.withOpacity(0.1),
                                 child: Icon(
                                   FontAwesomeIcons.video,
@@ -182,173 +183,181 @@ class NoteCard extends StatelessWidget {
                         ],
                       ),
 
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  note.videoTitle,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              IconButton(
-                                icon: FaIcon(
-                                  note.isFavorite
-                                      ? FontAwesomeIcons.solidHeart
-                                      : FontAwesomeIcons.heart,
-                                  color: note.isFavorite
-                                      ? Colors.red
-                                      : Colors.grey,
-                                  size: 20,
-                                ),
-                                onPressed: () => _toggleFavorite(context),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-
-                          Row(
-                            children: [
-                              FaIcon(
-                                FontAwesomeIcons.calendarDay,
-                                size: 12,
-                                color: isDark
-                                    ? Colors.white60
-                                    : Colors.grey[600],
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                DateFormat(
-                                  'MMM dd, yyyy',
-                                ).format(note.createdAt),
-                                style: GoogleFonts.inter(
-                                  color: isDark
-                                      ? Colors.white60
-                                      : Colors.grey[600],
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          Text(
-                            note.notes,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              color: isDark ? Colors.white70 : Colors.grey[700],
-                              height: 1.6,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          if (note.keyPoints.isNotEmpty)
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                settings.glassMorphicContainer(
-                                  context: context,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  opacity: 0.1,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      FaIcon(
-                                        FontAwesomeIcons.lightbulb,
-                                        size: 12,
-                                        color: settings.accentColor,
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      note.videoTitle,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '${note.keyPoints.length} Insights',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: settings.accentColor,
-                                        ),
-                                      ),
-                                    ],
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-
-                          const SizedBox(height: 12),
-                          const Divider(height: 1, color: Colors.black12),
-                          const SizedBox(height: 12),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              TextButton.icon(
-                                onPressed: () => _launchUrl(note.videoUrl),
-                                icon: FaIcon(
-                                  FontAwesomeIcons.youtube,
-                                  size: 16,
-                                  color: settings.accentColor,
-                                ),
-                                label: Text(
-                                  'WATCH VIDEO',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1,
-                                    color: settings.accentColor,
+                                  IconButton(
+                                    icon: FaIcon(
+                                      note.isFavorite
+                                          ? FontAwesomeIcons.solidHeart
+                                          : FontAwesomeIcons.heart,
+                                      color: note.isFavorite
+                                          ? Colors.red
+                                          : Colors.grey,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => _toggleFavorite(context),
                                   ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                ),
+                                ],
                               ),
+                              const SizedBox(height: 8),
+
                               Row(
                                 children: [
-                                  IconButton(
-                                    icon: const FaIcon(
-                                      FontAwesomeIcons.shareNodes,
-                                      size: 18,
-                                    ),
-                                    onPressed: _shareNote,
-                                    tooltip: 'Share',
+                                  FaIcon(
+                                    FontAwesomeIcons.calendarDay,
+                                    size: 12,
                                     color: isDark
                                         ? Colors.white60
                                         : Colors.grey[600],
                                   ),
-                                  IconButton(
-                                    icon: const FaIcon(
-                                      FontAwesomeIcons.trashCan,
-                                      size: 18,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    DateFormat(
+                                      'MMM dd, yyyy',
+                                    ).format(note.createdAt),
+                                    style: GoogleFonts.inter(
+                                      color: isDark
+                                          ? Colors.white60
+                                          : Colors.grey[600],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    onPressed: () => _deleteNote(context),
-                                    tooltip: 'Delete',
-                                    color: Colors.red.withOpacity(0.7),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              Text(
+                                note.notes,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  color: isDark
+                                      ? Colors.white70
+                                      : Colors.grey[700],
+                                  height: 1.6,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              if (note.keyPoints.isNotEmpty)
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    settings.glassMorphicContainer(
+                                      context: context,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      opacity: 0.1,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          FaIcon(
+                                            FontAwesomeIcons.lightbulb,
+                                            size: 12,
+                                            color: settings.accentColor,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${note.keyPoints.length} Insights',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: settings.accentColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                              const SizedBox(height: 12),
+                              const Divider(height: 1, color: Colors.black12),
+                              const SizedBox(height: 12),
+
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () => _launchUrl(note.videoUrl),
+                                    icon: FaIcon(
+                                      FontAwesomeIcons.youtube,
+                                      size: 16,
+                                      color: settings.accentColor,
+                                    ),
+                                    label: Text(
+                                      'WATCH VIDEO',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                        color: settings.accentColor,
+                                      ),
+                                    ),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const FaIcon(
+                                          FontAwesomeIcons.shareNodes,
+                                          size: 18,
+                                        ),
+                                        onPressed: _shareNote,
+                                        tooltip: 'Share',
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.grey[600],
+                                      ),
+                                      IconButton(
+                                        icon: const FaIcon(
+                                          FontAwesomeIcons.trashCan,
+                                          size: 18,
+                                        ),
+                                        onPressed: () => _deleteNote(context),
+                                        tooltip: 'Delete',
+                                        color: Colors.red.withOpacity(0.7),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
