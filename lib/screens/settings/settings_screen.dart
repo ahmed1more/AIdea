@@ -51,14 +51,7 @@ class SettingsScreen extends StatelessWidget {
                 _buildAccountCard(context, settings, isDark),
                 const SizedBox(height: 16),
 
-                // ── AI Configuration Section ──
-                _buildSectionHeader(
-                  context,
-                  'AI Insight',
-                  FontAwesomeIcons.bolt,
-                ),
-                _buildAiConfigCard(context, settings, isDark),
-                const SizedBox(height: 16),
+
 
                 // ── Appearance Section ──
                 _buildSectionHeader(
@@ -539,126 +532,6 @@ class SettingsScreen extends StatelessWidget {
     ).animate().fadeIn(delay: 500.ms).slideX(begin: 0.1);
   }
 
-  // ── AI Configuration Card ──
-  Widget _buildAiConfigCard(
-    BuildContext context,
-    SettingsProvider settings,
-    bool isDark,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: settings.glassMorphicContainer(
-        context: context,
-        padding: const EdgeInsets.all(20),
-        opacity: isDark ? 0.05 : 0.7,
-        borderRadius: BorderRadius.circular(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Powered by',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: settings.isAiConfigured
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    settings.isAiConfigured ? 'Ready' : 'Setup Required',
-                    style: GoogleFonts.inter(
-                      color: settings.isAiConfigured
-                          ? Colors.green
-                          : Colors.orange,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            _buildDropdown(
-              value: settings.aiModel,
-              items: {
-                AiModel.aidea: 'AIdea Cloud (Recommended)',
-                AiModel.gemini: 'Google Gemini Pro',
-              },
-              onChanged: (val) => settings.setAiModel(val as AiModel),
-              isDark: isDark,
-              settings: settings,
-            ),
-
-            const SizedBox(height: 16),
-            if (settings.aiModel == AiModel.aidea)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: settings.accentColor.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: settings.accentColor.withOpacity(0.1),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.wandMagicSparkles,
-                      color: settings.accentColor,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'AIdea is auto-configured for the best experience.',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else ...[
-              Text(
-                'Gemini API Key',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white54 : Colors.black45,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildModernTextField(
-                initialValue: settings.apiKey,
-                hint: 'Enter your API key',
-                icon: FontAwesomeIcons.key,
-                onChanged: (val) => settings.setApiKey(val),
-                isDark: isDark,
-                settings: settings,
-                obscure: true,
-              ),
-            ],
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 300.ms).slideX(begin: 0.1);
-  }
 
   Widget _buildDropdown({
     required dynamic value,

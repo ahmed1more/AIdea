@@ -68,44 +68,21 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   Future<void> _simulateAIGeneration() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    if (!settings.isAiConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Please configure your AI API key in Settings first.',
-          ),
-          action: SnackBarAction(
-            label: 'Settings',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ),
-      );
-      return;
-    }
+
 
     setState(() {
       _isGenerating = true;
     });
 
     try {
-      String? idToken;
-      if (settings.aiModel == AiModel.aidea) {
-        idToken = await firebase_auth.FirebaseAuth.instance.currentUser
-            ?.getIdToken();
-        if (idToken == null) {
-          throw Exception('Authentication required for AIdea model.');
-        }
+      String? idToken = await firebase_auth.FirebaseAuth.instance.currentUser?.getIdToken();
+      if (idToken == null) {
+        throw Exception('Authentication required to generate notes.');
       }
 
       final result = await AiService.generateNotes(
         videoUrl: _videoUrlController.text.trim(),
         videoTitle: _videoTitleController.text.trim(),
-        model: settings.aiModel.name,
-        apiKey: settings.apiKey,
         aideaUrl: settings.aideaUrl,
         idToken: idToken,
       );
@@ -125,7 +102,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${settings.aiModel.name.toUpperCase()} failed: ${e.toString().replaceAll('Exception: ', '')}',
+              'AI Generation failed: ${e.toString().replaceAll('Exception: ', '')}',
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
