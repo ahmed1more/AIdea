@@ -1,0 +1,18 @@
+﻿Analyzing aidea...
+
+  error - lib\screens\account\account_tab.dart:324:23 - The argument type 'AiModel' can't be assigned to the parameter type 'String'.  - argument_type_not_assignable
+  error - lib\screens\home\home_screen.dart:336:6 - Expected to find ')'. - expected_token
+  error - lib\screens\home\home_screen.dart:610:71 - The getter 'primary' isn't defined for the type 'AppTheme'. Try importing the library that defines 'primary', correcting the name to the name of an existing getter, or defining a getter or field named 'primary'. - undefined_getter
+warning - lib\screens\account\account_tab.dart:7:8 - Unused import: '../../widgets/editorial_quote_card.dart'. Try removing the import directive. - unused_import
+   info - lib\screens\account\account_tab.dart:336:17 - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\screens\home\note_detail_screen.dart:53:5 - 'Share' is deprecated and shouldn't be used. Use SharePlus instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\screens\home\note_detail_screen.dart:53:11 - 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\screens\settings\settings_screen.dart:49:36 - 'userLarge' is deprecated and shouldn't be used. Use "user" instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\screens\splash_screen.dart:36:28 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\splash_screen.dart:36:32 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\splash_screen.dart:37:46 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\splash_screen.dart:46:28 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\splash_screen.dart:46:32 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\splash_screen.dart:47:46 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+
+14 issues found.

@@ -2,11 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'package:logger/logger.dart';
 import '../models/app_user.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Logger logger = Logger();
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -48,11 +50,11 @@ class AuthService {
               .set(newUser.toMap())
               .timeout(const Duration(seconds: 10));
         } catch (e) {
-          print('Error creating user document: $e');
+          logger.e('Error creating user document: $e');
           try {
             await user.delete(); // Rollback auth creation
           } catch (deleteError) {
-            print('Error deleting orphaned user: $deleteError');
+            logger.e('Error deleting orphaned user: $deleteError');
           }
           throw Exception(
             'Failed to setup your database profile. Check Firestore rules or connection. Error: $e',
@@ -66,7 +68,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error signing up: $e');
+      logger.e('Error signing up: $e');
       rethrow;
     }
   }
@@ -96,7 +98,7 @@ class AuthService {
           .timeout(const Duration(seconds: 10));
 
       if (!doc.exists) {
-        print('User document missing from Firestore.');
+        logger.w('User document missing from Firestore.');
         await _auth.signOut();
         await clearCachedUser();
         throw FirebaseAuthException(
@@ -112,9 +114,9 @@ class AuthService {
       if (e is FirebaseAuthException) rethrow; // Pass up our custom exception
 
       if (e is FirebaseException && e.code == 'unavailable') {
-        print('Device is offline. Using fallback auth data.');
+        logger.i('Device is offline. Using fallback auth data.');
       } else {
-        print('Firestore unreachable: $e');
+        logger.e('Firestore unreachable: $e');
       }
       // Build a minimal AppUser from what Firebase Auth gives us
       final fallbackUser = AppUser(
@@ -135,7 +137,7 @@ class AuthService {
       await _auth.signOut();
       await clearCachedUser();
     } catch (e) {
-      print('Error signing out: $e');
+      logger.e('Error signing out: $e');
       rethrow;
     }
   }
@@ -153,7 +155,7 @@ class AuthService {
         await cacheUser(appUser);
         return appUser;
       } else {
-        print('User document missing from Firestore. Signing out.');
+        logger.w('User document missing from Firestore. Signing out.');
         await _auth.signOut();
         await clearCachedUser();
         return null;
@@ -162,13 +164,13 @@ class AuthService {
       if (e is FirebaseException && e.code == 'unavailable') {
         // Device is offline
       } else {
-        print('Error getting user data: $e');
+        logger.e('Error getting user data: $e');
       }
       // Firestore is offline — return the locally cached user so the app
       // keeps working without a network connection.
       final cached = await getCachedUser();
       if (cached != null) {
-        print('Falling back to cached user data.');
+        logger.i('Falling back to cached user data.');
         return cached;
       }
 
@@ -176,9 +178,9 @@ class AuthService {
       final user = _auth.currentUser;
       if (user != null && user.uid == uid) {
         if (e is FirebaseException && e.code == 'unavailable') {
-          print('Device is offline. Using fallback auth data.');
+          logger.i('Device is offline. Using fallback auth data.');
         } else {
-          print('Firestore unavailable, falling back to Auth user data: $e');
+          logger.w('Firestore unavailable, falling back to Auth user data: $e');
         }
         final fallbackUser = AppUser(
           id: user.uid,
@@ -201,7 +203,7 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print('Error resetting password: $e');
+      logger.e('Error resetting password: $e');
       rethrow;
     }
   }
@@ -212,7 +214,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cached_user', user.toJson());
     } catch (e) {
-      print('Error caching user: $e');
+      logger.e('Error caching user: $e');
     }
   }
 
@@ -225,7 +227,7 @@ class AuthService {
         return AppUser.fromJson(userString);
       }
     } catch (e) {
-      print('Error getting cached user: $e');
+      logger.e('Error getting cached user: $e');
     }
     return null;
   }
@@ -236,7 +238,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('cached_user');
     } catch (e) {
-      print('Error clearing cached user: $e');
+      logger.e('Error clearing cached user: $e');
     }
   }
 }

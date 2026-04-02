@@ -46,7 +46,7 @@ class SettingsScreen extends StatelessWidget {
                 _buildSectionHeader(
                   context,
                   'Account',
-                  FontAwesomeIcons.userLarge,
+                  FontAwesomeIcons.user,
                 ),
                 _buildAccountCard(context, settings, isDark),
                 const SizedBox(height: 16),
@@ -94,8 +94,8 @@ class SettingsScreen extends StatelessWidget {
                     height: 56,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.red.withOpacity(0.5)),
-                      color: Colors.red.withOpacity(0.05),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+                      color: Colors.red.withValues(alpha: 0.05),
                     ),
                     child: TextButton.icon(
                       onPressed: () => _handleLogout(context),
@@ -137,7 +137,7 @@ class SettingsScreen extends StatelessWidget {
           FaIcon(
             icon,
             size: 14,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 10),
           Text(
@@ -177,7 +177,7 @@ class SettingsScreen extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: settings.accentColor.withOpacity(0.3),
+                    color: settings.accentColor.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -185,7 +185,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               child: CircleAvatar(
                 radius: 32,
-                backgroundColor: settings.accentColor.withOpacity(0.2),
+                backgroundColor: settings.accentColor.withValues(alpha: 0.2),
                 backgroundImage: user?.photoUrl != null
                     ? NetworkImage(user!.photoUrl!)
                     : null,
@@ -228,7 +228,7 @@ class SettingsScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: settings.accentColor.withOpacity(0.1),
+                      color: settings.accentColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -334,7 +334,7 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? settings.accentColor.withOpacity(0.15)
+              ? settings.accentColor.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -415,7 +415,7 @@ class SettingsScreen extends StatelessWidget {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: accentColor.color.withOpacity(0.4),
+                                    color: accentColor.color.withValues(alpha: 0.4),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -440,8 +440,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              SettingsProvider.accentColors[settings.accentColorIndex].name +
-                  ' Theme',
+              '${SettingsProvider.accentColors[settings.accentColorIndex].name} Theme',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 color: settings.accentColor,
@@ -471,7 +470,7 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(width: 60, height: 60, child: settings.logo(size: 60))
+                SizedBox(width: 60, height: 60, child: settings.logo(size: 60))
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .shimmer(duration: 2.seconds, color: Colors.white24),
                 const SizedBox(width: 16),
@@ -511,7 +510,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Divider(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
             ),
             const SizedBox(height: 12),
             Row(
@@ -571,9 +570,7 @@ class SettingsScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: settings.isAiConfigured
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
+                    color: settings.accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -607,10 +604,10 @@ class SettingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: settings.accentColor.withOpacity(0.05),
+                  color: settings.accentColor.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: settings.accentColor.withOpacity(0.1),
+                    color: settings.accentColor.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(
@@ -670,7 +667,7 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: DropdownButtonHideUnderline(
@@ -705,7 +702,7 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextFormField(
@@ -766,8 +763,8 @@ class SettingsScreen extends StatelessWidget {
           height: 48,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
-            color: Colors.redAccent.withOpacity(0.1),
+            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+            color: Colors.redAccent.withValues(alpha: 0.1),
           ),
           child: TextButton.icon(
             onPressed: () => Navigator.of(context).pop(true),

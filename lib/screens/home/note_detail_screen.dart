@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
+import '../../theme/app_theme.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final VideoNote note;
@@ -70,7 +72,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     final newNotes = _notesController.text;
     final newKeyPoints = _keyPointsControllers.map((c) => c.text).toList();
 
-    // Call updateNote mapping to database
     bool success = await notesProvider.updateNote(_note.id, {
       'notes': newNotes,
       'keyPoints': newKeyPoints,
@@ -82,12 +83,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         _isEditing = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Note updated successfully')),
+        SnackBar(
+          content: const Text('Note updated successfully'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
     } else if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to update note')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to update note'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
     }
   }
 
@@ -101,253 +112,267 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     });
   }
 
+  String _readTime() {
+    final words = _note.notes.split(' ').length;
+    final minutes = (words / 200).ceil();
+    return '$minutes min read';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with Image
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                _note.videoTitle,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 3.0,
-                      color: Colors.black54,
-                    ),
-                  ],
-                ),
-              ),
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    _note.thumbnail,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[800],
-                        child: const Icon(
-                          Icons.video_library,
-                          size: 80,
-                          color: Colors.white54,
-                        ),
-                      );
-                    },
-                  ),
-                  // Gradient overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+      appBar: AppBar(
+        title: Text(
+          'Summary',
+          style: AppTheme.headline3(
+            color: isDark
+                ? AppTheme.darkTextPrimary
+                : AppTheme.lightTextPrimary,
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          if (_isEditing) ...[
+            TextButton(
+              onPressed: _saveChanges,
+              child: Text('Save',
+                  style: AppTheme.labelLarge(color: primaryColor)),
             ),
-            actions: [
-              if (_isEditing) ...[
-                IconButton(
-                  icon: const Icon(Icons.check),
-                  onPressed: _saveChanges,
-                  tooltip: 'Save',
+            IconButton(
+              icon: Icon(Icons.close,
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary),
+              onPressed: _cancelEditing,
+            ),
+          ] else ...[
+            IconButton(
+              icon: Icon(Icons.edit_outlined, size: 22, color: primaryColor),
+              onPressed: () => setState(() => _isEditing = true),
+              tooltip: 'Edit',
+            ),
+            IconButton(
+              icon: Icon(
+                _note.isFavorite ? Icons.bookmark : Icons.bookmark_outline,
+                color: _note.isFavorite ? AppTheme.teal : null,
+                size: 22,
+              ),
+              onPressed: () => _toggleFavorite(context),
+            ),
+            IconButton(
+              icon: Icon(Icons.share_outlined, size: 22,
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary),
+              onPressed: _shareNote,
+            ),
+          ],
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        children: [
+          // ─── Title ──────────────────────────────────
+          Text(
+            _note.videoTitle,
+            style: AppTheme.headline2(
+              color: isDark
+                  ? AppTheme.darkTextPrimary
+                  : AppTheme.lightTextPrimary,
+            ),
+          ).animate().fadeIn(duration: 400.ms),
+
+          const SizedBox(height: 16),
+
+          // ─── Meta row ───────────────────────────────
+          Row(
+            children: [
+              Icon(Icons.calendar_today, size: 14,
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary),
+              const SizedBox(width: 6),
+              Text(
+                DateFormat('MMMM dd, yyyy').format(_note.createdAt),
+                style: AppTheme.bodySmall(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _cancelEditing,
-                  tooltip: 'Cancel',
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.schedule, size: 14,
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary),
+              const SizedBox(width: 6),
+              Text(
+                _readTime(),
+                style: AppTheme.bodySmall(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
                 ),
-              ] else ...[
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = true;
-                    });
-                  },
-                  tooltip: 'Edit',
-                ),
-                IconButton(
-                  icon: Icon(
-                    _note.isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: _note.isFavorite ? Colors.red : Colors.white,
-                  ),
-                  onPressed: () => _toggleFavorite(context),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: _shareNote,
-                ),
-              ],
+              ),
+            ],
+          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+
+          const SizedBox(height: 16),
+
+          // ─── Watch Button ───────────────────────────
+          OutlinedButton.icon(
+            onPressed: () => _launchUrl(_note.videoUrl),
+            icon: Icon(Icons.play_circle_outline, color: primaryColor),
+            label: Text('Watch Video',
+                style: AppTheme.labelLarge(color: primaryColor)),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(
+                  color: primaryColor.withValues(alpha: 0.3)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            ),
+          ).animate().fadeIn(delay: 150.ms, duration: 300.ms),
+
+          const SizedBox(height: 32),
+
+          // ─── Notes Section ──────────────────────────
+          Row(
+            children: [
+              Icon(Icons.notes, size: 16, color: primaryColor),
+              const SizedBox(width: 8),
+              Text(
+                'NOTES',
+                style: AppTheme.labelSmall(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ).copyWith(letterSpacing: 2),
+              ),
             ],
           ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
+            child: _isEditing
+                ? TextFormField(
+                    controller: _notesController,
+                    maxLines: null,
+                    style: AppTheme.bodyLarge(
+                      color: isDark
+                          ? AppTheme.darkTextPrimary
+                          : AppTheme.lightTextPrimary,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  )
+                : Text(
+                    _note.notes,
+                    style: AppTheme.bodyLarge(
+                      color: isDark
+                          ? AppTheme.darkTextPrimary
+                          : AppTheme.lightTextPrimary,
+                    ),
+                  ),
+          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Date and Watch Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const SizedBox(height: 32),
+
+          // ─── Key Points ─────────────────────────────
+          if (_note.keyPoints.isNotEmpty) ...[
+            Row(
+              children: [
+                Icon(Icons.checklist, size: 16, color: primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  'KEY POINTS',
+                  style: AppTheme.labelSmall(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
+                  ).copyWith(letterSpacing: 2),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...List.generate(_note.keyPoints.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: colorScheme.onSurfaceVariant,
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: primaryColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: AppTheme.labelSmall(color: Colors.white)
+                                .copyWith(fontSize: 12),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            DateFormat('MMMM dd, yyyy').format(_note.createdAt),
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () => _launchUrl(_note.videoUrl),
-                        icon: const Icon(Icons.play_circle_outline),
-                        label: const Text('Watch Video'),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _isEditing
+                            ? TextFormField(
+                                controller: _keyPointsControllers[index],
+                                maxLines: null,
+                                style: AppTheme.bodyMedium(
+                                  color: isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              )
+                            : Text(
+                                _note.keyPoints[index],
+                                style: AppTheme.bodyMedium(
+                                  color: isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary,
+                                ),
+                              ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-
-                  // Notes Section
-                  Text(
-                    'Notes',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colorScheme.outlineVariant),
-                    ),
-                    child: _isEditing
-                        ? TextFormField(
-                            controller: _notesController,
-                            maxLines: null,
-                            style: TextStyle(
-                              fontSize: 16,
-                              height: 1.6,
-                              color: colorScheme.onSurface,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          )
-                        : Text(
-                            _note.notes,
-                            style: TextStyle(
-                              fontSize: 16,
-                              height: 1.6,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Key Points Section
-                  if (_note.keyPoints.isNotEmpty) ...[
-                    Text(
-                      'Key Points',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    ...List.generate(_note.keyPoints.length, (index) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${index + 1}',
-                                  style: TextStyle(
-                                    color: colorScheme.onPrimary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _isEditing
-                                  ? TextFormField(
-                                      controller: _keyPointsControllers[index],
-                                      maxLines: null,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        height: 1.5,
-                                        color: colorScheme.onPrimaryContainer,
-                                      ),
-                                      decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                      ),
-                                    )
-                                  : Text(
-                                      _note.keyPoints[index],
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        height: 1.5,
-                                        color: colorScheme.onPrimaryContainer,
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ),
+                ),
+              )
+                  .animate()
+                  .fadeIn(
+                    delay: (250 + 50 * index).ms,
+                    duration: 400.ms,
+                  )
+                  .slideX(begin: 0.05, duration: 300.ms);
+            }),
+          ],
         ],
       ),
     );

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import 'auth/login_screen.dart';
-import 'home/home_screen.dart';
+import 'main_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,28 +18,36 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthState();
+    _checkAuthAndNavigate();
   }
 
-  Future<void> _checkAuthState() async {
-    // Elegant delay for the splash experience
+  Future<void> _checkAuthAndNavigate() async {
     await Future.delayed(const Duration(milliseconds: 2500));
 
     if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // Auth state is already resolved via AuthProvider._initAuth() in the constructor.
+    // We just needed to wait for the splash animation.
 
-    if (mounted) {
+    if (authProvider.isAuthenticated) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 800),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              authProvider.isAuthenticated
-              ? const HomeScreen()
-              : const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          pageBuilder: (context, _, __) => const MainShell(),
+          transitionsBuilder: (context, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
+          transitionDuration: const Duration(milliseconds: 600),
+        ),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, _, __) => const LoginScreen(),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 600),
         ),
       );
     }
@@ -47,112 +55,117 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final settings = Provider.of<SettingsProvider>(context);
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background identity color
-          Positioned.fill(
-            child: Container(
-              color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            ),
-          ),
+      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(flex: 3),
 
-          // Subtle accent glow
-          Positioned(
-            top: -150,
-            right: -150,
-            child:
-                Container(
-                      width: 400,
-                      height: 400,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: settings.accentColor.withOpacity(0.15),
-                      ),
-                    )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scale(
-                      duration: 4.seconds,
-                      begin: const Offset(1, 1),
-                      end: const Offset(1.2, 1.2),
-                    )
-                    .blur(
-                      begin: const Offset(80, 80),
-                      end: const Offset(120, 120),
-                    ),
-          ),
+            // Logo
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 40,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: settings.logo(size: 80, applyTheme: false),
+              ),
+            )
+                .animate()
+                .scale(
+                  begin: const Offset(0.8, 0.8),
+                  end: const Offset(1, 1),
+                  duration: 800.ms,
+                  curve: Curves.easeOutBack,
+                )
+                .fadeIn(duration: 600.ms),
 
-          Center(
-            child: Column(
+            const SizedBox(height: 32),
+
+            // App Name
+            Text(
+              'AiDea',
+              style: AppTheme.headline2(
+                color: isDark
+                    ? AppTheme.darkTextPrimary
+                    : AppTheme.lightTextPrimary,
+              ),
+            )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 500.ms)
+                .slideY(begin: 0.2, duration: 500.ms, curve: Curves.easeOut),
+
+            const SizedBox(height: 8),
+
+            // Tagline
+            Text(
+              'Your intelligence, distilled.',
+              style: AppTheme.bodyLarge(
+                color: isDark
+                    ? AppTheme.darkTextSecondary
+                    : AppTheme.lightTextSecondary,
+              ),
+            ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+
+            const Spacer(flex: 2),
+
+            // Divider
+            Container(
+              width: 200,
+              height: 1,
+              color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
+            ).animate().fadeIn(delay: 800.ms).scaleX(
+                  begin: 0,
+                  end: 1,
+                  duration: 600.ms,
+                  curve: Curves.easeOut,
+                ),
+
+            const SizedBox(height: 16),
+
+            // Status
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Premium Logo Presentation
-                settings
-                    .glassMorphicContainer(
-                      context: context,
-                      padding: const EdgeInsets.all(32),
-                      opacity: isDark ? 0.05 : 0.4,
-                      blur: 30,
-                      borderRadius: BorderRadius.circular(40),
-                      child: settings
-                          .logo(size: 140, applyTheme: false)
-                          .animate()
-                          .scale(duration: 800.ms, curve: Curves.easeOutBack)
-                          .shimmer(delay: 1.seconds, duration: 2.seconds),
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .slideY(begin: 0.1),
-
-                const SizedBox(height: 40),
-
-                // Branded Title
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
                 Text(
-                  'AIdea',
-                  style: GoogleFonts.poppins(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                    letterSpacing: 2,
-                  ),
-                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
-
-                const SizedBox(height: 12),
-
-                // Tagline
-                Text(
-                  'Intelligent Video Insights',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: settings.accentColor.withOpacity(0.8),
-                    letterSpacing: 1.5,
-                  ),
-                ).animate().fadeIn(delay: 500.ms),
-
-                const SizedBox(height: 80),
-
-                // Minimalist Progress
-                SizedBox(
-                  width: 160,
-                  height: 4,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      backgroundColor: settings.accentColor.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        settings.accentColor,
-                      ),
-                    ),
-                  ),
-                ).animate().fadeIn(delay: 1.seconds),
+                  'SYSTEMS ACTIVE',
+                  style: AppTheme.labelSmall(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary.withValues(alpha: 0.6)
+                        : AppTheme.lightTextSecondary.withValues(alpha: 0.6),
+                  ).copyWith(letterSpacing: 3),
+                ),
               ],
-            ),
-          ),
-        ],
+            ).animate().fadeIn(delay: 1000.ms, duration: 500.ms),
+
+            const Spacer(),
+          ],
+        ),
       ),
     );
   }

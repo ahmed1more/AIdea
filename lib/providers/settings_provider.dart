@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_theme.dart';
 
 enum AiModel { aidea, gemini }
 
@@ -34,6 +35,8 @@ class SettingsProvider extends ChangeNotifier {
   int get accentColorIndex => _accentColorIndex;
   Color get accentColor => accentColors[_accentColorIndex].color;
   AiModel get aiModel => _aiModel;
+  String get aiModelLabel =>
+      _aiModel == AiModel.aidea ? 'AIdea (Default)' : 'Google Gemini';
   String get apiKey => _apiKey;
   String get aideaUrl => _aideaUrl;
   bool get isAiConfigured {
@@ -97,47 +100,8 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setString(_aideaUrlKey, url);
   }
 
-  ThemeData getLightTheme() => _buildTheme(Brightness.light);
-  ThemeData getDarkTheme() => _buildTheme(Brightness.dark);
-
-  ThemeData _buildTheme(Brightness brightness) {
-    final seedColor = accentColor;
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seedColor,
-      brightness: brightness,
-    );
-
-    return ThemeData(
-      colorScheme: colorScheme,
-      useMaterial3: true,
-      appBarTheme: AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: brightness == Brightness.light ? Colors.black87 : Colors.white,
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        filled: true,
-        fillColor: brightness == Brightness.light
-            ? Colors.grey.shade50
-            : Colors.grey.shade900,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
-  }
+  ThemeData getLightTheme() => AppTheme.buildLightTheme(accentColor);
+  ThemeData getDarkTheme() => AppTheme.buildDarkTheme(accentColor);
 
   // Glassmorphism helper
   BoxDecoration glassDecoration({
@@ -148,10 +112,10 @@ class SettingsProvider extends ChangeNotifier {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
-      color: (isDark ? Colors.white : Colors.black).withOpacity(opacity),
+      color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(16),
       border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
         width: 1.5,
       ),
     );
@@ -174,14 +138,12 @@ class SettingsProvider extends ChangeNotifier {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(opacity),
+            color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
             borderRadius: borderRadius ?? BorderRadius.circular(24),
             border:
                 border ??
                 Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(
-                    0.1,
-                  ),
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
                   width: 1.5,
                 ),
           ),
@@ -203,7 +165,7 @@ class SettingsProvider extends ChangeNotifier {
           // but usually, logos need subtle adjustments for dark/light backgrounds.
           // For now, let's keep it original but allow for future filtering.
           color: applyTheme
-              ? (isDark ? Colors.white.withOpacity(0.9) : null)
+              ? (isDark ? Colors.white.withValues(alpha: 0.9) : null)
               : null,
           colorBlendMode: applyTheme
               ? (isDark ? BlendMode.modulate : null)
@@ -223,7 +185,7 @@ class SettingsProvider extends ChangeNotifier {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return Center(

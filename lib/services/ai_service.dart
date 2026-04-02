@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class AiService {
   /// Generate notes from a video URL/title using the configured AI model.
-  /// Returns a map with 'notes' (String) and 'keyPoints' (List<String>).
+  /// Returns a map with 'notes' (String) and 'keyPoints' (`List<String>`).
   static Future<Map<String, dynamic>> generateNotes({
     required String videoUrl,
     required String videoTitle,
