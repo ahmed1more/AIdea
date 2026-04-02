@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../../widgets/editorial_quote_card.dart';
-// import '../../widgets/settings_tile.dart'; // This file does not exist, _SettingTile is local
+import '../../providers/notes_provider.dart';
 
 /// Account tab — profile, settings, AI config, and sign-out.
 class AccountTab extends StatelessWidget {
@@ -394,11 +394,63 @@ class AccountTab extends StatelessWidget {
   }
 
   void _showModelPicker(BuildContext context, SettingsProvider settings) {
-    // Basic implementation for picker
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Select AI Model', style: AppTheme.headline3()),
+            const SizedBox(height: 12),
+            Text(
+              'Choose your preferred intelligence engine for note generation.',
+              textAlign: TextAlign.center,
+              style: AppTheme.bodyMedium(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppTheme.darkTextSecondary
+                    : AppTheme.lightTextSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: const Icon(Icons.flash_on, color: AppTheme.teal),
+              title: const Text('AIdea Cloud'),
+              subtitle: const Text('Optimized for speed and quality (Recommended)'),
+              trailing: settings.aiModel == AiModel.aidea
+                  ? const Icon(Icons.check_circle, color: AppTheme.teal)
+                  : null,
+              onTap: () {
+                settings.setAiModel(AiModel.aidea);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const FaIcon(FontAwesomeIcons.google, color: Color(0xFF4285F4)),
+              title: const Text('Google Gemini Pro'),
+              subtitle: const Text('Direct access to Gemini using your API key'),
+              trailing: settings.aiModel == AiModel.gemini
+                  ? const Icon(Icons.check_circle, color: Color(0xFF4285F4))
+                  : null,
+              onTap: () {
+                settings.setAiModel(AiModel.gemini);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   void _handleLogout(BuildContext context) {
-    Provider.of<AuthProvider>(context, listen: false).signOut();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final notes = Provider.of<NotesProvider>(context, listen: false);
+    auth.signOut();
+    notes.clearSearch();
   }
 }
 

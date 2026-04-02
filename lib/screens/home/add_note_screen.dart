@@ -8,6 +8,7 @@ import '../../providers/settings_provider.dart';
 import '../../models/video_note.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
+import '../settings/settings_screen.dart';
 
 class AddNoteScreen extends StatefulWidget {
   final String? initialUrl;
@@ -317,8 +318,9 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Title is required';
+                  }
                   return null;
                 },
               ).animate().fadeIn(delay: 100.ms, duration: 300.ms),

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/video_note.dart';
 import '../providers/notes_provider.dart';
+import '../providers/settings_provider.dart';
 import '../screens/home/note_detail_screen.dart';
 
 /// Editorial-inspired note card for the redesigned UI.
@@ -13,73 +18,56 @@ class NoteCard extends StatelessWidget {
 
   const NoteCard({super.key, required this.note, this.index = 0});
 
-  /// Pick an icon based on title keywords.
-  IconData _categoryIcon() {
-    final lower = note.videoTitle.toLowerCase();
-    if (lower.contains('tech') ||
-        lower.contains('code') ||
-        lower.contains('program')) {
-      return Icons.auto_awesome;
-    } else if (lower.contains('business') ||
-        lower.contains('econom') ||
-        lower.contains('financ')) {
-      return Icons.trending_up;
-    } else if (lower.contains('design') ||
-        lower.contains('ui') ||
-        lower.contains('ux')) {
-      return Icons.palette_outlined;
-    } else if (lower.contains('science') || lower.contains('research')) {
-      return Icons.science_outlined;
-    } else if (lower.contains('health') || lower.contains('medical')) {
-      return Icons.favorite_outline;
-    } else if (lower.contains('edu') ||
-        lower.contains('learn') ||
-        lower.contains('study')) {
-      return Icons.school_outlined;
+  void _toggleFavorite(BuildContext context) {
+    context.read<NotesProvider>().toggleFavorite(note.id, note.isFavorite);
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     }
-    return Icons.article_outlined;
   }
 
-  /// Pick a category color.
-  Color _categoryColor() {
-    final lower = note.videoTitle.toLowerCase();
-    if (lower.contains('tech') || lower.contains('code')) return AppTheme.coral;
-    if (lower.contains('business') || lower.contains('econom'))
-      return AppTheme.teal;
-    if (lower.contains('design') || lower.contains('ui'))
-      return const Color(0xFF8B5CF6);
-    if (lower.contains('science')) return const Color(0xFFF97316);
-    return AppTheme.teal;
+  void _shareNote() {
+    // ignore: deprecated_member_use
+    Share.share('Check out these notes from "${note.videoTitle}": ${note.videoUrl}');
   }
 
-  String _readTime() {
-    final words = note.notes.split(' ').length;
-    final minutes = (words / 200).ceil();
-    return '$minutes min read';
-  }
-
-  String _formattedDate() {
-    final d = note.createdAt;
-    final months = [
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC',
-    ];
-    return '${months[d.month - 1]} ${d.day.toString().padLeft(2, '0')}, ${d.year}';
+  void _deleteNote(BuildContext context) {
+    final settings = context.read<SettingsProvider>();
+    settings.showGlassDialog(
+      context: context,
+      title: 'Delete Note',
+      content: Text(
+        'Are you sure you want to delete this note?',
+        textAlign: TextAlign.center,
+        style: GoogleFonts.inter(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white
+              : Colors.black,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('CANCEL', style: GoogleFonts.inter(color: Colors.grey)),
+        ),
+        TextButton(
+          onPressed: () {
+            context.read<NotesProvider>().deleteNote(note.id, note.userId);
+            Navigator.pop(context);
+          },
+          child: Text('DELETE', style: GoogleFonts.inter(color: Colors.red)),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final settings = context.watch<SettingsProvider>();
 
     return Animate(
       effects: [
@@ -96,7 +84,7 @@ class NoteCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? Colors.black : Colors.grey).withOpacity(0.1),
+              color: (isDark ? Colors.black : Colors.grey).withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -134,9 +122,9 @@ class NoteCard extends StatelessWidget {
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 height: 200,
-                                color: settings.accentColor.withOpacity(0.1),
+                                color: settings.accentColor.withValues(alpha: 0.1),
                                 child: Icon(
-                                  FontAwesomeIcons.video,
+                                  FontAwesomeIcons.circlePlay,
                                   size: 40,
                                   color: settings.accentColor,
                                 ),
@@ -151,7 +139,7 @@ class NoteCard extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.black.withOpacity(0.5),
+                                    Colors.black.withValues(alpha: 0.5),
                                   ],
                                 ),
                               ),
@@ -342,7 +330,7 @@ class NoteCard extends StatelessWidget {
                                     ),
                                     onPressed: () => _deleteNote(context),
                                     tooltip: 'Delete',
-                                    color: Colors.red.withOpacity(0.7),
+                                    color: Colors.red.withValues(alpha: 0.7),
                                   ),
                                 ],
                               ),
@@ -361,3 +349,4 @@ class NoteCard extends StatelessWidget {
     );
   }
 }
+

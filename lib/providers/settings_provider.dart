@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_theme.dart';
 
 enum AiModel { aidea, gemini }
 
@@ -9,11 +10,14 @@ class SettingsProvider extends ChangeNotifier {
   static const String _themeModeKey = 'theme_mode';
   static const String _accentColorKey = 'accent_color';
   static const String _aideaUrlKey = 'aidea_url';
+  static const String _aiModelKey = 'ai_model';
+  static const String _apiKeyKey = 'api_key';
 
   ThemeMode _themeMode = ThemeMode.system;
   int _accentColorIndex = 0;
-  // التعديل الأول هنا 👇
   String _aideaUrl = 'http://127.0.0.1:7860';
+  AiModel _aiModel = AiModel.aidea;
+  String _apiKey = '';
 
   // Available accent colors
   static const List<({String name, Color color})> accentColors = [
@@ -33,7 +37,9 @@ class SettingsProvider extends ChangeNotifier {
   AiModel get aiModel => _aiModel;
   String get apiKey => _apiKey;
   String get aideaUrl => _aideaUrl;
-  bool get isAiConfigured => true;
+  bool get isAiConfigured => _aiModel == AiModel.aidea ? _aideaUrl.isNotEmpty : _apiKey.isNotEmpty;
+
+  String get aiModelLabel => _aiModel == AiModel.aidea ? 'AIdea Engine' : 'Google Gemini';
 
   SettingsProvider() {
     _loadPreferences();
@@ -45,8 +51,9 @@ class SettingsProvider extends ChangeNotifier {
     _themeMode = ThemeMode.values[modeIndex];
     _accentColorIndex = prefs.getInt(_accentColorKey) ?? 0;
     if (_accentColorIndex >= accentColors.length) _accentColorIndex = 0;
-    // التعديل التاني هنا 👇
     _aideaUrl = prefs.getString(_aideaUrlKey) ?? 'http://127.0.0.1:7860';
+    _aiModel = AiModel.values[prefs.getInt(_aiModelKey) ?? 0];
+    _apiKey = prefs.getString(_apiKeyKey) ?? '';
     notifyListeners();
   }
 
@@ -70,6 +77,20 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_aideaUrlKey, url);
+  }
+
+  Future<void> setAiModel(AiModel model) async {
+    _aiModel = model;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_aiModelKey, model.index);
+  }
+
+  Future<void> setApiKey(String key) async {
+    _apiKey = key;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_apiKeyKey, key);
   }
 
   ThemeData getLightTheme() => AppTheme.buildLightTheme(accentColor);
@@ -137,9 +158,6 @@ class SettingsProvider extends ChangeNotifier {
           'assets/icon/aidea-logo.png',
           width: size,
           height: size,
-          // If the logo is colored, we might want to keep it as is,
-          // but usually, logos need subtle adjustments for dark/light backgrounds.
-          // For now, let's keep it original but allow for future filtering.
           color: applyTheme
               ? (isDark ? Colors.white.withValues(alpha: 0.9) : null)
               : null,
@@ -215,3 +233,4 @@ class SettingsProvider extends ChangeNotifier {
     );
   }
 }
+

@@ -49,11 +49,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
   }
 
-  void _shareNote() {
-    Share.share(
-      '${_note.videoTitle}\n\n${_note.notes}\n\nWatch: ${_note.videoUrl}',
-      subject: _note.videoTitle,
-    );
+  void _shareNote(BuildContext context) {
+    // ignore: deprecated_member_use
+    Share.share('Check out these notes from "${_note.videoTitle}": ${_note.videoUrl}');
   }
 
   Future<void> _toggleFavorite(BuildContext context) async {
@@ -168,7 +166,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   color: isDark
                       ? AppTheme.darkTextSecondary
                       : AppTheme.lightTextSecondary),
-              onPressed: _shareNote,
+              onPressed: () => _shareNote(context),
             ),
           ],
         ],

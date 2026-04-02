@@ -65,6 +65,15 @@ class SettingsScreen extends StatelessWidget {
                 _buildAccentColorCard(context, settings, isDark),
                 const SizedBox(height: 16),
 
+                // ── AI Configuration Section ──
+                _buildSectionHeader(
+                  context,
+                  'AI Configuration',
+                  FontAwesomeIcons.robot,
+                ),
+                _buildAiConfigCard(context, settings, isDark),
+                const SizedBox(height: 16),
+
                 // ── About Section ──
                 _buildSectionHeader(
                   context,
@@ -564,8 +573,8 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: settings.isAiConfigured
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -599,10 +608,10 @@ class SettingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: settings.accentColor.withOpacity(0.05),
+                  color: settings.accentColor.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: settings.accentColor.withOpacity(0.1),
+                    color: settings.accentColor.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(
