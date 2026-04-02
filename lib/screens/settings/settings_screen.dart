@@ -43,21 +43,8 @@ class SettingsScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 20),
               children: [
                 // ── Account Section ──
-                _buildSectionHeader(
-                  context,
-                  'Account',
-                  FontAwesomeIcons.user,
-                ),
+                _buildSectionHeader(context, 'Account', FontAwesomeIcons.user),
                 _buildAccountCard(context, settings, isDark),
-                const SizedBox(height: 16),
-
-                // ── AI Configuration Section ──
-                _buildSectionHeader(
-                  context,
-                  'AI Insight',
-                  FontAwesomeIcons.bolt,
-                ),
-                _buildAiConfigCard(context, settings, isDark),
                 const SizedBox(height: 16),
 
                 // ── Appearance Section ──
@@ -94,7 +81,9 @@ class SettingsScreen extends StatelessWidget {
                     height: 56,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.5),
+                      ),
                       color: Colors.red.withValues(alpha: 0.05),
                     ),
                     child: TextButton.icon(
@@ -415,7 +404,9 @@ class SettingsScreen extends StatelessWidget {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: accentColor.color.withValues(alpha: 0.4),
+                                    color: accentColor.color.withValues(
+                                      alpha: 0.4,
+                                    ),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -510,7 +501,9 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Divider(
-              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: 0.05,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -570,7 +563,9 @@ class SettingsScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: settings.accentColor.withValues(alpha: 0.1),
+                    color: settings.isAiConfigured
+                        ? Colors.green.withOpacity(0.1)
+                        : Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -604,10 +599,10 @@ class SettingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: settings.accentColor.withValues(alpha: 0.05),
+                  color: settings.accentColor.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: settings.accentColor.withValues(alpha: 0.1),
+                    color: settings.accentColor.withOpacity(0.1),
                   ),
                 ),
                 child: Row(

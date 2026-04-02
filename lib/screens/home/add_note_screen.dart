@@ -70,11 +70,16 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Please configure your AI API key in Account settings first.',
+            'Please configure your AI API key in Settings first.',
           ),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          action: SnackBarAction(
+            label: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
         ),
       );
       return;
@@ -85,20 +90,15 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     });
 
     try {
-      String? idToken;
-      if (settings.aiModel == AiModel.aidea) {
-        idToken = await firebase_auth.FirebaseAuth.instance.currentUser
-            ?.getIdToken();
-        if (idToken == null) {
-          throw Exception('Authentication required for AIdea model.');
-        }
+      String? idToken = await firebase_auth.FirebaseAuth.instance.currentUser
+          ?.getIdToken();
+      if (idToken == null) {
+        throw Exception('Authentication required to generate notes.');
       }
 
       final result = await AiService.generateNotes(
         videoUrl: _videoUrlController.text.trim(),
         videoTitle: _videoTitleController.text.trim(),
-        model: settings.aiModel.name,
-        apiKey: settings.apiKey,
         aideaUrl: settings.aideaUrl,
         idToken: idToken,
       );
@@ -118,7 +118,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${settings.aiModel.name.toUpperCase()} failed: ${e.toString().replaceAll('Exception: ', '')}',
+              'AI Generation failed: ${e.toString().replaceAll('Exception: ', '')}',
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
@@ -126,7 +126,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
             duration: const Duration(seconds: 6),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -147,7 +148,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         return;
@@ -183,7 +185,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
             backgroundColor: Colors.green.shade700,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         Navigator.of(context).pop();
@@ -194,7 +197,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -233,9 +237,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
               onPressed: _saveNote,
               icon: const Icon(Icons.check, size: 18),
               label: const Text('Save'),
-              style: TextButton.styleFrom(
-                foregroundColor: primaryColor,
-              ),
+              style: TextButton.styleFrom(foregroundColor: primaryColor),
             ),
           ),
         ],
@@ -268,8 +270,9 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                   hintText: 'Paste YouTube or Vimeo URL...',
                   prefixIcon: Icon(Icons.link, size: 20, color: primaryColor),
                   filled: true,
-                  fillColor:
-                      isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  fillColor: isDark
+                      ? AppTheme.darkSurface
+                      : AppTheme.lightSurface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     borderSide: BorderSide.none,
@@ -305,15 +308,17 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                   hintText: 'What is this video about?',
                   prefixIcon: Icon(Icons.title, size: 20, color: primaryColor),
                   filled: true,
-                  fillColor:
-                      isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  fillColor: isDark
+                      ? AppTheme.darkSurface
+                      : AppTheme.lightSurface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Title is required';
+                  if (value == null || value.isEmpty)
+                    return 'Title is required';
                   return null;
                 },
               ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
@@ -329,8 +334,9 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        primaryColor.withValues(alpha: 0.5),
+                    disabledBackgroundColor: primaryColor.withValues(
+                      alpha: 0.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
@@ -381,8 +387,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
               const SizedBox(height: 12),
               Container(
                 decoration: BoxDecoration(
-                  color:
-                      isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
                 child: TextFormField(
@@ -394,8 +399,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                         : AppTheme.lightTextPrimary,
                   ),
                   decoration: InputDecoration(
-                    hintText:
-                        'Start typing or use AI to generate notes...',
+                    hintText: 'Start typing or use AI to generate notes...',
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -423,11 +427,12 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
               ),
               const SizedBox(height: 12),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color:
-                      isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: TextField(
@@ -443,8 +448,11 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     suffixIcon: IconButton(
-                      icon:
-                          Icon(Icons.add_circle, color: primaryColor, size: 22),
+                      icon: Icon(
+                        Icons.add_circle,
+                        color: primaryColor,
+                        size: 22,
+                      ),
                       onPressed: _addKeyPoint,
                     ),
                   ),
@@ -457,18 +465,18 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? AppTheme.darkSurface
                           : AppTheme.lightSurface,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusSm),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle,
-                            size: 18, color: primaryColor),
+                        Icon(Icons.check_circle, size: 18, color: primaryColor),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -481,8 +489,11 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close,
-                              size: 16, color: Colors.redAccent),
+                          icon: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Colors.redAccent,
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _removeKeyPoint(index),

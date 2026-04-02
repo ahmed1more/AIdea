@@ -2,22 +2,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../theme/app_theme.dart';
 
 enum AiModel { aidea, gemini }
 
 class SettingsProvider extends ChangeNotifier {
   static const String _themeModeKey = 'theme_mode';
   static const String _accentColorKey = 'accent_color';
-  static const String _aiModelKey = 'ai_model';
-  static const String _apiKeyKey = 'api_key';
   static const String _aideaUrlKey = 'aidea_url';
 
   ThemeMode _themeMode = ThemeMode.system;
   int _accentColorIndex = 0;
-  AiModel _aiModel = AiModel.gemini;
-  String _apiKey = '';
-  String _aideaUrl = 'https://atinc1-aidea-server.hf.space';
+  // التعديل الأول هنا 👇
+  String _aideaUrl = 'http://127.0.0.1:7860';
 
   // Available accent colors
   static const List<({String name, Color color})> accentColors = [
@@ -35,16 +31,9 @@ class SettingsProvider extends ChangeNotifier {
   int get accentColorIndex => _accentColorIndex;
   Color get accentColor => accentColors[_accentColorIndex].color;
   AiModel get aiModel => _aiModel;
-  String get aiModelLabel =>
-      _aiModel == AiModel.aidea ? 'AIdea (Default)' : 'Google Gemini';
   String get apiKey => _apiKey;
   String get aideaUrl => _aideaUrl;
-  bool get isAiConfigured {
-    if (_aiModel == AiModel.aidea) {
-      return true; // Now auto-configured
-    }
-    return _apiKey.isNotEmpty;
-  }
+  bool get isAiConfigured => true;
 
   SettingsProvider() {
     _loadPreferences();
@@ -56,11 +45,8 @@ class SettingsProvider extends ChangeNotifier {
     _themeMode = ThemeMode.values[modeIndex];
     _accentColorIndex = prefs.getInt(_accentColorKey) ?? 0;
     if (_accentColorIndex >= accentColors.length) _accentColorIndex = 0;
-    final aiModelIndex = prefs.getInt(_aiModelKey) ?? 0;
-    _aiModel = AiModel.values[aiModelIndex];
-    _apiKey = prefs.getString(_apiKeyKey) ?? '';
-    _aideaUrl =
-        prefs.getString(_aideaUrlKey) ?? 'https://atinc1-aidea-server.hf.space';
+    // التعديل التاني هنا 👇
+    _aideaUrl = prefs.getString(_aideaUrlKey) ?? 'http://127.0.0.1:7860';
     notifyListeners();
   }
 
@@ -77,20 +63,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_accentColorKey, index);
-  }
-
-  Future<void> setAiModel(AiModel model) async {
-    _aiModel = model;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_aiModelKey, model.index);
-  }
-
-  Future<void> setApiKey(String key) async {
-    _apiKey = key;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_apiKeyKey, key);
   }
 
   Future<void> setAideaUrl(String url) async {
@@ -138,12 +110,16 @@ class SettingsProvider extends ChangeNotifier {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: opacity,
+            ),
             borderRadius: borderRadius ?? BorderRadius.circular(24),
             border:
                 border ??
                 Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+                  color: (isDark ? Colors.white : Colors.black).withValues(
+                    alpha: 0.1,
+                  ),
                   width: 1.5,
                 ),
           ),
