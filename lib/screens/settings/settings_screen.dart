@@ -797,8 +797,8 @@ class SettingsScreen extends StatelessWidget {
       final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
       await authProvider.signOut();
+      notesProvider.clear();
       notesProvider.clearSearch();
-      // notesProvider.clear(); // If there was a clear method, use it or clear notes specifically if needed.
 
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(

@@ -450,6 +450,7 @@ class AccountTab extends StatelessWidget {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final notes = Provider.of<NotesProvider>(context, listen: false);
     auth.signOut();
+    notes.clear();
     notes.clearSearch();
   }
 }
