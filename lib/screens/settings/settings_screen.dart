@@ -56,14 +56,7 @@ class SettingsScreen extends StatelessWidget {
                 _buildThemeModeCard(context, settings, isDark),
                 const SizedBox(height: 16),
 
-                // ── Themes Section ──
-                _buildSectionHeader(
-                  context,
-                  'Color Palette',
-                  FontAwesomeIcons.droplet,
-                ),
-                _buildAccentColorCard(context, settings, isDark),
-                const SizedBox(height: 16),
+                // ── AI Configuration Section ──
 
                 // ── AI Configuration Section ──
                 _buildSectionHeader(
@@ -93,20 +86,20 @@ class SettingsScreen extends StatelessWidget {
                       border: Border.all(
                         color: Colors.red.withValues(alpha: 0.5),
                       ),
-                      color: Colors.red.withValues(alpha: 0.05),
+                      color: Colors.redAccent.withValues(alpha: 0.05),
                     ),
                     child: TextButton.icon(
                       onPressed: () => _handleLogout(context),
                       icon: const FaIcon(
                         FontAwesomeIcons.rightFromBracket,
                         size: 18,
-                        color: Colors.red,
+                        color: Colors.redAccent,
                       ),
                       label: Text(
                         'LOGOUT',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
-                          color: Colors.red,
+                          color: Colors.redAccent,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -347,111 +340,25 @@ class SettingsScreen extends StatelessWidget {
               size: 20,
               color: isSelected
                   ? settings.accentColor
-                  : (isDark ? Colors.white38 : Colors.black26),
+                  : (isDark ? Colors.white60 : Colors.black26),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected
+                  ? settings.accentColor
+                  : (isDark ? Colors.white60 : Colors.black38),
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? settings.accentColor
-                    : (isDark ? Colors.white38 : Colors.black38),
-              ),
-            ),
+          ),
           ],
         ),
       ),
     );
   }
 
-  // ── Accent Color Card ──
-  Widget _buildAccentColorCard(
-    BuildContext context,
-    SettingsProvider settings,
-    bool isDark,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: settings.glassMorphicContainer(
-        context: context,
-        padding: const EdgeInsets.all(20),
-        opacity: isDark ? 0.05 : 0.7,
-        borderRadius: BorderRadius.circular(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Accent Color',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: List.generate(SettingsProvider.accentColors.length, (
-                index,
-              ) {
-                final accentColor = SettingsProvider.accentColors[index];
-                final isSelected = settings.accentColorIndex == index;
-                return GestureDetector(
-                  onTap: () => settings.setAccentColor(index),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: 300.ms,
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: accentColor.color,
-                          shape: BoxShape.circle,
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: accentColor.color.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                              : [],
-                        ),
-                      ),
-                      if (isSelected)
-                        const FaIcon(
-                          FontAwesomeIcons.check,
-                          color: Colors.white,
-                          size: 14,
-                        ).animate().scale(
-                          begin: const Offset(0, 0),
-                          end: const Offset(1, 1),
-                          curve: Curves.elasticOut,
-                        ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${SettingsProvider.accentColors[settings.accentColorIndex].name} Theme',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: settings.accentColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 400.ms).slideX(begin: 0.1);
-  }
 
   // ── About Card ──
   Widget _buildAboutCard(

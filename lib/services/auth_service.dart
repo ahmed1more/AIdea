@@ -208,6 +208,34 @@ class AuthService {
     }
   }
 
+  // Update display name
+  Future<AppUser?> updateDisplayName(String newName) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      // Update Firebase Auth profile
+      await user.updateDisplayName(newName);
+
+      // Update Firestore user document
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'displayName': newName})
+          .timeout(const Duration(seconds: 10));
+
+      // Return updated user
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) {
+        await cacheUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e) {
+      logger.e('Error updating display name: $e');
+      rethrow;
+    }
+  }
+
   // Cache user data locally
   Future<void> cacheUser(AppUser user) async {
     try {

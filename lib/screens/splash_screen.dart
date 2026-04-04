@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -22,7 +23,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    // If not web, show splash for a few seconds. If web, skip delay.
+    if (!kIsWeb) {
+      await Future.delayed(const Duration(milliseconds: 2500));
+    } else {
+      // Small delay on web to allow Firebase to initialize and resolve auth state.
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
     if (!mounted) return;
 
@@ -33,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (authProvider.isAuthenticated) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, _, __) => const MainShell(),
+          pageBuilder: (context, anim, _) => const MainShell(),
           transitionsBuilder: (context, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -43,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, _, __) => const LoginScreen(),
+          pageBuilder: (context, anim, _) => const LoginScreen(),
           transitionsBuilder: (context, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -58,6 +65,12 @@ class _SplashScreenState extends State<SplashScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
     final primaryColor = Theme.of(context).colorScheme.primary;
+
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+      );
+    }
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,

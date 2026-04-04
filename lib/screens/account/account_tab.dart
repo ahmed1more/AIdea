@@ -6,10 +6,40 @@ import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/notes_provider.dart';
+import '../auth/signup_screen.dart';
 
 /// Account tab — profile, settings, AI config, and sign-out.
-class AccountTab extends StatelessWidget {
+class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
+
+  @override
+  State<AccountTab> createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<AccountTab> {
+  String _selectedSidebarItem = 'Profile Details';
+  final ScrollController _scrollController = ScrollController();
+  final _profileKey = GlobalKey();
+  final _securityKey = GlobalKey();
+  final _themeKey = GlobalKey();
+  final _aiKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,17 +147,6 @@ class AccountTab extends StatelessWidget {
                       onTap: () => _showThemePicker(context, settings),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SettingTile(
-                      icon: Icons.color_lens_outlined,
-                      iconColor: const Color(0xFFF97316),
-                      title: 'Accent',
-                      subtitle: SettingsProvider.accentColors[settings.accentColorIndex].name,
-                      isDark: isDark,
-                      onTap: () => _showAccentPicker(context, settings),
-                    ),
-                  ),
                 ],
               ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
@@ -192,14 +211,14 @@ class AccountTab extends StatelessWidget {
                       children: [
                         Text('ACCOUNT', style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline).copyWith(fontWeight: FontWeight.w900, letterSpacing: 2)),
                         const SizedBox(height: 16),
-                        _buildSidebarItem(context, 'Profile Details', true, isDark),
-                        _buildSidebarItem(context, 'Security', false, isDark),
+                        _buildSidebarItem(context, 'Profile Details', isDark),
+                        _buildSidebarItem(context, 'Security', isDark),
                         
                         const SizedBox(height: 32),
                         Text('SYSTEM', style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline).copyWith(fontWeight: FontWeight.w900, letterSpacing: 2)),
                         const SizedBox(height: 16),
-                        _buildSidebarItem(context, 'Theme & UI', false, isDark),
-                        _buildSidebarItem(context, 'AI Models', false, isDark),
+                        _buildSidebarItem(context, 'Theme & UI', isDark),
+                        _buildSidebarItem(context, 'AI Models', isDark),
                         
                         const SizedBox(height: 48),
                         SizedBox(
@@ -245,13 +264,13 @@ class AccountTab extends StatelessWidget {
                                 Text(auth.user?.email ?? '', style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant)),
                                 const SizedBox(height: 12),
                                 OutlinedButton(
-                                  onPressed: () {},
+                                  onPressed: () => _showEditProfileDialog(context, auth),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary,
                                     side: BorderSide(color: isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.outlineVariant),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                                   ),
-                                  child: const Text('Change Avatar'),
+                                  child: const Text('Edit Profile'),
                                 ),
                               ],
                             ),
@@ -260,19 +279,17 @@ class AccountTab extends StatelessWidget {
                         
                         const SizedBox(height: 48),
                         
-                        Text('Theme & Locale', style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
+                        Text('Theme & Locale', key: _themeKey, style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
                         const SizedBox(height: 24),
                         Row(
                           children: [
                             Expanded(child: _SettingTile(icon: Icons.palette_outlined, iconColor: primaryColor, title: 'App Theme', subtitle: settings.themeMode == ThemeMode.dark ? 'Dark' : 'Light', isDark: isDark, onTap: () => _showThemePicker(context, settings))),
-                            const SizedBox(width: 24),
-                            Expanded(child: _SettingTile(icon: Icons.color_lens_outlined, iconColor: const Color(0xFFF97316), title: 'Accent Color', subtitle: SettingsProvider.accentColors[settings.accentColorIndex].name, isDark: isDark, onTap: () => _showAccentPicker(context, settings))),
                           ],
                         ),
 
                         const SizedBox(height: 48),
 
-                        Text('AI Engine Configuration', style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
+                        Text('AI Engine Configuration', key: _aiKey, style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
                         const SizedBox(height: 24),
                         _buildAiConfigSection(context, settings, isDark, primaryColor),
                       ],
@@ -287,9 +304,14 @@ class AccountTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebarItem(BuildContext context, String title, bool isSelected, bool isDark) {
+  Widget _buildSidebarItem(BuildContext context, String title, bool isDark) {
+    final isSelected = _selectedSidebarItem == title;
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        setState(() => _selectedSidebarItem = title);
+        _scrollToSection(title);
+      },
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -331,9 +353,9 @@ class AccountTab extends StatelessWidget {
             children: [
               Text('Smart Context', style: AppTheme.bodyLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),
               Switch.adaptive(
-                value: true,
-                onChanged: (v) {},
-                activeColor: primaryColor,
+                value: settings.smartContext,
+                onChanged: (v) => settings.setSmartContext(v),
+                activeTrackColor: primaryColor,
               ),
             ],
           ),
@@ -362,36 +384,6 @@ class AccountTab extends StatelessWidget {
     );
   }
 
-  void _showAccentPicker(BuildContext context, SettingsProvider settings) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Accent Color', style: AppTheme.headline3()),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 200,
-              child: ListView.builder(
-                itemCount: SettingsProvider.accentColors.length,
-                itemBuilder: (context, index) {
-                  final c = SettingsProvider.accentColors[index];
-                  return ListTile(
-                    leading: CircleAvatar(backgroundColor: c.color),
-                    title: Text(c.name),
-                    onTap: () { settings.setAccentColor(index); Navigator.pop(context); },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showModelPicker(BuildContext context, SettingsProvider settings) {
     showModalBottomSheet(
@@ -446,12 +438,97 @@ class AccountTab extends StatelessWidget {
     );
   }
 
+  void _scrollToSection(String title) {
+    GlobalKey? targetKey;
+    switch (title) {
+      case 'Profile Details':
+        targetKey = _profileKey;
+        break;
+      case 'Security':
+        targetKey = _securityKey;
+        break;
+      case 'Theme & UI':
+        targetKey = _themeKey;
+        break;
+      case 'AI Models':
+        targetKey = _aiKey;
+        break;
+    }
+    if (targetKey?.currentContext != null) {
+      Scrollable.ensureVisible(
+        targetKey!.currentContext!,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _showEditProfileDialog(BuildContext context, AuthProvider auth) {
+    final nameController = TextEditingController(text: auth.user?.displayName ?? '');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Edit Profile', style: AppTheme.headline3(
+          color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+        )),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Display Name',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Email: ${auth.user?.email ?? 'N/A'}',
+              style: AppTheme.bodySmall(
+                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isNotEmpty && newName != auth.user?.displayName) {
+                await auth.updateDisplayName(newName);
+                if (context.mounted) {
+                  _showToast('Profile updated successfully');
+                }
+              }
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _handleLogout(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final notes = Provider.of<NotesProvider>(context, listen: false);
     auth.signOut();
     notes.clear();
     notes.clearSearch();
+
+    // Navigate back to the sign-up screen as requested
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+      (route) => false,
+    );
   }
 }
 

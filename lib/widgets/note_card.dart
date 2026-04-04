@@ -10,6 +10,7 @@ import '../models/video_note.dart';
 import '../providers/notes_provider.dart';
 import '../providers/settings_provider.dart';
 import '../screens/home/note_detail_screen.dart';
+import '../theme/app_theme.dart';
 
 /// Editorial-inspired note card for the redesigned UI.
 class NoteCard extends StatelessWidget {
@@ -36,6 +37,7 @@ class NoteCard extends StatelessWidget {
 
   void _deleteNote(BuildContext context) {
     final settings = context.read<SettingsProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     settings.showGlassDialog(
       context: context,
       title: 'Delete Note',
@@ -51,14 +53,14 @@ class NoteCard extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('CANCEL', style: GoogleFonts.inter(color: Colors.grey)),
+          child: Text('CANCEL', style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
         ),
         TextButton(
           onPressed: () {
             context.read<NotesProvider>().deleteNote(note.id, note.userId);
             Navigator.pop(context);
           },
-          child: Text('DELETE', style: GoogleFonts.inter(color: Colors.red)),
+          child: Text('DELETE', style: AppTheme.labelLarge(color: Colors.redAccent)),
         ),
       ],
     );
@@ -79,7 +81,7 @@ class NoteCard extends StatelessWidget {
         ),
       ],
       child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
+        // Remove margin to allow GridView/ListView spacers to handle layout.
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
@@ -114,22 +116,23 @@ class NoteCard extends StatelessWidget {
                     if (note.thumbnail.isNotEmpty)
                       Stack(
                         children: [
-                          Image.network(
-                            note.thumbnail,
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 200,
-                                color: settings.accentColor.withValues(alpha: 0.1),
-                                child: Icon(
-                                  FontAwesomeIcons.circlePlay,
-                                  size: 40,
-                                  color: settings.accentColor,
-                                ),
-                              );
-                            },
+                          AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: Image.network(
+                              note.thumbnail,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: settings.accentColor.withValues(alpha: 0.1),
+                                  child: Icon(
+                                    FontAwesomeIcons.circlePlay,
+                                    size: 40,
+                                    color: settings.accentColor,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                           Positioned.fill(
                             child: Container(
@@ -282,7 +285,7 @@ class NoteCard extends StatelessWidget {
                             ),
 
                           const SizedBox(height: 12),
-                          const Divider(height: 1, color: Colors.black12),
+                          const Divider(height: 1),
                           const SizedBox(height: 12),
 
                           Row(

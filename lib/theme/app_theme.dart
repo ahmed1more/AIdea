@@ -26,7 +26,7 @@ class AppTheme {
   static const Color darkSurface = Color(0xFF1E293B);
   static const Color darkSurfaceHigh = Color(0xFF334155);
   static const Color darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color darkTextSecondary = Color(0xFF94A3B8);
+  static const Color darkTextSecondary = Color(0xFFA1B0C5);
   static const Color darkDivider = Color(0xFF334155);
 
   // ─── Spacing ──────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ class AppTheme {
         fontSize: 15,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.3,
-        color: color ?? Colors.white,
+        color: color,
       );
 
   // ─── Theme Data Builders ──────────────────────────────────────────
@@ -194,6 +194,14 @@ class AppTheme {
           side: BorderSide(color: lightDivider),
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: seedColor,
+          textStyle: labelLarge(),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+        ),
+      ),
       dividerTheme: const DividerThemeData(
         color: lightDivider,
         thickness: 1,
@@ -270,7 +278,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusSm),
           ),
-          textStyle: button(color: darkBg),
+          textStyle: button(),
           elevation: 0,
         ),
       ),
@@ -282,6 +290,14 @@ class AppTheme {
             borderRadius: BorderRadius.circular(radiusSm),
           ),
           side: BorderSide(color: darkDivider),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: seedColor,
+          textStyle: labelLarge(),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
         ),
       ),
       dividerTheme: const DividerThemeData(

@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../../widgets/note_card.dart';
 import '../../widgets/editorial_quote_card.dart';
+import '../settings/settings_screen.dart';
 import 'add_note_screen.dart';
 
 /// Home tab — editorial-inspired landing with URL input and recent notes.
@@ -18,6 +19,7 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   final _urlController = TextEditingController();
+  bool _isGridView = true;
 
   @override
   void initState() {
@@ -52,6 +54,17 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        width: 300,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,8 +103,15 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.menu_open, color: primaryColor, size: 24),
-                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: Icon(Icons.menu_open, color: primaryColor, size: 24),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 4),
                       Image.asset(
                         'assets/icon/aidea-logo.png',
                         height: 28,
@@ -113,13 +133,26 @@ class _HomeTabState extends State<HomeTab> {
                   // Profile avatar
                       Builder(builder: (context) {
                       final name = auth.user?.displayName ?? 'U';
-                      return CircleAvatar(
-                        radius: 20,
-                        backgroundColor:
-                            isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                        child: Text(
-                          name[0].toUpperCase(),
-                          style: AppTheme.labelLarge(color: primaryColor),
+                      return InkWell(
+                        onTap: () {
+                          // Navigate to Account tab (index 2) via the MainShell
+                          final mainShellState = context.findAncestorStateOfType<State>();
+                          if (mainShellState != null && mainShellState.mounted) {
+                            // Find the MainShell's setState to switch tab
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor:
+                              isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                          child: Text(
+                            name[0].toUpperCase(),
+                            style: AppTheme.labelLarge(color: primaryColor),
+                          ),
                         ),
                       );
                       }),
@@ -197,7 +230,13 @@ class _HomeTabState extends State<HomeTab> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _handleSummarize,
+                onPressed: () {
+                  if (_urlController.text.trim().isEmpty) {
+                    _showToast('Please paste a video link first');
+                    return;
+                  }
+                  _handleSummarize();
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
                       isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
@@ -259,9 +298,12 @@ class _HomeTabState extends State<HomeTab> {
                   ],
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // Navigate to Favorites tab (index 1) via parent MainShell
+                    _showToast('Switch to the Favorites tab to see your archive');
+                  },
                   child: Text(
-                    'VIEW ARCHIVE',
+                    'VIEW ALL',
                     style: AppTheme.labelSmall(color: primaryColor)
                         .copyWith(letterSpacing: 1),
                   ),
@@ -428,7 +470,13 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _handleSummarize,
+                        onPressed: () {
+                          if (_urlController.text.trim().isEmpty) {
+                            _showToast('Please paste a link first');
+                            return;
+                          }
+                          _handleSummarize();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark ? AppTheme.darkTextPrimary : primaryColor,
                           foregroundColor: isDark ? AppTheme.darkBg : Colors.white,
@@ -473,9 +521,15 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                             Row(
                               children: [
-                                Icon(Icons.grid_view, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
-                                const SizedBox(width: 16),
-                                Icon(Icons.view_agenda, color: AppTheme.lightTextSecondary.withValues(alpha: 0.5)),
+                                IconButton(
+                                  icon: Icon(Icons.grid_view, color: _isGridView ? primaryColor : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+                                  onPressed: () => setState(() => _isGridView = true),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: Icon(Icons.view_agenda, color: !_isGridView ? primaryColor : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary).withValues(alpha: 0.5)),
+                                  onPressed: () => setState(() => _isGridView = false),
+                                ),
                               ],
                             ),
                           ],
@@ -493,7 +547,7 @@ class _HomeTabState extends State<HomeTab> {
                                ),
                              ),
                            )
-                        else
+                        else if (_isGridView)
                            GridView.builder(
                              shrinkWrap: true,
                              physics: const NeverScrollableScrollPhysics(),
@@ -501,9 +555,22 @@ class _HomeTabState extends State<HomeTab> {
                                crossAxisCount: 2,
                                crossAxisSpacing: 40,
                                mainAxisSpacing: 40,
-                               childAspectRatio: 0.8,
+                               childAspectRatio: 0.7,
                              ),
                              itemCount: notesProvider.notes.length,
+                             itemBuilder: (context, index) {
+                               return NoteCard(
+                                 note: notesProvider.notes[index],
+                                 index: index,
+                               );
+                             },
+                           )
+                        else
+                           ListView.separated(
+                             shrinkWrap: true,
+                             physics: const NeverScrollableScrollPhysics(),
+                             itemCount: notesProvider.notes.length,
+                             separatorBuilder: (_, _) => const SizedBox(height: 24),
                              itemBuilder: (context, index) {
                                return NoteCard(
                                  note: notesProvider.notes[index],
@@ -562,11 +629,23 @@ class _HomeTabState extends State<HomeTab> {
                               ).copyWith(fontWeight: FontWeight.w900, letterSpacing: 2),
                             ),
                             const SizedBox(height: 24),
-                            _buildSidebarFeature('01', 'Define the Lens', 'Set specific persona parameters for precise extraction.', isDark),
+                            _buildSidebarFeature('01', 'Define the Lens', 'Set specific persona parameters for precise extraction.', isDark, () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const AddNoteScreen()),
+                              );
+                            }),
                             const SizedBox(height: 24),
-                            _buildSidebarFeature('02', 'Verify Sources', 'Auto-cross-reference claims against our vetted database.', isDark),
+                            _buildSidebarFeature('02', 'Verify Sources', 'Auto-cross-reference claims against our vetted database.', isDark, () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const AddNoteScreen()),
+                              );
+                            }),
                             const SizedBox(height: 24),
-                            _buildSidebarFeature('03', 'Style Transfer', 'Apply your brand\'s unique voice to the distilled insights.', isDark),
+                            _buildSidebarFeature('03', 'Style Transfer', 'Apply your brand\'s unique voice to the distilled insights.', isDark, () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const AddNoteScreen()),
+                              );
+                            }),
                           ],
                         ),
                       ],
@@ -581,47 +660,54 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildSidebarFeature(String number, String title, String subtitle, bool isDark) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            number,
-            style: AppTheme.headline3(
-              color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.primary,
-            ).copyWith(fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTheme.titleMedium(
+  Widget _buildSidebarFeature(String number, String title, String subtitle, bool isDark, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                number,
+                style: AppTheme.headline3(
                   color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.primary,
-                ),
+                ).copyWith(fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: AppTheme.bodySmall(
-                  color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-                ).copyWith(height: 1.4),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.titleMedium(
+                      color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTheme.bodySmall(
+                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    ).copyWith(height: 1.4),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -8,35 +8,29 @@ enum AiModel { aidea, gemini }
 
 class SettingsProvider extends ChangeNotifier {
   static const String _themeModeKey = 'theme_mode';
-  static const String _accentColorKey = 'accent_color';
   static const String _aideaUrlKey = 'aidea_url';
   static const String _aiModelKey = 'ai_model';
   static const String _apiKeyKey = 'api_key';
+  static const String _smartContextKey = 'smart_context';
+  static const String _autoSaveKey = 'auto_save';
 
   ThemeMode _themeMode = ThemeMode.system;
-  int _accentColorIndex = 0;
-  String _aideaUrl = 'http://127.0.0.1:7860';
+  String _aideaUrl = 'https://atinc1-aidea-server.hf.space';
   AiModel _aiModel = AiModel.aidea;
   String _apiKey = '';
+  bool _smartContext = true;
+  bool _autoSave = true;
 
-  // Available accent colors
-  static const List<({String name, Color color})> accentColors = [
-    (name: 'Indigo', color: Color(0xFF6366F1)),
-    (name: 'Teal', color: Color(0xFF14B8A6)),
-    (name: 'Rose', color: Color(0xFFF43F5E)),
-    (name: 'Orange', color: Color(0xFFF97316)),
-    (name: 'Emerald', color: Color(0xFF10B981)),
-    (name: 'Sky', color: Color(0xFF0EA5E9)),
-    (name: 'Violet', color: Color(0xFF8B5CF6)),
-    (name: 'Amber', color: Color(0xFFF59E0B)),
-  ];
+  // Default accent color
+  static const Color defaultAccentColor = Color(0xFF6366F1);
 
   ThemeMode get themeMode => _themeMode;
-  int get accentColorIndex => _accentColorIndex;
-  Color get accentColor => accentColors[_accentColorIndex].color;
+  Color get accentColor => defaultAccentColor;
   AiModel get aiModel => _aiModel;
   String get apiKey => _apiKey;
   String get aideaUrl => _aideaUrl;
+  bool get smartContext => _smartContext;
+  bool get autoSave => _autoSave;
   bool get isAiConfigured => _aiModel == AiModel.aidea ? _aideaUrl.isNotEmpty : _apiKey.isNotEmpty;
 
   String get aiModelLabel => _aiModel == AiModel.aidea ? 'AIdea Engine' : 'Google Gemini';
@@ -49,12 +43,31 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final modeIndex = prefs.getInt(_themeModeKey) ?? 0;
     _themeMode = ThemeMode.values[modeIndex];
-    _accentColorIndex = prefs.getInt(_accentColorKey) ?? 0;
-    if (_accentColorIndex >= accentColors.length) _accentColorIndex = 0;
-    _aideaUrl = prefs.getString(_aideaUrlKey) ?? 'http://127.0.0.1:7860';
+    _aideaUrl = prefs.getString(_aideaUrlKey) ?? 'https://atinc1-aidea-server.hf.space';
+    // Migration: If user has old local URL, migrate it to the new Hugging Face Space URL.
+    if (_aideaUrl == 'http://127.0.0.1:7860') {
+      _aideaUrl = 'https://atinc1-aidea-server.hf.space';
+      await prefs.setString(_aideaUrlKey, _aideaUrl);
+    }
     _aiModel = AiModel.values[prefs.getInt(_aiModelKey) ?? 0];
     _apiKey = prefs.getString(_apiKeyKey) ?? '';
+    _smartContext = prefs.getBool(_smartContextKey) ?? true;
+    _autoSave = prefs.getBool(_autoSaveKey) ?? true;
     notifyListeners();
+  }
+
+  Future<void> setSmartContext(bool value) async {
+    _smartContext = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_smartContextKey, value);
+  }
+
+  Future<void> setAutoSave(bool value) async {
+    _autoSave = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoSaveKey, value);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -62,14 +75,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_themeModeKey, mode.index);
-  }
-
-  Future<void> setAccentColor(int index) async {
-    if (index < 0 || index >= accentColors.length) return;
-    _accentColorIndex = index;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_accentColorKey, index);
   }
 
   Future<void> setAideaUrl(String url) async {

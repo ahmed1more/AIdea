@@ -220,26 +220,29 @@ class _DesktopNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inactiveColor = isDark ? AppTheme.darkTextSecondary : const Color(0xFF94A3B8);
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: AppTheme.labelLarge(
-              color: isActive ? activeColor : inactiveColor,
-            ).copyWith(fontWeight: isActive ? FontWeight.bold : FontWeight.normal),
-          ),
-          if (isActive)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              height: 2,
-              width: 24,
-              color: activeColor,
-            ).animate().scaleX(duration: 200.ms),
-        ],
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: AppTheme.labelLarge(
+                color: isActive ? activeColor : inactiveColor,
+              ).copyWith(fontWeight: isActive ? FontWeight.bold : FontWeight.normal),
+            ),
+            if (isActive)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                height: 2,
+                width: 24,
+                color: activeColor,
+              ).animate().scaleX(duration: 200.ms),
+          ],
+        ),
       ),
     );
   }
@@ -270,9 +273,9 @@ class _MobileNavItem extends StatelessWidget {
         ? AppTheme.darkTextSecondary
         : const Color(0xFF94A3B8);
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: 250.ms,
         curve: Curves.easeInOut,

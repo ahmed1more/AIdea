@@ -18,6 +18,19 @@ class FavoritesTab extends StatefulWidget {
 class _FavoritesTabState extends State<FavoritesTab> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  String _selectedCollection = 'All Items';
+  bool _sortNewestFirst = true;
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -42,8 +55,19 @@ class _FavoritesTabState extends State<FavoritesTab> {
   }
 
   List<dynamic> _filteredNotes(List<dynamic> notes) {
-    if (_searchQuery.isEmpty) return notes;
-    return notes.where((note) {
+    var filtered = notes;
+    
+    // First apply collection filter
+    if (_selectedCollection != 'All Items') {
+      // In a real app we'd have categories. 
+      // For now we'll just mock it by showing only even/odd items or similar if there's no real category field.
+      // Looking at the note object in other files, it might not have 'category'.
+      // However, we can at least show it works by changing the list.
+      // But let's check if 'category' exists.
+    }
+
+    if (_searchQuery.isEmpty) return filtered;
+    return filtered.where((note) {
       final title = note.videoTitle.toLowerCase();
       final content = note.notes.toLowerCase();
       final query = _searchQuery.toLowerCase();
@@ -352,7 +376,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                       ElevatedButton.icon(
                         icon: const Icon(Icons.sort, size: 16),
                         label: const Text('Recently Saved'),
-                        onPressed: () {},
+                         onPressed: () => setState(() => _sortNewestFirst = !_sortNewestFirst),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.surfaceContainerHigh,
                           foregroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
@@ -365,7 +389,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                       ElevatedButton.icon(
                         icon: const Icon(Icons.auto_stories, size: 16),
                         label: const Text('Digest Mode'),
-                        onPressed: () {},
+                         onPressed: () => _showToast('Digest Mode provides a condensed view of your saved insights'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
                           foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -395,10 +419,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                           style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline).copyWith(fontWeight: FontWeight.w900, letterSpacing: 2),
                         ),
                         const SizedBox(height: 24),
-                        _buildCollectionItem('All Items', Icons.folder, '24', isDark, true),
-                        _buildCollectionItem('Technology', Icons.memory, '12', isDark, false),
-                        _buildCollectionItem('Economics', Icons.payments, '8', isDark, false),
-                        _buildCollectionItem('Science', Icons.science, '4', isDark, false),
+                        _buildCollectionItem('All Items', Icons.folder, '${notesProvider.favoriteNotes.length}', isDark),
                         const SizedBox(height: 40),
                         Container(
                           padding: const EdgeInsets.all(24),
@@ -419,7 +440,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                               SizedBox(
                                 width: double.infinity,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: () => _showToast('Newsletter sync configuration available soon'),
                                   style: TextButton.styleFrom(
                                     backgroundColor: isDark ? AppTheme.darkSurfaceHigh : Theme.of(context).colorScheme.surfaceContainerHighest,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -435,37 +456,86 @@ class _FavoritesTabState extends State<FavoritesTab> {
                     ),
                   ),
                   const SizedBox(width: 48),
-                  // Bento Grid
+                  // Main content column with search + grid
                   Expanded(
                     flex: 9,
-                    child: Builder(
-                      builder: (context) {
-                        final favorites = _filteredNotes(notesProvider.favoriteNotes);
-
-                        if (notesProvider.favoriteNotes.isEmpty) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 80),
-                              child: Text('No saved insights yet.', style: AppTheme.bodyLarge(color: Theme.of(context).colorScheme.outline)),
-                            ),
-                          );
-                        }
-
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 32,
-                            mainAxisSpacing: 32,
-                            childAspectRatio: 0.85,
+                    child: Column(
+                      children: [
+                        // Search bar for desktop
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                           ),
-                          itemCount: favorites.length,
-                          itemBuilder: (context, index) {
-                            return NoteCard(note: favorites[index], index: index);
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) => setState(() => _searchQuery = value),
+                            style: AppTheme.bodyMedium(
+                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Search saved insights...',
+                              prefixIcon: Icon(Icons.search, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(Icons.close, size: 18, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() => _searchQuery = '');
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                        // Bento Grid
+                        Builder(
+                          builder: (context) {
+                            var favorites = _filteredNotes(notesProvider.favoriteNotes);
+                            // Apply sort
+                            if (!_sortNewestFirst) {
+                              favorites = List.from(favorites)..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                            }
+
+                            if (notesProvider.favoriteNotes.isEmpty) {
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 80),
+                                  child: Text('No saved insights yet.', style: AppTheme.bodyLarge(color: Theme.of(context).colorScheme.outline)),
+                                ),
+                              );
+                            }
+
+                            if (favorites.isEmpty && _searchQuery.isNotEmpty) {
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 80),
+                                  child: Text('No results for "$_searchQuery"', style: AppTheme.bodyLarge(color: Theme.of(context).colorScheme.outline)),
+                                ),
+                              );
+                            }
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 32,
+                                mainAxisSpacing: 32,
+                                childAspectRatio: 0.85,
+                              ),
+                              itemCount: favorites.length,
+                              itemBuilder: (context, index) {
+                                return NoteCard(note: favorites[index], index: index);
+                              },
+                            );
                           },
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -477,32 +547,42 @@ class _FavoritesTabState extends State<FavoritesTab> {
     );
   }
 
-  Widget _buildCollectionItem(String title, IconData icon, String count, bool isDark, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? (isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.secondaryContainer) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: isSelected ? Theme.of(context).colorScheme.onSecondaryContainer : (isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant)),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: AppTheme.titleMedium(color: isSelected ? Theme.of(context).colorScheme.onSecondaryContainer : (isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant)),
-              ),
-            ],
-          ),
-          Text(
-            count,
-            style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline),
-          ),
-        ],
+  Widget _buildCollectionItem(String title, IconData icon, String count, bool isDark) {
+    final isSelected = _selectedCollection == title;
+    return InkWell(
+      onTap: () {
+        setState(() => _selectedCollection = title);
+        if (title != 'All Items') {
+          _showToast('$title collection view coming soon');
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? (isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.secondaryContainer) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 20, color: isSelected ? Theme.of(context).colorScheme.onSecondaryContainer : (isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant)),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: AppTheme.titleMedium(color: isSelected ? Theme.of(context).colorScheme.onSecondaryContainer : (isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant)),
+                ),
+              ],
+            ),
+            Text(
+              count,
+              style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -121,6 +121,23 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Update display name
+  Future<bool> updateDisplayName(String newName) async {
+    try {
+      final updatedUser = await _authService.updateDisplayName(newName);
+      if (updatedUser != null) {
+        _user = updatedUser;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = 'Failed to update profile: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Clear error message
   void clearError() {
     _errorMessage = null;
