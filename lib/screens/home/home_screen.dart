@@ -225,7 +225,7 @@ class _HomeTabState extends State<HomeTab> {
                     color: isDark
                         ? AppTheme.darkSurface
                         : AppTheme.lightSurface,
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   ),
                   child: TextField(
                     controller: _urlController,
@@ -288,37 +288,34 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
-                const SizedBox(height: 40),
-
-                // ─── Quote Card ─────────────────────────────
-                const EditorialQuoteCard(
-                  quote:
-                      'Information is not knowledge. The only source of knowledge is experience and focused reflection.',
-                  attribution: 'WEEKLY INSPIRATION',
-                ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
-
-                const SizedBox(height: 40),
-
                 // ─── Search Bar ─────────────────────────────
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                    borderRadius: BorderRadius.circular(100),
+                    color: isDark
+                        ? AppTheme.darkSurface
+                        : AppTheme.lightSurface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
-                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                      color: (isDark ? Colors.white : Colors.black).withValues(
+                        alpha: 0.05,
+                      ),
                     ),
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (value) => notesProvider.setSearchQuery(value),
                     style: AppTheme.bodyMedium(
-                      color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                      color: isDark
+                          ? AppTheme.darkTextPrimary
+                          : AppTheme.lightTextPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Search',
                       prefixIcon: Icon(
                         Icons.search,
-                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
                         size: 20,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
@@ -340,6 +337,15 @@ class _HomeTabState extends State<HomeTab> {
 
                 const SizedBox(height: 32),
 
+                // ─── Quote Card ─────────────────────────────
+                const EditorialQuoteCard(
+                  quote:
+                      'Information is not knowledge. The only source of knowledge is experience and focused reflection.',
+                  attribution: 'WEEKLY INSPIRATION',
+                ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+
+                const SizedBox(height: 40),
+
                 // ─── Recent Summaries ───────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -348,7 +354,7 @@ class _HomeTabState extends State<HomeTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Recent Curations',
+                          'Recent NOTES',
                           style: AppTheme.headline3(
                             color: isDark
                                 ? AppTheme.darkTextPrimary
@@ -485,7 +491,7 @@ class _HomeTabState extends State<HomeTab> {
                   color: (isDark
                       ? AppTheme.darkSurface
                       : Theme.of(context).colorScheme.secondaryContainer),
-                  borderRadius: BorderRadius.circular(40),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 ),
                 child: Text(
                   'INTELLIGENCE REDEFINED',
@@ -544,7 +550,7 @@ class _HomeTabState extends State<HomeTab> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isDark ? AppTheme.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     boxShadow: [
                       BoxShadow(
                         color: (isDark ? Colors.black : Colors.black)
@@ -602,7 +608,9 @@ class _HomeTabState extends State<HomeTab> {
                             vertical: 20,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                            borderRadius: BorderRadius.circular(
+                                AppTheme.radiusMd,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -637,22 +645,28 @@ class _HomeTabState extends State<HomeTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Search within curations
+                        // Search within Notes
                         Container(
                           width: 400,
                           margin: const EdgeInsets.only(bottom: 32),
                           decoration: BoxDecoration(
-                            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                            borderRadius: BorderRadius.circular(100),
+                            color: isDark
+                                ? AppTheme.darkSurface
+                                : AppTheme.lightSurface,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                             border: Border.all(
-                              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+                              color: (isDark ? Colors.white : Colors.black)
+                                  .withValues(alpha: 0.1),
                             ),
                           ),
                           child: TextField(
                             controller: _searchController,
-                            onChanged: (value) => notesProvider.setSearchQuery(value),
+                            onChanged: (value) =>
+                                notesProvider.setSearchQuery(value),
                             style: AppTheme.bodyMedium(
-                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                              color: isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Search',
@@ -678,7 +692,7 @@ class _HomeTabState extends State<HomeTab> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Recent Curations',
+                              'Recent Notes',
                               style: AppTheme.headline3(
                                 color: isDark
                                     ? AppTheme.darkTextPrimary
@@ -723,7 +737,7 @@ class _HomeTabState extends State<HomeTab> {
                             padding: const EdgeInsets.symmetric(vertical: 40),
                             child: Center(
                               child: Text(
-                                'No curations yet. Paste a link above to get started.',
+                                'No Notes yet. Paste a link above to get started.',
                                 style: AppTheme.bodyMedium(
                                   color: isDark
                                       ? AppTheme.darkTextSecondary
@@ -741,7 +755,7 @@ class _HomeTabState extends State<HomeTab> {
                                   crossAxisCount: 2,
                                   crossAxisSpacing: 40,
                                   mainAxisSpacing: 40,
-                                  childAspectRatio: 0.7,
+                                  childAspectRatio: 0.85,
                                 ),
                             itemCount: notesProvider.notes.length,
                             itemBuilder: (context, index) {
@@ -825,12 +839,12 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                         ),
                         const SizedBox(height: 48),
-                        // Curation Mastery
+                        // Note Mastery
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'CURATION MASTERY',
+                              'NOTE MASTERY',
                               style:
                                   AppTheme.labelSmall(
                                     color: isDark

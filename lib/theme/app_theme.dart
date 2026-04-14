@@ -154,15 +154,15 @@ class AppTheme {
         filled: true,
         fillColor: lightSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(radiusMd),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(radiusMd),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(radiusMd),
           borderSide: BorderSide(color: seedColor.withValues(alpha: 0.5), width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -180,7 +180,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(radiusMd),
           ),
           textStyle: button(),
           elevation: 0,
@@ -252,15 +252,15 @@ class AppTheme {
         filled: true,
         fillColor: darkSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(radiusMd),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(radiusMd),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(radiusMd),
           borderSide: BorderSide(color: seedColor.withValues(alpha: 0.5), width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -278,7 +278,7 @@ class AppTheme {
           foregroundColor: darkBg,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(radiusMd),
           ),
           textStyle: button(),
           elevation: 0,

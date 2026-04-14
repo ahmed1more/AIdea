@@ -153,7 +153,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     fillColor:
                         isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -191,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     fillColor:
                         isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -230,7 +230,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     fillColor:
                         isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                     suffixIcon: IconButton(

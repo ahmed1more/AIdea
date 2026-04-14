@@ -390,7 +390,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                     filled: true,
                     fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -422,7 +422,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                     filled: true,
                     fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                     suffixIcon: _isFetchingTitle
@@ -450,7 +450,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppTheme.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
                     ),
                     child: Row(

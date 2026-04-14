@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../theme/app_theme.dart';
 
 class CustomYoutubePlayer extends StatefulWidget {
@@ -24,11 +27,19 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
   late YoutubePlayerController _controller;
   bool _isPlayerReady = false;
   bool _showControls = true;
+  bool _tookTooLong = false;
+  Timer? _loadingTimer;
 
   @override
   void initState() {
     super.initState();
+    _startLoadingTimer();
     final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+    
+    if (videoId == null || videoId.isEmpty) {
+      debugPrint('Invalid YouTube URL: ${widget.videoUrl}');
+    }
+
     _controller = YoutubePlayerController(
       initialVideoId: videoId ?? '',
       flags: const YoutubePlayerFlags(
@@ -41,6 +52,17 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
         enableCaption: true,
       ),
     )..addListener(_listener);
+  }
+
+  void _startLoadingTimer() {
+    _loadingTimer?.cancel();
+    _loadingTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted && !_isPlayerReady && !_controller.value.hasError) {
+        setState(() {
+          _tookTooLong = true;
+        });
+      }
+    });
   }
 
   void _listener() {
@@ -64,6 +86,7 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
 
   @override
   void dispose() {
+    _loadingTimer?.cancel();
     _controller.removeListener(_listener);
     _controller.dispose();
     super.dispose();
@@ -110,40 +133,142 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
                   ),
                 ),
               if (!_isPlayerReady && !hasError)
-                const Positioned.fill(
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          ),
+                          if (_tookTooLong || kIsWeb) ...[
+                            const SizedBox(height: 24),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40),
+                              child: Text(
+                                _tookTooLong 
+                                  ? "This is taking longer than usual..." 
+                                  : "Preparing video...",
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.manrope(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _launchUrl(widget.videoUrl),
+                                borderRadius: BorderRadius.circular(30),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.white30, width: 1),
+                                    borderRadius: BorderRadius.circular(30),
+                                    color: Colors.white10,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.open_in_new, size: 16, color: Colors.white),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Open in YouTube',
+                                        style: GoogleFonts.manrope(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               if (hasError)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black87,
+                    color: Colors.black.withValues(alpha: 0.85),
+                    padding: const EdgeInsets.all(24),
                     child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.white, size: 40),
-                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
+                          ),
+                          const SizedBox(height: 16),
                           Text(
                             'Video Unavailable',
                             style: GoogleFonts.manrope(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               fontSize: 16,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           Text(
-                            'Check your connection or the video link.',
+                            'The player encountered an issue or the video is restricted. You can still watch it directly on YouTube.',
                             style: GoogleFonts.manrope(
-                              color: Colors.white70,
-                              fontSize: 12,
+                              color: Colors.white60,
+                              fontSize: 13,
                             ),
                             textAlign: TextAlign.center,
                           ),
+                          const SizedBox(height: 24),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _launchUrl(widget.videoUrl),
+                              borderRadius: BorderRadius.circular(30),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.white30, width: 1),
+                                  borderRadius: BorderRadius.circular(30),
+                                  color: Colors.white10,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.open_in_new, size: 16, color: Colors.white),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Watch on YouTube',
+                                      style: GoogleFonts.manrope(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
+                       ),
                     ),
                   ),
                 ),
@@ -370,6 +495,17 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
       return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
     }
     return "$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch video URL')),
+        );
+      }
+    }
   }
 }
 

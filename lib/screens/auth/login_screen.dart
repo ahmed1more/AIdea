@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fillColor:
                         isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fillColor:
                         isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                     suffixIcon: IconButton(
@@ -252,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               .withValues(alpha: 0.5),
                           shape: RoundedRectangleBorder(
                             borderRadius:
-                                BorderRadius.circular(AppTheme.radiusSm),
+                                BorderRadius.circular(AppTheme.radiusMd),
                           ),
                           elevation: 0,
                         ),

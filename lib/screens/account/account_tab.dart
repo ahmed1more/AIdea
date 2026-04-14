@@ -1008,13 +1008,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               decoration: InputDecoration(
                 labelText: 'DISPLAY NAME',
                 prefixIcon: Icon(Icons.person_outline, color: primaryColor, size: 20),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(100),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(100),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   borderSide: BorderSide(color: primaryColor, width: 2),
                 ),
               ),
@@ -1063,7 +1063,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Save Changes'),
@@ -1117,9 +1117,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
                     onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                   ),
                 ),
@@ -1135,9 +1135,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
                     onPressed: () => setDialogState(() => obscureNew = !obscureNew),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                   ),
                 ),
@@ -1149,9 +1149,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                   ),
                 ),
@@ -1198,7 +1198,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
               child: const Text('Update Password'),
             ),
@@ -1247,7 +1247,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             style: ElevatedButton.styleFrom(
               backgroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
               foregroundColor: isDark ? AppTheme.darkBg : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
             ),
             child: const Text('Sign Out'),
           ),
