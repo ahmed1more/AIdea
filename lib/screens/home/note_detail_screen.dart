@@ -31,7 +31,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   
   // YouTube player state
   YoutubePlayerController? _ytController;
-  bool _showPlayer = false;
+  final GlobalKey _videoSectionKey = GlobalKey();
 
   @override
   void initState() {
@@ -246,6 +246,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
                           const SizedBox(height: 32),
 
+                          // ─── Video Section ─────────────────────
+                          if (_ytController != null)
+                            _buildVideoSection(isDark, primaryColor),
+
+                          const SizedBox(height: 32),
+
                           // ─── Source Card ─────────────────────
                           _buildSourceCard(isDark, primaryColor),
                         ],
@@ -331,53 +337,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           fit: StackFit.expand,
           children: [
             // Thumbnail or gradient background
-            // Thumbnail or gradient background or Video Player
-            if (_showPlayer && _ytController != null)
-              YoutubePlayer(
-                controller: _ytController!,
-                showVideoProgressIndicator: true,
-                progressIndicatorColor: primaryColor,
-                onReady: () {
-                  _ytController?.play();
-                },
-              )
-            else if (hasThumbnail)
-              Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    _note.thumbnail,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _gradientBackground(primaryColor),
-                  ),
-                  // Play button overlay
-                  if (!hasThumbnail || !_showPlayer)
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showPlayer = true;
-                          });
-                        },
-                        child: CircleAvatar(
-                          radius: 35,
-                          backgroundColor: Colors.black.withValues(alpha: 0.5),
-                          child: const Icon(
-                            Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 45,
-                          ),
-                        ).animate(
-                          onPlay: (controller) => controller.repeat(reverse: true),
-                        ).scale(
-                          begin: const Offset(1, 1),
-                          end: const Offset(1.1, 1.1),
-                          duration: 1.5.seconds,
-                          curve: Curves.easeInOut,
-                        ),
-                      ),
-                    ),
-                ],
+            if (hasThumbnail)
+              Image.network(
+                _note.thumbnail,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _gradientBackground(primaryColor),
               )
             else
               _gradientBackground(primaryColor),
@@ -468,16 +432,15 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           if (_ytController != null) ...[
             _metaDot(isDark),
             _MetaChip(
-              icon: _showPlayer ? Icons.visibility_off : Icons.play_circle_filled,
-              label: _showPlayer ? 'Hide Video' : 'Watch Video',
+              icon: Icons.play_circle_filled,
+              label: 'Watch Video',
               isDark: isDark,
               onTap: () {
-                setState(() {
-                  _showPlayer = !_showPlayer;
-                  if (!_showPlayer) {
-                    _ytController?.pause();
-                  }
-                });
+                Scrollable.ensureVisible(
+                  _videoSectionKey.currentContext!,
+                  duration: const Duration(seconds: 1),
+                  curve: Curves.easeInOutCubic,
+                );
               },
             ),
           ],
@@ -703,6 +666,46 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         }),
       ],
     );
+  }
+
+  // ─── VIDEO SECTION ────────────────────────────────────────────────
+  Widget _buildVideoSection(bool isDark, Color primaryColor) {
+    return Column(
+      key: _videoSectionKey,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.video_library_outlined, color: primaryColor, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'VIDEO PLAYER',
+              style: AppTheme.labelSmall(color: primaryColor).copyWith(letterSpacing: 2),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              border: Border.all(
+                color: primaryColor.withValues(alpha: 0.1),
+              ),
+            ),
+            child: YoutubePlayer(
+              controller: _ytController!,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: primaryColor,
+              onReady: () {
+                // We don't autoplay here unless scrolled to?
+              },
+            ),
+          ),
+        ),
+      ],
+    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1);
   }
 
   // ─── SOURCE CARD ──────────────────────────────────────────────────

@@ -112,8 +112,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.menu_open, color: primaryColor, size: 24),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 4),
                       Image.asset(
                         'assets/icon/aidea-logo.png',
                         height: 28,

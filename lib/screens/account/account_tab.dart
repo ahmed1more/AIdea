@@ -165,11 +165,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
 
               // ─── Logout ───────────────────────────────
               _buildLogoutButton(context, isDark, primaryColor),
-
-              const SizedBox(height: 16),
-
-              // ─── Delete Account ────────────────────────
-              _buildDeleteAccountButton(context, auth, isDark),
             ],
           ),
         ),
@@ -654,20 +649,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     ).animate().fadeIn(delay: 600.ms);
   }
 
-  Widget _buildDeleteAccountButton(BuildContext context, AuthProvider auth, bool isDark) {
-    return Center(
-      child: TextButton(
-        onPressed: () => _showDeleteAccountDialog(context, auth),
-        child: Text(
-          'Delete Account',
-          style: AppTheme.bodySmall(
-            color: AppTheme.error.withValues(alpha: 0.6),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(delay: 650.ms);
-  }
-
   Widget _buildSidebarItem(BuildContext context, String title, bool isDark) {
     final isSelected = _selectedSidebarItem == title;
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -735,35 +716,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             subtitle: settings.aiModelLabel,
             isDark: isDark,
             onTap: () => _showModelPicker(context, settings),
-          ),
-          Divider(
-            height: 32,
-            thickness: 0.5,
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.teal.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.psychology_outlined, color: AppTheme.teal, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Text('Smart Context', style: AppTheme.bodyLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),
-                ],
-              ),
-              Switch.adaptive(
-                value: settings.smartContext,
-                onChanged: (v) => settings.setSmartContext(v),
-                activeTrackColor: primaryColor,
-              ),
-            ],
           ),
         ],
       ),
