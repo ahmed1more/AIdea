@@ -348,7 +348,7 @@ class _HomeTabState extends State<HomeTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Recent Summaries',
+                          'Recent Curations',
                           style: AppTheme.headline3(
                             color: isDark
                                 ? AppTheme.darkTextPrimary
@@ -625,44 +625,6 @@ class _HomeTabState extends State<HomeTab> {
 
               const SizedBox(height: 64),
 
-              // ─── Desktop Search Bar ──────────────────────
-              Center(
-                child: Container(
-                  width: 500,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(
-                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) => notesProvider.setSearchQuery(value),
-                    style: AppTheme.bodyMedium(
-                      color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search your summaries...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                notesProvider.clearSearch();
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                    ),
-                  ),
-                ),
-              ).animate().fadeIn(delay: 350.ms, duration: 400.ms),
-
               const SizedBox(height: 80),
 
               // Split Grid
@@ -675,6 +637,43 @@ class _HomeTabState extends State<HomeTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Search within curations
+                        Container(
+                          width: 400,
+                          margin: const EdgeInsets.only(bottom: 32),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) => notesProvider.setSearchQuery(value),
+                            style: AppTheme.bodyMedium(
+                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Search',
+                              prefixIcon: const Icon(Icons.search, size: 20),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, size: 18),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        notesProvider.clearSearch();
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                            ),
+                          ),
+                        ).animate().fadeIn(delay: 350.ms, duration: 400.ms),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

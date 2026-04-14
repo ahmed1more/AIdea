@@ -527,7 +527,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 32,
                                 mainAxisSpacing: 32,
-                                childAspectRatio: 0.85,
+                                childAspectRatio: 0.7,
                               ),
                               itemCount: favorites.length,
                               itemBuilder: (context, index) {

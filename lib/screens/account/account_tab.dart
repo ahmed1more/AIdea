@@ -1063,7 +1063,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Save Changes'),
@@ -1135,9 +1135,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
                     onPressed: () => setDialogState(() => obscureNew = !obscureNew),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                   ),
                 ),
@@ -1198,7 +1198,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
               ),
               child: const Text('Update Password'),
             ),
@@ -1247,7 +1247,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             style: ElevatedButton.styleFrom(
               backgroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
               foregroundColor: isDark ? AppTheme.darkBg : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
             ),
             child: const Text('Sign Out'),
           ),

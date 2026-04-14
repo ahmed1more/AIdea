@@ -41,8 +41,9 @@ class AppTheme {
   // ─── Radii ────────────────────────────────────────────────────────
   static const double radiusSm = 12;
   static const double radiusMd = 16;
-  static const double radiusLg = 24;
-  static const double radiusXl = 32;
+  static const double radiusLg = 24.0;
+  static const double radiusXl = 100.0; // Fully round for pills
+  static const double radiusFull = 100.0;
 
   // ─── Typography ───────────────────────────────────────────────────
   static TextStyle headline1({Color? color}) => GoogleFonts.manrope(
@@ -153,18 +154,18 @@ class AppTheme {
         filled: true,
         fillColor: lightSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide(color: seedColor.withValues(alpha: 0.5), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         hintStyle: GoogleFonts.inter(color: lightTextSecondary, fontSize: 14),
         labelStyle: GoogleFonts.manrope(
           fontSize: 11,
@@ -179,7 +180,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusSm),
+            borderRadius: BorderRadius.circular(100),
           ),
           textStyle: button(),
           elevation: 0,
@@ -251,18 +252,18 @@ class AppTheme {
         filled: true,
         fillColor: darkSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusSm),
+          borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide(color: seedColor.withValues(alpha: 0.5), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         hintStyle: GoogleFonts.inter(color: darkTextSecondary, fontSize: 14),
         labelStyle: GoogleFonts.manrope(
           fontSize: 11,
@@ -277,7 +278,7 @@ class AppTheme {
           foregroundColor: darkBg,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusSm),
+            borderRadius: BorderRadius.circular(100),
           ),
           textStyle: button(),
           elevation: 0,

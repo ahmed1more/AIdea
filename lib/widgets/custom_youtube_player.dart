@@ -47,6 +47,13 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
     if (_isPlayerReady && mounted && !_controller.value.isFullScreen) {
       setState(() {});
     }
+    if (_controller.value.hasError) {
+      if (mounted) {
+        setState(() {
+          _isPlayerReady = false;
+        });
+      }
+    }
   }
 
   @override
@@ -78,12 +85,13 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
         },
       ),
       builder: (context, player) {
+        final hasError = _controller.value.hasError;
         return ClipRRect(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           child: Stack(
             children: [
               player,
-              if (_isPlayerReady)
+              if (_isPlayerReady && !hasError)
                 Positioned.fill(
                   child: GestureDetector(
                     onTap: () {
@@ -97,6 +105,44 @@ class _CustomYoutubePlayerState extends State<CustomYoutubePlayer> {
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.4),
                         child: _showControls ? _buildControlsOverlay() : null,
+                      ),
+                    ),
+                  ),
+                ),
+              if (!_isPlayerReady && !hasError)
+                const Positioned.fill(
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                ),
+              if (hasError)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black87,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.white, size: 40),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Video Unavailable',
+                            style: GoogleFonts.manrope(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Check your connection or the video link.',
+                            style: GoogleFonts.manrope(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   ),
