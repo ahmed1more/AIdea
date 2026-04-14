@@ -232,17 +232,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            onPressed: () => _showDeleteAccountDialog(context, auth),
-                            child: Text(
-                              'Delete Account',
-                              style: AppTheme.bodySmall(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7)),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -646,7 +635,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           elevation: 0,
         ),
       ),
-    ).animate().fadeIn(delay: 600.ms);
+    ).animate().fadeIn();
   }
 
   Widget _buildSidebarItem(BuildContext context, String title, bool isDark) {
@@ -1019,13 +1008,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               decoration: InputDecoration(
                 labelText: 'DISPLAY NAME',
                 prefixIcon: Icon(Icons.person_outline, color: primaryColor, size: 20),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(100),
                   borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(100),
                   borderSide: BorderSide(color: primaryColor, width: 2),
                 ),
               ),
@@ -1128,9 +1117,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
                     onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                   ),
                 ),
@@ -1160,9 +1149,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
                   ),
                 ),
@@ -1215,100 +1204,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context, AuthProvider auth) {
-    final passwordController = TextEditingController();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.warning_amber_rounded, color: AppTheme.error, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Text('Delete Account', style: AppTheme.headline3(
-              color: AppTheme.error,
-            ).copyWith(fontSize: 18)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'This action is permanent and cannot be undone. All your notes, data, and profile will be deleted.',
-              style: AppTheme.bodyMedium(
-                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Enter your password to confirm',
-                prefixIcon: const Icon(Icons.lock, size: 20),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppTheme.error.withValues(alpha: 0.3)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: AppTheme.error, width: 2),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final password = passwordController.text;
-              if (password.isEmpty) {
-                _showToast('Please enter your password', isError: true);
-                return;
-              }
-
-              final success = await auth.deleteAccount(password);
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-
-              if (success && context.mounted) {
-                final notes = Provider.of<NotesProvider>(context, listen: false);
-                notes.clear();
-                notes.clearSearch();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                  (route) => false,
-                );
-              } else if (context.mounted) {
-                _showToast(auth.errorMessage ?? 'Failed to delete account', isError: true);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Delete Forever'),
-          ),
-        ],
       ),
     );
   }

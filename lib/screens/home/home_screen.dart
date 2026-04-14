@@ -20,6 +20,7 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   final _urlController = TextEditingController();
+  final _searchController = TextEditingController();
   bool _isGridView = true;
 
   @override
@@ -41,6 +42,7 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _urlController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -223,7 +225,7 @@ class _HomeTabState extends State<HomeTab> {
                     color: isDark
                         ? AppTheme.darkSurface
                         : AppTheme.lightSurface,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                    borderRadius: BorderRadius.circular(100),
                   ),
                   child: TextField(
                     controller: _urlController,
@@ -243,6 +245,7 @@ class _HomeTabState extends State<HomeTab> {
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
+                      filled: false,
                     ),
                   ),
                 ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
@@ -295,6 +298,47 @@ class _HomeTabState extends State<HomeTab> {
                 ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
 
                 const SizedBox(height: 40),
+
+                // ─── Search Bar ─────────────────────────────
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => notesProvider.setSearchQuery(value),
+                    style: AppTheme.bodyMedium(
+                      color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                        size: 20,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                notesProvider.clearSearch();
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                    ),
+                  ),
+                ).animate().fadeIn(delay: 450.ms, duration: 400.ms),
+
+                const SizedBox(height: 32),
 
                 // ─── Recent Summaries ───────────────────────
                 Row(
@@ -500,7 +544,7 @@ class _HomeTabState extends State<HomeTab> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isDark ? AppTheme.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                    borderRadius: BorderRadius.circular(100),
                     boxShadow: [
                       BoxShadow(
                         color: (isDark ? Colors.black : Colors.black)
@@ -534,6 +578,7 @@ class _HomeTabState extends State<HomeTab> {
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
+                            filled: false,
                           ),
                         ),
                       ),
@@ -577,6 +622,46 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
               ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+
+              const SizedBox(height: 64),
+
+              // ─── Desktop Search Bar ──────────────────────
+              Center(
+                child: Container(
+                  width: 500,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => notesProvider.setSearchQuery(value),
+                    style: AppTheme.bodyMedium(
+                      color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Search your summaries...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                notesProvider.clearSearch();
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                    ),
+                  ),
+                ),
+              ).animate().fadeIn(delay: 350.ms, duration: 400.ms),
 
               const SizedBox(height: 80),
 

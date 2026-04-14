@@ -189,7 +189,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
             Container(
               decoration: BoxDecoration(
                 color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                borderRadius: BorderRadius.circular(100),
               ),
               child: TextField(
                 controller: _searchController,
@@ -200,7 +200,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                       : AppTheme.lightTextPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search curated memory...',
+                  hintText: 'Search',
                   prefixIcon: Icon(
                     Icons.search,
                     color: isDark
@@ -225,6 +225,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
+                  filled: false,
                 ),
               ),
             ).animate().fadeIn(delay: 250.ms),
@@ -465,7 +466,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                           margin: const EdgeInsets.only(bottom: 24),
                           decoration: BoxDecoration(
                             color: isDark ? AppTheme.darkSurface : Theme.of(context).colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                            borderRadius: BorderRadius.circular(100),
                           ),
                           child: TextField(
                             controller: _searchController,
@@ -474,7 +475,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                               color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Search saved insights...',
+                              hintText: 'Search',
                               prefixIcon: Icon(Icons.search, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                               suffixIcon: _searchQuery.isNotEmpty
                                   ? IconButton(
@@ -488,6 +489,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
+                              filled: false,
                             ),
                           ),
                         ),

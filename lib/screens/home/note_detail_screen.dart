@@ -10,7 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../../widgets/custom_youtube_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart' show YoutubePlayer;
 
 class NoteDetailScreen extends StatefulWidget {
   final VideoNote note;
@@ -29,9 +30,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
   
-  // YouTube player state
-  YoutubePlayerController? _ytController;
+  // Video player state
   final GlobalKey _videoSectionKey = GlobalKey();
+  bool _hasVideo = false;
 
   @override
   void initState() {
@@ -43,22 +44,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         .toList();
     _scrollController.addListener(_updateScrollProgress);
     
-    // Initialize YouTube Controller
-    final videoId = YoutubePlayer.convertUrlToId(_note.videoUrl);
-    if (videoId != null) {
-      _ytController = YoutubePlayerController(
-        initialVideoId: videoId,
-        flags: const YoutubePlayerFlags(
-          autoPlay: false,
-          mute: false,
-          disableDragSeek: false,
-          loop: false,
-          isLive: false,
-          forceHD: false,
-          enableCaption: true,
-        ),
-      );
-    }
+    // Check if video exists
+    _hasVideo = YoutubePlayer.convertUrlToId(_note.videoUrl) != null;
   }
 
   @override
@@ -69,7 +56,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
     _scrollController.removeListener(_updateScrollProgress);
     _scrollController.dispose();
-    _ytController?.dispose();
     super.dispose();
   }
 
@@ -247,7 +233,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           const SizedBox(height: 32),
 
                           // ─── Video Section ─────────────────────
-                          if (_ytController != null)
+                          if (_hasVideo)
                             _buildVideoSection(isDark, primaryColor),
 
                           const SizedBox(height: 32),
@@ -429,7 +415,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             label: _readTime(),
             isDark: isDark,
           ),
-          if (_ytController != null) ...[
+          if (_hasVideo) ...[
             _metaDot(isDark),
             _MetaChip(
               icon: Icons.play_circle_filled,
@@ -687,21 +673,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         const SizedBox(height: 16),
         ClipRRect(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-              border: Border.all(
-                color: primaryColor.withValues(alpha: 0.1),
-              ),
-            ),
-            child: YoutubePlayer(
-              controller: _ytController!,
-              showVideoProgressIndicator: true,
-              progressIndicatorColor: primaryColor,
-              onReady: () {
-                // We don't autoplay here unless scrolled to?
-              },
-            ),
+          child: CustomYoutubePlayer(
+            videoUrl: _note.videoUrl,
+            initialTitle: _note.videoTitle,
           ),
         ),
       ],
