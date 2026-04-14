@@ -10,8 +10,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/custom_youtube_player.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart' show YoutubePlayer;
+import '../../theme/app_theme.dart';
+// Removed: import '../../widgets/custom_youtube_player.dart';
+// Removed: import 'package:youtube_player_flutter/youtube_player_flutter.dart' show YoutubePlayer;
 
 class NoteDetailScreen extends StatefulWidget {
   final VideoNote note;
@@ -31,8 +32,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   double _scrollProgress = 0.0;
   
   // Video player state
-  final GlobalKey _videoSectionKey = GlobalKey();
-  bool _hasVideo = false;
+  // Video player state removed
+  // final GlobalKey _videoSectionKey = GlobalKey();
+  // bool _hasVideo = false;
 
   @override
   void initState() {
@@ -44,8 +46,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         .toList();
     _scrollController.addListener(_updateScrollProgress);
     
-    // Check if video exists
-    _hasVideo = YoutubePlayer.convertUrlToId(_note.videoUrl) != null;
+    // Check if video exists logic removed
   }
 
   @override
@@ -232,9 +233,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
                           const SizedBox(height: 32),
 
-                          // ─── Video Section ─────────────────────
-                          if (_hasVideo)
-                            _buildVideoSection(isDark, primaryColor),
+                          // ─── Video Section Removed ───────────
 
                           const SizedBox(height: 32),
 
@@ -415,21 +414,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             label: _readTime(),
             isDark: isDark,
           ),
-          if (_hasVideo) ...[
-            _metaDot(isDark),
-            _MetaChip(
-              icon: Icons.play_circle_filled,
-              label: 'Watch Video',
-              isDark: isDark,
-              onTap: () {
-                Scrollable.ensureVisible(
-                  _videoSectionKey.currentContext!,
-                  duration: const Duration(seconds: 1),
-                  curve: Curves.easeInOutCubic,
-                );
-              },
-            ),
-          ],
+          /* Watch Video meta chip removed */
           _metaDot(isDark),
           _MetaChip(
             icon: Icons.text_fields,
@@ -654,33 +639,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
   }
 
-  // ─── VIDEO SECTION ────────────────────────────────────────────────
-  Widget _buildVideoSection(bool isDark, Color primaryColor) {
-    return Column(
-      key: _videoSectionKey,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.video_library_outlined, color: primaryColor, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'VIDEO PLAYER',
-              style: AppTheme.labelSmall(color: primaryColor).copyWith(letterSpacing: 2),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          child: CustomYoutubePlayer(
-            videoUrl: _note.videoUrl,
-            initialTitle: _note.videoTitle,
-          ),
-        ),
-      ],
-    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1);
-  }
+  // ─── VIDEO SECTION REMOVED ────────────────────────────────────────
 
   // ─── SOURCE CARD ──────────────────────────────────────────────────
   Widget _buildSourceCard(bool isDark, Color primaryColor) {

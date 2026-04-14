@@ -65,9 +65,9 @@ dependencies:
   # Firebase Storage
   firebase_storage: ^13.0.6
 
-  # Video Processing
-  youtube_player_flutter: ^9.1.3
-  logger: ^2.7.0
+  # Video Processing removed
+  # youtube_player_flutter: ^9.1.3
+  # logger: ^2.7.0
   
 
   
