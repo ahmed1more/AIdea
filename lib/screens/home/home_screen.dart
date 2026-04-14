@@ -7,7 +7,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../../widgets/note_card.dart';
 import '../../widgets/editorial_quote_card.dart';
-import '../settings/settings_screen.dart';
 import '../main_shell.dart';
 import 'add_note_screen.dart';
 
@@ -121,20 +120,7 @@ class _HomeTabState extends State<HomeTab> {
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.menu_open,
-                            color: primaryColor,
-                            size: 24,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SettingsScreen(),
-                              ),
-                            );
-                          },
-                        ),
+                        const SizedBox(width: 12),
                         const SizedBox(width: 4),
                         Image.asset('assets/icon/aidea-logo.png', height: 28),
                         const SizedBox(width: 8),
@@ -577,7 +563,7 @@ class _HomeTabState extends State<HomeTab> {
                         child: Row(
                           children: [
                             Text(
-                              'Curate',
+                              'Summarize',
                               style: AppTheme.button().copyWith(
                                 fontWeight: FontWeight.bold,
                               ),

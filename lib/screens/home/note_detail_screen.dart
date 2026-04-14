@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final VideoNote note;
@@ -26,6 +28,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late List<TextEditingController> _keyPointsControllers;
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
+  
+  // YouTube player state
+  YoutubePlayerController? _ytController;
+  bool _showPlayer = false;
 
   @override
   void initState() {
@@ -36,6 +42,23 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         .map((kp) => TextEditingController(text: kp))
         .toList();
     _scrollController.addListener(_updateScrollProgress);
+    
+    // Initialize YouTube Controller
+    final videoId = YoutubePlayer.convertUrlToId(_note.videoUrl);
+    if (videoId != null) {
+      _ytController = YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(
+          autoPlay: false,
+          mute: false,
+          disableDragSeek: false,
+          loop: false,
+          isLive: false,
+          forceHD: false,
+          enableCaption: true,
+        ),
+      );
+    }
   }
 
   @override
@@ -46,6 +69,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
     _scrollController.removeListener(_updateScrollProgress);
     _scrollController.dispose();
+    _ytController?.dispose();
     super.dispose();
   }
 
@@ -307,11 +331,53 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           fit: StackFit.expand,
           children: [
             // Thumbnail or gradient background
-            if (hasThumbnail)
-              Image.network(
-                _note.thumbnail,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _gradientBackground(primaryColor),
+            // Thumbnail or gradient background or Video Player
+            if (_showPlayer && _ytController != null)
+              YoutubePlayer(
+                controller: _ytController!,
+                showVideoProgressIndicator: true,
+                progressIndicatorColor: primaryColor,
+                onReady: () {
+                  _ytController?.play();
+                },
+              )
+            else if (hasThumbnail)
+              Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    _note.thumbnail,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => _gradientBackground(primaryColor),
+                  ),
+                  // Play button overlay
+                  if (!hasThumbnail || !_showPlayer)
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _showPlayer = true;
+                          });
+                        },
+                        child: CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Colors.black.withValues(alpha: 0.5),
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 45,
+                          ),
+                        ).animate(
+                          onPlay: (controller) => controller.repeat(reverse: true),
+                        ).scale(
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.1, 1.1),
+                          duration: 1.5.seconds,
+                          curve: Curves.easeInOut,
+                        ),
+                      ),
+                    ),
+                ],
               )
             else
               _gradientBackground(primaryColor),
@@ -399,6 +465,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             label: _readTime(),
             isDark: isDark,
           ),
+          if (_ytController != null) ...[
+            _metaDot(isDark),
+            _MetaChip(
+              icon: _showPlayer ? Icons.visibility_off : Icons.play_circle_filled,
+              label: _showPlayer ? 'Hide Video' : 'Watch Video',
+              isDark: isDark,
+              onTap: () {
+                setState(() {
+                  _showPlayer = !_showPlayer;
+                  if (!_showPlayer) {
+                    _ytController?.pause();
+                  }
+                });
+              },
+            ),
+          ],
           _metaDot(isDark),
           _MetaChip(
             icon: Icons.text_fields,
@@ -411,7 +493,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               icon: Icons.lightbulb_outline,
               label: '${_note.keyPoints.length} insights',
               isDark: isDark,
-              highlight: primaryColor,
             ),
           ],
         ],
@@ -506,14 +587,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     contentPadding: EdgeInsets.zero,
                   ),
                 )
-              : SelectableText(
-                  _note.notes,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    height: 1.8,
-                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-                    letterSpacing: 0.1,
-                  ),
+              : MarkdownBody(
+                  data: _note.notes,
+                  selectable: true,
+                  styleSheet: AppTheme.markdownStyle(context, isDark),
+                  onTapLink: (text, href, title) {
+                    if (href != null) _launchUrl(href);
+                  },
                 ),
         ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
       ],
@@ -773,30 +853,47 @@ class _MetaChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isDark;
-  final Color? highlight;
+  final VoidCallback? onTap;
 
   const _MetaChip({
     required this.icon,
     required this.label,
     required this.isDark,
-    this.highlight,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = highlight ??
-        (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary);
-    return Row(
+    final color = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+    
+    Widget content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 5),
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: color,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 }
 

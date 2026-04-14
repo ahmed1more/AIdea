@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +11,6 @@ import '../../providers/settings_provider.dart';
 import '../../models/video_note.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
-import '../settings/settings_screen.dart';
 import 'note_detail_screen.dart';
 
 class AddNoteScreen extends StatefulWidget {
@@ -39,6 +40,11 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   List<String> _generatedKeyPoints = [];
   bool _isComplete = false;
 
+  // Metadata state
+  bool _isFetchingTitle = false;
+  Timer? _debounceTimer;
+  String? _lastFetchedUrl;
+
   late AnimationController _pulseController;
 
   static const _processingSteps = [
@@ -59,14 +65,47 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
     if (widget.initialUrl != null) {
       _videoUrlController.text = widget.initialUrl!;
+      _onUrlChanged(); // Initial fetch if provided
     }
     if (widget.initialTitle != null) {
       _videoTitleController.text = widget.initialTitle!;
+    }
+
+    _videoUrlController.addListener(_onUrlChanged);
+  }
+
+  void _onUrlChanged() {
+    final url = _videoUrlController.text.trim();
+    if (url == _lastFetchedUrl) return;
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 800), () {
+      if (url.isNotEmpty && (url.contains('youtube.com') || url.contains('youtu.be'))) {
+        _fetchMetadata(url);
+      }
+    });
+  }
+
+  Future<void> _fetchMetadata(String url) async {
+    setState(() => _isFetchingTitle = true);
+    _lastFetchedUrl = url;
+
+    final metadata = await AiService.fetchVideoMetadata(url);
+
+    if (mounted && metadata.containsKey('title')) {
+      setState(() {
+        _videoTitleController.text = metadata['title']!;
+        _isFetchingTitle = false;
+      });
+    } else if (mounted) {
+      setState(() => _isFetchingTitle = false);
     }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    _videoUrlController.removeListener(_onUrlChanged);
     _videoUrlController.dispose();
     _videoTitleController.dispose();
     _pulseController.dispose();
@@ -98,16 +137,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
     if (!settings.isAiConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please configure your AI API key in Settings first.'),
-          action: SnackBarAction(
-            label: 'Settings',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
+        const SnackBar(
+          content: Text('AI configuration error. Please contact support.'),
         ),
       );
       return;
@@ -394,6 +425,17 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       borderSide: BorderSide.none,
                     ),
+                    suffixIcon: _isFetchingTitle
+                        ? Container(
+                            padding: const EdgeInsets.all(12),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: primaryColor.withValues(alpha: 0.5),
+                            ),
+                          )
+                        : null,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Title is required';
@@ -753,11 +795,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                   color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
-                child: Text(
-                  _generatedNotes,
-                  style: AppTheme.bodyLarge(
-                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-                  ),
+                child: MarkdownBody(
+                  data: _generatedNotes,
+                  selectable: true,
+                  styleSheet: AppTheme.markdownStyle(context, isDark),
                 ),
               ).animate().fadeIn(delay: 500.ms),
 

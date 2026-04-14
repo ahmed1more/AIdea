@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 /// Centralized design tokens for the AIdea editorial design system.
 class AppTheme {
@@ -313,6 +314,63 @@ class AppTheme {
         margin: EdgeInsets.zero,
       ),
       textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+    );
+  }
+
+  static MarkdownStyleSheet markdownStyle(BuildContext context, bool isDark) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final textColor = isDark ? darkTextPrimary : lightTextPrimary;
+    final secondaryTextColor = isDark ? darkTextSecondary : lightTextSecondary;
+
+    return MarkdownStyleSheet(
+      p: GoogleFonts.inter(
+        fontSize: 16,
+        height: 1.8,
+        color: textColor,
+        letterSpacing: 0.1,
+      ),
+      h1: GoogleFonts.manrope(
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        color: textColor,
+      ),
+      h2: GoogleFonts.manrope(
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        color: textColor,
+      ),
+      h3: GoogleFonts.manrope(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: textColor,
+      ),
+      listBullet: GoogleFonts.inter(
+        fontSize: 16,
+        color: primaryColor,
+        fontWeight: FontWeight.bold,
+      ),
+      blockquote: GoogleFonts.inter(
+        fontSize: 16,
+        fontStyle: FontStyle.italic,
+        color: secondaryTextColor,
+      ),
+      blockquoteDecoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: primaryColor.withValues(alpha: 0.3), width: 4),
+        ),
+      ),
+      code: GoogleFonts.firaCode(
+        fontSize: 14,
+        backgroundColor: isDark ? darkSurfaceHigh : lightSurfaceHigh,
+        color: primaryColor,
+      ),
+      codeblockDecoration: BoxDecoration(
+        color: isDark ? darkSurfaceHigh : lightSurfaceHigh,
+        borderRadius: BorderRadius.circular(radiusSm),
+      ),
+      strong: const TextStyle(fontWeight: FontWeight.bold),
+      em: const TextStyle(fontStyle: FontStyle.italic),
+      a: TextStyle(color: primaryColor, decoration: TextDecoration.underline),
     );
   }
 }
