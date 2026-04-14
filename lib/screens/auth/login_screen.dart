@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -312,18 +313,44 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      body: isDesktop
-          ? Row(
-              children: [
-                Expanded(
-                  child: _buildLeftPanel(context, isDark, settings),
+      body: Stack(
+        children: [
+          // ─── Mobile Background ───────────────────────
+          if (!isDesktop)
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/signup_bg.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+          if (!isDesktop)
+            Positioned.fill(
+              child: Container(
+                color: (isDark ? AppTheme.darkBg : AppTheme.lightBg)
+                    .withValues(alpha: isDark ? 0.6 : 0.7),
+              ),
+            ),
+
+          // ─── Main Content ────────────────────────────
+          isDesktop
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: _buildLeftPanel(context, isDark, settings),
+                    ),
+                    Expanded(
+                      child: formContent,
+                    ),
+                  ],
+                )
+              : SafeArea(
+                  child: BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: formContent,
+                  ),
                 ),
-                Expanded(
-                  child: formContent,
-                ),
-              ],
-            )
-          : SafeArea(child: formContent),
+        ],
+      ),
     );
   }
 
@@ -332,91 +359,107 @@ class _LoginScreenState extends State<LoginScreen> {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Container(
-      color: AppTheme.darkBg, // Always dark and editorial
-      padding: const EdgeInsets.all(64),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.darkSurface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: settings.logo(size: 32, applyTheme: false),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'AIdea',
-                style: AppTheme.headline3(color: Colors.white),
-              ),
-            ],
-          ).animate().fadeIn(delay: 100.ms),
-          
-          const Spacer(),
-          
-          Text(
-            'The craft of',
-            style: AppTheme.headline1(color: Colors.white).copyWith(
-              height: 1.1,
-              fontSize: 48,
-            ),
-          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-          Text(
-            'curated thought.',
-            style: AppTheme.headline1(color: primaryColor).copyWith(
-              height: 1.1,
-              fontSize: 48,
-            ),
-          ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
-          
-          const SizedBox(height: 24),
-          
-          Text(
-            'Join an exclusive community of writers and thinkers. Experience a digital environment that mimics the weight and authority of high-end luxury periodicals.',
-            style: AppTheme.bodyLarge(color: Colors.white70),
-          ).animate().fadeIn(delay: 400.ms),
-          
-          const Spacer(),
-          
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
+      decoration: const BoxDecoration(
+        color: AppTheme.darkBg,
+        image: DecorationImage(
+          image: AssetImage('assets/images/signup_bg.png'),
+          fit: BoxFit.cover,
+          opacity: 0.4,
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(64),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height - 128,
+          ),
+          child: IntrinsicHeight(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.format_quote, color: Colors.white24, size: 48),
-                Text(
-                  '"Precision is the soul of style. Without it, the narrative loses its gravity."',
-                  style: AppTheme.headline3(color: Colors.white).copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 24),
                 Row(
                   children: [
-                    Container(width: 32, height: 1, color: primaryColor),
-                    const SizedBox(width: 12),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkSurface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: settings.logo(size: 32, applyTheme: false),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
                     Text(
-                      'THE EDITORIAL BOARD',
-                      style: AppTheme.labelSmall(color: primaryColor),
+                      'AIdea',
+                      style: AppTheme.headline3(color: Colors.white),
                     ),
                   ],
-                ),
+                ).animate().fadeIn(delay: 100.ms),
+                
+                const Spacer(),
+                
+                Text(
+                  'The craft of',
+                  style: AppTheme.headline1(color: Colors.white).copyWith(
+                    height: 1.1,
+                    fontSize: 48,
+                  ),
+                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                Text(
+                  'curated thought.',
+                  style: AppTheme.headline1(color: primaryColor).copyWith(
+                    height: 1.1,
+                    fontSize: 48,
+                  ),
+                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                
+                const SizedBox(height: 24),
+                
+                Text(
+                  'Join an exclusive community of writers and thinkers. Experience a digital environment that mimics the weight and authority of high-end luxury periodicals.',
+                  style: AppTheme.bodyLarge(color: Colors.white70),
+                ).animate().fadeIn(delay: 400.ms),
+                
+                const Spacer(),
+                
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.format_quote, color: Colors.white24, size: 48),
+                      Text(
+                        '"Precision is the soul of style. Without it, the narrative loses its gravity."',
+                        style: AppTheme.headline3(color: Colors.white).copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Container(width: 32, height: 1, color: primaryColor),
+                          const SizedBox(width: 12),
+                          Text(
+                            'THE EDITORIAL BOARD',
+                            style: AppTheme.labelSmall(color: primaryColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 500.ms),
               ],
             ),
-          ).animate().fadeIn(delay: 500.ms),
-        ],
+          ),
+        ),
       ),
     );
   }

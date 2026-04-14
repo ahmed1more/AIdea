@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'home/home_screen.dart';
@@ -12,10 +13,10 @@ class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   final List<Widget> _tabs = const [
@@ -23,6 +24,13 @@ class _MainShellState extends State<MainShell> {
     FavoritesTab(),
     AccountTab(),
   ];
+
+  /// Public method so child widgets can switch tabs
+  void switchToTab(int index) {
+    if (index >= 0 && index < _tabs.length) {
+      setState(() => _currentIndex = index);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +47,7 @@ class _MainShellState extends State<MainShell> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     decoration: BoxDecoration(
                       color: isDark
                           ? AppTheme.darkBg.withValues(alpha: 0.8)
@@ -51,91 +59,87 @@ class _MainShellState extends State<MainShell> {
                         ),
                       ),
                     ),
-                    child: SafeArea(
-                      bottom: false,
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1000),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                          Row(
-                            children: [
-                              Image.asset(
-                                'assets/icon/aidea-logo.png',
-                                height: 32,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'AiDea',
-                                style: AppTheme.headline3(
-                                  color: isDark
-                                      ? AppTheme.darkTextPrimary
-                                      : AppTheme.lightTextPrimary,
-                                ).copyWith(fontWeight: FontWeight.w900),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _DesktopNavItem(
-                                label: 'Home',
-                                isActive: _currentIndex == 0,
-                                activeColor: primaryColor,
-                                isDark: isDark,
-                                onTap: () => setState(() => _currentIndex = 0),
-                              ),
-                              const SizedBox(width: 32),
-                              _DesktopNavItem(
-                                label: 'Favorites',
-                                isActive: _currentIndex == 1,
-                                activeColor: primaryColor,
-                                isDark: isDark,
-                                onTap: () => setState(() => _currentIndex = 1),
-                              ),
-                              const SizedBox(width: 32),
-                              _DesktopNavItem(
-                                label: 'Account',
-                                isActive: _currentIndex == 2,
-                                activeColor: primaryColor,
-                                isDark: isDark,
-                                onTap: () => setState(() => _currentIndex = 2),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Icon(Icons.search, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
-                              const SizedBox(width: 16),
-                              Consumer<AuthProvider>(
-                                builder: (context, auth, _) {
-                                  final name = auth.user?.displayName ?? 'U';
-                                  return CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                                    child: Text(
-                                      name[0].toUpperCase(),
-                                      style: AppTheme.labelLarge(color: primaryColor),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/icon/aidea-logo.png',
+                              height: 32,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'AiDea',
+                              style: AppTheme.headline3(
+                                color: isDark
+                                    ? AppTheme.darkTextPrimary
+                                    : AppTheme.lightTextPrimary,
+                              ).copyWith(fontWeight: FontWeight.w900),
+                            ),
+                          ],
                         ),
-                      ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _DesktopNavItem(
+                              label: 'Home',
+                              isActive: _currentIndex == 0,
+                              activeColor: primaryColor,
+                              isDark: isDark,
+                              onTap: () => setState(() => _currentIndex = 0),
+                            ),
+                            const SizedBox(width: 32),
+                            _DesktopNavItem(
+                              label: 'Favorites',
+                              isActive: _currentIndex == 1,
+                              activeColor: primaryColor,
+                              isDark: isDark,
+                              onTap: () => setState(() => _currentIndex = 1),
+                            ),
+                            const SizedBox(width: 32),
+                            _DesktopNavItem(
+                              label: 'Account',
+                              isActive: _currentIndex == 2,
+                              activeColor: primaryColor,
+                              isDark: isDark,
+                              onTap: () => setState(() => _currentIndex = 2),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Consumer<AuthProvider>(
+                              builder: (context, auth, _) {
+                                return GestureDetector(
+                                  onTap: () => setState(() => _currentIndex = 2),
+                                  child: _buildProfileAvatar(
+                                    auth: auth,
+                                    isDark: isDark,
+                                    primaryColor: primaryColor,
+                                    radius: 20,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             )
           : null,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        child: IndexedStack(
+          key: ValueKey(_currentIndex),
+          index: _currentIndex,
+          children: _tabs,
+        ),
       ),
       bottomNavigationBar: isDesktop
           ? null
@@ -198,6 +202,36 @@ class _MainShellState extends State<MainShell> {
                 ),
               ),
             ),
+    );
+  }
+
+  /// Reusable profile avatar that shows photo or initials
+  static Widget _buildProfileAvatar({
+    required AuthProvider auth,
+    required bool isDark,
+    required Color primaryColor,
+    double radius = 20,
+  }) {
+    final name = auth.user?.displayName ?? 'U';
+    final photoUrl = auth.user?.photoUrl;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        backgroundImage: photoUrl != null
+            ? CachedNetworkImageProvider(photoUrl)
+            : null,
+        child: photoUrl == null
+            ? Text(
+                name[0].toUpperCase(),
+                style: AppTheme.labelLarge(color: primaryColor).copyWith(
+                  fontSize: radius * 0.8,
+                ),
+              )
+            : null,
+      ),
     );
   }
 }

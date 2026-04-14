@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:logger/logger.dart';
@@ -8,6 +10,7 @@ import '../models/app_user.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final Logger logger = Logger();
 
   // Get current user
@@ -232,6 +235,146 @@ class AuthService {
       return updatedUser;
     } catch (e) {
       logger.e('Error updating display name: $e');
+      rethrow;
+    }
+  }
+
+  // Upload profile photo to Firebase Storage and update user document
+  Future<AppUser?> updateProfilePhoto(File imageFile) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      // Upload to Firebase Storage
+      final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+      final uploadTask = ref.putFile(
+        imageFile,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Update Firebase Auth photoURL
+      await user.updatePhotoURL(downloadUrl);
+
+      // Update Firestore user document
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'photoUrl': downloadUrl})
+          .timeout(const Duration(seconds: 10));
+
+      // Return updated user
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) {
+        await cacheUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e) {
+      logger.e('Error updating profile photo: $e');
+      rethrow;
+    }
+  }
+
+  // Remove profile photo
+  Future<AppUser?> removeProfilePhoto() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      // Delete from Firebase Storage (ignore if doesn't exist)
+      try {
+        final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+        await ref.delete();
+      } catch (_) {
+        // File might not exist, that's okay
+      }
+
+      // Update Firebase Auth
+      await user.updatePhotoURL(null);
+
+      // Update Firestore
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'photoUrl': null})
+          .timeout(const Duration(seconds: 10));
+
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) {
+        await cacheUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e) {
+      logger.e('Error removing profile photo: $e');
+      rethrow;
+    }
+  }
+
+  // Change password (requires re-authentication)
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No authenticated user found.');
+      }
+
+      // Re-authenticate
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+    } catch (e) {
+      logger.e('Error changing password: $e');
+      rethrow;
+    }
+  }
+
+  // Delete account (requires re-authentication)
+  Future<void> deleteAccount(String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No authenticated user found.');
+      }
+
+      // Re-authenticate
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Delete profile photo from storage
+      try {
+        final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+        await ref.delete();
+      } catch (_) {}
+
+      // Delete Firestore user document
+      await _firestore.collection('users').doc(user.uid).delete();
+
+      // Delete all user's notes
+      final notesSnapshot = await _firestore
+          .collection('notes')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+      for (final doc in notesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete Firebase Auth account
+      await user.delete();
+      await clearCachedUser();
+    } catch (e) {
+      logger.e('Error deleting account: $e');
       rethrow;
     }
   }
