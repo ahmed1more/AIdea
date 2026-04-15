@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,16 +6,17 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
-import '../../providers/settings_provider.dart';
-import 'add_note_screen.dart';
 import '../../widgets/note_card.dart';
-import '../settings/settings_screen.dart';
+import '../../widgets/editorial_quote_card.dart';
+import '../main_shell.dart';
+import 'add_note_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+/// Home tab — editorial-inspired landing with URL input and recent notes.
+class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeTab> createState() => _HomeTabState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -46,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     if (authProvider.user != null) {
       notesProvider.loadUserNotes(authProvider.user!.id);
-      notesProvider.loadFavoriteNotes(authProvider.user!.id);
     }
   }
 
@@ -118,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 900;

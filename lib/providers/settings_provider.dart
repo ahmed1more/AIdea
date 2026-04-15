@@ -2,34 +2,38 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_theme.dart';
+
+enum AiModel { aidea, gemini }
 
 class SettingsProvider extends ChangeNotifier {
   static const String _themeModeKey = 'theme_mode';
-  static const String _accentColorKey = 'accent_color';
   static const String _aideaUrlKey = 'aidea_url';
+  static const String _aiModelKey = 'ai_model';
+  static const String _apiKeyKey = 'api_key';
+  static const String _smartContextKey = 'smart_context';
+  static const String _autoSaveKey = 'auto_save';
 
   ThemeMode _themeMode = ThemeMode.system;
-  int _accentColorIndex = 0;
-  // التعديل الأول هنا 👇
-  String _aideaUrl = 'http://127.0.0.1:7860';
+  String _aideaUrl = 'https://atinc1-aidea-server.hf.space';
+  AiModel _aiModel = AiModel.aidea;
+  String _apiKey = '';
+  bool _smartContext = true;
+  bool _autoSave = true;
 
-  // Available accent colors
-  static const List<({String name, Color color})> accentColors = [
-    (name: 'Indigo', color: Color(0xFF6366F1)),
-    (name: 'Teal', color: Color(0xFF14B8A6)),
-    (name: 'Rose', color: Color(0xFFF43F5E)),
-    (name: 'Orange', color: Color(0xFFF97316)),
-    (name: 'Emerald', color: Color(0xFF10B981)),
-    (name: 'Sky', color: Color(0xFF0EA5E9)),
-    (name: 'Violet', color: Color(0xFF8B5CF6)),
-    (name: 'Amber', color: Color(0xFFF59E0B)),
-  ];
+  // Default accent color
+  static const Color defaultAccentColor = Color(0xFF6366F1);
 
   ThemeMode get themeMode => _themeMode;
-  int get accentColorIndex => _accentColorIndex;
-  Color get accentColor => accentColors[_accentColorIndex].color;
+  Color get accentColor => defaultAccentColor;
+  AiModel get aiModel => _aiModel;
+  String get apiKey => _apiKey;
   String get aideaUrl => _aideaUrl;
-  bool get isAiConfigured => true;
+  bool get smartContext => _smartContext;
+  bool get autoSave => _autoSave;
+  bool get isAiConfigured => _aiModel == AiModel.aidea ? _aideaUrl.isNotEmpty : _apiKey.isNotEmpty;
+
+  String get aiModelLabel => _aiModel == AiModel.aidea ? 'AIdea Engine' : 'Google Gemini';
 
   SettingsProvider() {
     _loadPreferences();
@@ -39,12 +43,31 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final modeIndex = prefs.getInt(_themeModeKey) ?? 0;
     _themeMode = ThemeMode.values[modeIndex];
-    _accentColorIndex = prefs.getInt(_accentColorKey) ?? 0;
-    if (_accentColorIndex >= accentColors.length) _accentColorIndex = 0;
-    // التعديل التاني هنا 👇
-    _aideaUrl =
-        prefs.getString(_aideaUrlKey) ?? 'http://127.0.0.1:7860';
+    _aideaUrl = prefs.getString(_aideaUrlKey) ?? 'https://atinc1-aidea-server.hf.space';
+    // Migration: If user has old local URL, migrate it to the new Hugging Face Space URL.
+    if (_aideaUrl == 'http://127.0.0.1:7860') {
+      _aideaUrl = 'https://atinc1-aidea-server.hf.space';
+      await prefs.setString(_aideaUrlKey, _aideaUrl);
+    }
+    _aiModel = AiModel.values[prefs.getInt(_aiModelKey) ?? 0];
+    _apiKey = prefs.getString(_apiKeyKey) ?? '';
+    _smartContext = prefs.getBool(_smartContextKey) ?? true;
+    _autoSave = prefs.getBool(_autoSaveKey) ?? true;
     notifyListeners();
+  }
+
+  Future<void> setSmartContext(bool value) async {
+    _smartContext = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_smartContextKey, value);
+  }
+
+  Future<void> setAutoSave(bool value) async {
+    _autoSave = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoSaveKey, value);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -54,14 +77,6 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setInt(_themeModeKey, mode.index);
   }
 
-  Future<void> setAccentColor(int index) async {
-    if (index < 0 || index >= accentColors.length) return;
-    _accentColorIndex = index;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_accentColorKey, index);
-  }
-
   Future<void> setAideaUrl(String url) async {
     _aideaUrl = url;
     notifyListeners();
@@ -69,47 +84,22 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setString(_aideaUrlKey, url);
   }
 
-  ThemeData getLightTheme() => _buildTheme(Brightness.light);
-  ThemeData getDarkTheme() => _buildTheme(Brightness.dark);
-
-  ThemeData _buildTheme(Brightness brightness) {
-    final seedColor = accentColor;
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seedColor,
-      brightness: brightness,
-    );
-
-    return ThemeData(
-      colorScheme: colorScheme,
-      useMaterial3: true,
-      appBarTheme: AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: brightness == Brightness.light ? Colors.black87 : Colors.white,
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        filled: true,
-        fillColor: brightness == Brightness.light
-            ? Colors.grey.shade50
-            : Colors.grey.shade900,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
+  Future<void> setAiModel(AiModel model) async {
+    _aiModel = model;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_aiModelKey, model.index);
   }
+
+  Future<void> setApiKey(String key) async {
+    _apiKey = key;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_apiKeyKey, key);
+  }
+
+  ThemeData getLightTheme() => AppTheme.buildLightTheme(accentColor);
+  ThemeData getDarkTheme() => AppTheme.buildDarkTheme(accentColor);
 
   // Glassmorphism helper
   BoxDecoration glassDecoration({
@@ -120,10 +110,10 @@ class SettingsProvider extends ChangeNotifier {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
-      color: (isDark ? Colors.white : Colors.black).withOpacity(opacity),
+      color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(16),
       border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
         width: 1.5,
       ),
     );
@@ -146,13 +136,15 @@ class SettingsProvider extends ChangeNotifier {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(opacity),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: opacity,
+            ),
             borderRadius: borderRadius ?? BorderRadius.circular(24),
             border:
                 border ??
                 Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(
-                    0.1,
+                  color: (isDark ? Colors.white : Colors.black).withValues(
+                    alpha: 0.1,
                   ),
                   width: 1.5,
                 ),
@@ -171,11 +163,8 @@ class SettingsProvider extends ChangeNotifier {
           'assets/icon/aidea-logo.png',
           width: size,
           height: size,
-          // If the logo is colored, we might want to keep it as is,
-          // but usually, logos need subtle adjustments for dark/light backgrounds.
-          // For now, let's keep it original but allow for future filtering.
           color: applyTheme
-              ? (isDark ? Colors.white.withOpacity(0.9) : null)
+              ? (isDark ? Colors.white.withValues(alpha: 0.9) : null)
               : null,
           colorBlendMode: applyTheme
               ? (isDark ? BlendMode.modulate : null)
@@ -195,7 +184,7 @@ class SettingsProvider extends ChangeNotifier {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return Center(
@@ -224,8 +213,8 @@ class SettingsProvider extends ChangeNotifier {
                             fontWeight: FontWeight.bold,
                             color:
                                 Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
+                                ? Colors.white
+                                : Colors.black,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -249,3 +238,4 @@ class SettingsProvider extends ChangeNotifier {
     );
   }
 }
+

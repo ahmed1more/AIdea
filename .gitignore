@@ -47,3 +47,4 @@ app.*.map.json
 /App-IDs
 /firebase.json
 .firebaserc
+/aidea_UI_v2.0/

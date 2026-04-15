@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/video_note.dart';
+import 'package:logger/logger.dart';
 
 class DatabaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Logger logger = Logger();
 
   // Create a new video note
   Future<String?> createNote(VideoNote note) async {
@@ -17,11 +19,11 @@ class DatabaseService {
           .collection('users')
           .doc(note.userId)
           .update({'notesCount': FieldValue.increment(1)})
-          .catchError((e) => print('Error updating notes count: $e'));
+          .catchError((e) => logger.e('Error updating notes count: $e'));
 
       return docRef.id;
     } catch (e) {
-      print('Error creating note: $e');
+      logger.e('Error creating note: $e');
       return null;
     }
   }
@@ -68,7 +70,7 @@ class DatabaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting note: $e');
+      logger.e('Error getting note: $e');
       return null;
     }
   }
@@ -84,7 +86,7 @@ class DatabaseService {
           .timeout(const Duration(seconds: 10));
       return true;
     } catch (e) {
-      print('Error updating note: $e');
+      logger.e('Error updating note: $e');
       return false;
     }
   }
@@ -102,7 +104,7 @@ class DatabaseService {
           .timeout(const Duration(seconds: 10));
       return true;
     } catch (e) {
-      print('Error toggling favorite: $e');
+      logger.e('Error toggling favorite: $e');
       return false;
     }
   }
@@ -121,11 +123,11 @@ class DatabaseService {
           .collection('users')
           .doc(userId)
           .update({'notesCount': FieldValue.increment(-1)})
-          .catchError((e) => print('Error updating notes count: $e'));
+          .catchError((e) => logger.e('Error updating notes count: $e'));
 
       return true;
     } catch (e) {
-      print('Error deleting note: $e');
+      logger.e('Error deleting note: $e');
       return false;
     }
   }

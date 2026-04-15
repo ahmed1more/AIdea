@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class AiService {
   /// Generate notes from a video URL/title using the configured AI model.
-  /// Returns a map with 'notes' (String) and 'keyPoints' (List<String>).
+  /// Returns a map with 'notes' (String) and 'keyPoints' (`List<String>`).
   static Future<Map<String, dynamic>> generateNotes({
     required String videoUrl,
     required String videoTitle,
@@ -83,6 +84,32 @@ class AiService {
 
       // Wait 3 seconds before next poll
       await Future.delayed(const Duration(seconds: 3));
+    }
+  }
+
+  /// Fetches video metadata (title, thumbnail) using YouTube oEmbed API.
+  static Future<Map<String, String>> fetchVideoMetadata(String url) async {
+    try {
+      if (!url.contains('youtube.com') && !url.contains('youtu.be')) {
+        return {};
+      }
+
+      final oEmbedUrl = Uri.parse(
+        'https://www.youtube.com/oembed?url=${Uri.encodeComponent(url)}&format=json',
+      );
+
+      final response = await http.get(oEmbedUrl);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'title': data['title'] as String? ?? '',
+          'thumbnail': data['thumbnail_url'] as String? ?? '',
+        };
+      }
+      return {};
+    } catch (e) {
+      debugPrint('Error fetching video metadata: $e');
+      return {};
     }
   }
 }

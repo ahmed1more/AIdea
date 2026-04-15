@@ -1,12 +1,17 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'package:logger/logger.dart';
 import '../models/app_user.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final Logger logger = Logger();
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -48,11 +53,11 @@ class AuthService {
               .set(newUser.toMap())
               .timeout(const Duration(seconds: 10));
         } catch (e) {
-          print('Error creating user document: $e');
+          logger.e('Error creating user document: $e');
           try {
             await user.delete(); // Rollback auth creation
           } catch (deleteError) {
-            print('Error deleting orphaned user: $deleteError');
+            logger.e('Error deleting orphaned user: $deleteError');
           }
           throw Exception(
             'Failed to setup your database profile. Check Firestore rules or connection. Error: $e',
@@ -66,7 +71,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error signing up: $e');
+      logger.e('Error signing up: $e');
       rethrow;
     }
   }
@@ -96,7 +101,7 @@ class AuthService {
           .timeout(const Duration(seconds: 10));
 
       if (!doc.exists) {
-        print('User document missing from Firestore.');
+        logger.w('User document missing from Firestore.');
         await _auth.signOut();
         await clearCachedUser();
         throw FirebaseAuthException(
@@ -112,9 +117,9 @@ class AuthService {
       if (e is FirebaseAuthException) rethrow; // Pass up our custom exception
 
       if (e is FirebaseException && e.code == 'unavailable') {
-        print('Device is offline. Using fallback auth data.');
+        logger.i('Device is offline. Using fallback auth data.');
       } else {
-        print('Firestore unreachable: $e');
+        logger.e('Firestore unreachable: $e');
       }
       // Build a minimal AppUser from what Firebase Auth gives us
       final fallbackUser = AppUser(
@@ -135,7 +140,7 @@ class AuthService {
       await _auth.signOut();
       await clearCachedUser();
     } catch (e) {
-      print('Error signing out: $e');
+      logger.e('Error signing out: $e');
       rethrow;
     }
   }
@@ -153,7 +158,7 @@ class AuthService {
         await cacheUser(appUser);
         return appUser;
       } else {
-        print('User document missing from Firestore. Signing out.');
+        logger.w('User document missing from Firestore. Signing out.');
         await _auth.signOut();
         await clearCachedUser();
         return null;
@@ -162,13 +167,13 @@ class AuthService {
       if (e is FirebaseException && e.code == 'unavailable') {
         // Device is offline
       } else {
-        print('Error getting user data: $e');
+        logger.e('Error getting user data: $e');
       }
       // Firestore is offline — return the locally cached user so the app
       // keeps working without a network connection.
       final cached = await getCachedUser();
       if (cached != null) {
-        print('Falling back to cached user data.');
+        logger.i('Falling back to cached user data.');
         return cached;
       }
 
@@ -176,9 +181,9 @@ class AuthService {
       final user = _auth.currentUser;
       if (user != null && user.uid == uid) {
         if (e is FirebaseException && e.code == 'unavailable') {
-          print('Device is offline. Using fallback auth data.');
+          logger.i('Device is offline. Using fallback auth data.');
         } else {
-          print('Firestore unavailable, falling back to Auth user data: $e');
+          logger.w('Firestore unavailable, falling back to Auth user data: $e');
         }
         final fallbackUser = AppUser(
           id: user.uid,
@@ -201,7 +206,175 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print('Error resetting password: $e');
+      logger.e('Error resetting password: $e');
+      rethrow;
+    }
+  }
+
+  // Update display name
+  Future<AppUser?> updateDisplayName(String newName) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      // Update Firebase Auth profile
+      await user.updateDisplayName(newName);
+
+      // Update Firestore user document
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'displayName': newName})
+          .timeout(const Duration(seconds: 10));
+
+      // Return updated user
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) {
+        await cacheUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e) {
+      logger.e('Error updating display name: $e');
+      rethrow;
+    }
+  }
+
+  // Upload profile photo to Firebase Storage and update user document
+  Future<AppUser?> updateProfilePhoto(File imageFile) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      // Upload to Firebase Storage
+      final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+      final uploadTask = ref.putFile(
+        imageFile,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Update Firebase Auth photoURL
+      await user.updatePhotoURL(downloadUrl);
+
+      // Update Firestore user document
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'photoUrl': downloadUrl})
+          .timeout(const Duration(seconds: 10));
+
+      // Return updated user
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) {
+        await cacheUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e) {
+      logger.e('Error updating profile photo: $e');
+      rethrow;
+    }
+  }
+
+  // Remove profile photo
+  Future<AppUser?> removeProfilePhoto() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      // Delete from Firebase Storage (ignore if doesn't exist)
+      try {
+        final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+        await ref.delete();
+      } catch (_) {
+        // File might not exist, that's okay
+      }
+
+      // Update Firebase Auth
+      await user.updatePhotoURL(null);
+
+      // Update Firestore
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'photoUrl': null})
+          .timeout(const Duration(seconds: 10));
+
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) {
+        await cacheUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e) {
+      logger.e('Error removing profile photo: $e');
+      rethrow;
+    }
+  }
+
+  // Change password (requires re-authentication)
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No authenticated user found.');
+      }
+
+      // Re-authenticate
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+    } catch (e) {
+      logger.e('Error changing password: $e');
+      rethrow;
+    }
+  }
+
+  // Delete account (requires re-authentication)
+  Future<void> deleteAccount(String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('No authenticated user found.');
+      }
+
+      // Re-authenticate
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Delete profile photo from storage
+      try {
+        final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+        await ref.delete();
+      } catch (_) {}
+
+      // Delete Firestore user document
+      await _firestore.collection('users').doc(user.uid).delete();
+
+      // Delete all user's notes
+      final notesSnapshot = await _firestore
+          .collection('notes')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+      for (final doc in notesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete Firebase Auth account
+      await user.delete();
+      await clearCachedUser();
+    } catch (e) {
+      logger.e('Error deleting account: $e');
       rethrow;
     }
   }
@@ -212,7 +385,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cached_user', user.toJson());
     } catch (e) {
-      print('Error caching user: $e');
+      logger.e('Error caching user: $e');
     }
   }
 
@@ -225,7 +398,7 @@ class AuthService {
         return AppUser.fromJson(userString);
       }
     } catch (e) {
-      print('Error getting cached user: $e');
+      logger.e('Error getting cached user: $e');
     }
     return null;
   }
@@ -236,7 +409,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('cached_user');
     } catch (e) {
-      print('Error clearing cached user: $e');
+      logger.e('Error clearing cached user: $e');
     }
   }
 }

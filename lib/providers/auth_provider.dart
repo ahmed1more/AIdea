@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/app_user.dart';
@@ -121,6 +122,118 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Update display name
+  Future<bool> updateDisplayName(String newName) async {
+    try {
+      final updatedUser = await _authService.updateDisplayName(newName);
+      if (updatedUser != null) {
+        _user = updatedUser;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = 'Failed to update profile: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Update profile photo
+  Future<bool> updateProfilePhoto(File imageFile) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await _authService.updateProfilePhoto(imageFile);
+      if (updatedUser != null) {
+        _user = updatedUser;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Failed to update photo: ${_getErrorMessage(e)}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Remove profile photo
+  Future<bool> removeProfilePhoto() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await _authService.removeProfilePhoto();
+      if (updatedUser != null) {
+        _user = updatedUser;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Failed to remove photo: ${_getErrorMessage(e)}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Change password
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Delete account
+  Future<bool> deleteAccount(String password) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.deleteAccount(password);
+      _user = null;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Clear error message
   void clearError() {
     _errorMessage = null;
@@ -153,6 +266,8 @@ class AuthProvider extends ChangeNotifier {
           return 'Too many failed attempts. Please wait a moment and try again.';
         case 'network-request-failed':
           return 'No internet connection. Please check your network.';
+        case 'requires-recent-login':
+          return 'Please sign in again before making this change.';
         default:
           return error.message ?? 'An error occurred. Please try again.';
       }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/notes_provider.dart';
@@ -20,11 +19,11 @@ void main() async {
     persistenceEnabled: true,
   );
 
-  runApp(const aidea());
+  runApp(const AIdea());
 }
 
-class aidea extends StatelessWidget {
-  const aidea({super.key});
+class AIdea extends StatelessWidget {
+  const AIdea({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,16 +39,8 @@ class aidea extends StatelessWidget {
             title: 'AIdea',
             debugShowCheckedModeBanner: false,
             themeMode: settings.themeMode,
-            theme: settings.getLightTheme().copyWith(
-              textTheme: GoogleFonts.interTextTheme(
-                settings.getLightTheme().textTheme,
-              ),
-            ),
-            darkTheme: settings.getDarkTheme().copyWith(
-              textTheme: GoogleFonts.interTextTheme(
-                settings.getDarkTheme().textTheme,
-              ),
-            ),
+            theme: settings.getLightTheme(),
+            darkTheme: settings.getDarkTheme(),
             home: const SplashScreen(),
           );
         },

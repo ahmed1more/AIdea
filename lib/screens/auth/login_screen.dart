@@ -1,12 +1,12 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../main_shell.dart';
 import 'signup_screen.dart';
-import '../home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,13 +39,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (success && mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const MainShell()),
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(authProvider.errorMessage ?? 'Login failed'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -54,266 +57,409 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final settings = Provider.of<SettingsProvider>(context);
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 800;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background Image with Parallax/Animate
-          Positioned.fill(
-            child:
-                Image.asset('assets/images/premium_bg.png', fit: BoxFit.cover)
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .move(
-                      begin: const Offset(-20, -20),
-                      end: const Offset(20, 20),
-                      duration: 20.seconds,
-                      curve: Curves.easeInOut,
+    Widget formContent = Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ─── Logo ────────────────────────────────
+                if (!isDesktop) ...[
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.darkSurface
+                            : AppTheme.lightTextPrimary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: settings.logo(size: 50, applyTheme: false),
+                      ),
                     ),
-          ),
+                  ).animate().fadeIn(duration: 500.ms).scale(
+                        begin: const Offset(0.8, 0.8),
+                        duration: 500.ms,
+                        curve: Curves.easeOutBack,
+                      ),
+                  const SizedBox(height: 32),
+                ],
 
-          // Gradient Overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black.withOpacity(isDark ? 0.8 : 0.4),
-                    Colors.black.withOpacity(isDark ? 0.4 : 0.2),
-                  ],
-                ),
-              ),
-            ),
-          ),
+                // ─── Headline ────────────────────────────
+                Text(
+                  'Welcome Back',
+                  style: AppTheme.headline2(
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ).animate().fadeIn(delay: 150.ms).slideY(
+                      begin: 0.15,
+                      duration: 400.ms,
+                      curve: Curves.easeOut,
+                    ),
 
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Form(
-                  key: _formKey,
-                  child: settings.glassMorphicContainer(
-                    context: context,
-                    padding: const EdgeInsets.all(32),
-                    opacity: isDark ? 0.1 : 0.7,
-                    blur: 20,
-                    borderRadius: BorderRadius.circular(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // App Logo Animated
-                        Center(
-                          child: settings
-                              .logo(size: 120)
-                              .animate()
-                              .scale(
-                                duration: 600.ms,
-                                curve: Curves.easeOutBack,
-                              )
-                              .shimmer(delay: 1.seconds, duration: 2.seconds),
-                        ),
-                        const SizedBox(height: 32),
+                const SizedBox(height: 8),
 
-                        // Welcome Text
-                        Text(
-                          'AIdea',
-                          style: GoogleFonts.poppins(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                            letterSpacing: 1.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Brilliant notes from any video.',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ).animate().fadeIn(delay: 400.ms),
-                        const SizedBox(height: 48),
+                Text(
+                  'Access your editorial intelligence',
+                  style: AppTheme.bodyMedium(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ).animate().fadeIn(delay: 250.ms),
 
-                        // Email Field
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            labelStyle: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                            prefixIcon: Icon(
-                              FontAwesomeIcons.envelope,
-                              size: 18,
-                              color: settings.accentColor,
-                            ),
-                            filled: true,
-                            fillColor: (isDark ? Colors.black : Colors.white)
-                                .withOpacity(0.1),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty)
-                              return 'Enter your email';
-                            if (!value.contains('@'))
-                              return 'Enter a valid email';
-                            return null;
-                          },
-                        ).animate().fadeIn(delay: 600.ms).slideX(begin: -0.1),
-                        const SizedBox(height: 20),
+                const SizedBox(height: 48),
 
-                        // Password Field
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            labelStyle: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                            prefixIcon: Icon(
-                              FontAwesomeIcons.lock,
-                              size: 18,
-                              color: settings.accentColor,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: FaIcon(
-                                _obscurePassword
-                                    ? FontAwesomeIcons.eyeSlash
-                                    : FontAwesomeIcons.eye,
-                                size: 16,
-                                color: isDark ? Colors.white60 : Colors.black45,
-                              ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: (isDark ? Colors.black : Colors.white)
-                                .withOpacity(0.1),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty)
-                              return 'Enter your password';
-                            return null;
-                          },
-                        ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.1),
-                        const SizedBox(height: 32),
-
-                        // Login Button
-                        Consumer<AuthProvider>(
-                          builder: (context, auth, child) {
-                            return Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    settings.accentColor,
-                                    settings.accentColor.withBlue(255),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: settings.accentColor.withOpacity(
-                                      0.4,
-                                    ),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton(
-                                onPressed: auth.isLoading ? null : _handleLogin,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: auth.isLoading
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 3,
-                                        ),
-                                      )
-                                    : Text(
-                                        'SIGN IN',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          letterSpacing: 1,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            );
-                          },
-                        ).animate().fadeIn(delay: 800.ms).scale(),
-
-                        const SizedBox(height: 24),
-
-                        // Sign Up Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "New here? ",
-                              style: TextStyle(
-                                color: isDark ? Colors.white60 : Colors.black54,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const SignUpScreen(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Create Account',
-                                style: TextStyle(
-                                  color: settings.accentColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ).animate().fadeIn(delay: 1.seconds),
-                      ],
+                // ─── Email Label + Field ──────────────────
+                Text(
+                  'EMAIL ADDRESS',
+                  style: AppTheme.labelSmall(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
+                  ).copyWith(letterSpacing: 2),
+                ).animate().fadeIn(delay: 300.ms),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: AppTheme.bodyMedium(
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'editor@aidea.com',
+                    filled: true,
+                    fillColor:
+                        isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      borderSide: BorderSide.none,
                     ),
                   ),
-                ),
-              ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Enter your email';
+                    }
+                    if (!value.contains('@')) return 'Enter a valid email';
+                    return null;
+                  },
+                ).animate().fadeIn(delay: 350.ms),
+
+                const SizedBox(height: 24),
+
+                // ─── Password Label + Field ───────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'PASSWORD',
+                      style: AppTheme.labelSmall(
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ).copyWith(letterSpacing: 2),
+                    ),
+                    GestureDetector(
+                      onTap: () {},
+                      child: Text(
+                        'Forgot Password?',
+                        style: AppTheme.bodySmall(
+                          color: isDark
+                              ? AppTheme.darkTextSecondary
+                              : AppTheme.lightTextSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 400.ms),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  style: AppTheme.bodyMedium(
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    filled: true,
+                    fillColor:
+                        isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Enter your password';
+                    }
+                    return null;
+                  },
+                ).animate().fadeIn(delay: 450.ms),
+
+                const SizedBox(height: 32),
+
+                // ─── Sign In Button ───────────────────────
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: auth.isLoading ? null : _handleLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark
+                              ? AppTheme.darkTextPrimary
+                              : AppTheme.lightTextPrimary,
+                          foregroundColor:
+                              isDark ? AppTheme.darkBg : Colors.white,
+                          disabledBackgroundColor: (isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary)
+                              .withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: auth.isLoading
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: isDark ? AppTheme.darkBg : Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text('Sign In', style: AppTheme.button()),
+                      ),
+                    );
+                  },
+                ).animate().fadeIn(delay: 500.ms),
+
+                const SizedBox(height: 40),
+
+                // ─── Sign Up Link ─────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: AppTheme.bodyMedium(
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SignUpScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Sign Up',
+                        style: AppTheme.labelLarge(
+                          color: isDark
+                              ? AppTheme.darkTextPrimary
+                              : AppTheme.lightTextPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 600.ms),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+
+    return Scaffold(
+      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+      body: Stack(
+        children: [
+          // ─── Mobile Background ───────────────────────
+          if (!isDesktop)
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/signup_bg.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+          if (!isDesktop)
+            Positioned.fill(
+              child: Container(
+                color: (isDark ? AppTheme.darkBg : AppTheme.lightBg)
+                    .withValues(alpha: isDark ? 0.6 : 0.7),
+              ),
+            ),
+
+          // ─── Main Content ────────────────────────────
+          isDesktop
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: _buildLeftPanel(context, isDark, settings),
+                    ),
+                    Expanded(
+                      child: formContent,
+                    ),
+                  ],
+                )
+              : SafeArea(
+                  child: BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: formContent,
+                  ),
+                ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLeftPanel(
+      BuildContext context, bool isDark, SettingsProvider settings) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.darkBg,
+        image: DecorationImage(
+          image: AssetImage('assets/images/signup_bg.png'),
+          fit: BoxFit.cover,
+          opacity: 0.4,
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(64),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height - 128,
+          ),
+          child: IntrinsicHeight(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkSurface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: settings.logo(size: 32, applyTheme: false),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'AIdea',
+                      style: AppTheme.headline3(color: Colors.white),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 100.ms),
+                
+                const Spacer(),
+                
+                Text(
+                  'The craft of',
+                  style: AppTheme.headline1(color: Colors.white).copyWith(
+                    height: 1.1,
+                    fontSize: 48,
+                  ),
+                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                Text(
+                  'curated thought.',
+                  style: AppTheme.headline1(color: primaryColor).copyWith(
+                    height: 1.1,
+                    fontSize: 48,
+                  ),
+                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                
+                const SizedBox(height: 24),
+                
+                Text(
+                  'Join an exclusive community of writers and thinkers. Experience a digital environment that mimics the weight and authority of high-end luxury periodicals.',
+                  style: AppTheme.bodyLarge(color: Colors.white70),
+                ).animate().fadeIn(delay: 400.ms),
+                
+                const Spacer(),
+                
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.format_quote, color: Colors.white24, size: 48),
+                      Text(
+                        '"Precision is the soul of style. Without it, the narrative loses its gravity."',
+                        style: AppTheme.headline3(color: Colors.white).copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Container(width: 32, height: 1, color: primaryColor),
+                          const SizedBox(width: 12),
+                          Text(
+                            'THE EDITORIAL BOARD',
+                            style: AppTheme.labelSmall(color: primaryColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 500.ms),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
