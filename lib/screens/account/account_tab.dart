@@ -19,13 +19,12 @@ class AccountTab extends StatefulWidget {
   State<AccountTab> createState() => _AccountTabState();
 }
 
-class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateMixin {
+class _AccountTabState extends State<AccountTab>
+    with SingleTickerProviderStateMixin {
   String _selectedSidebarItem = 'Profile Details';
   final ScrollController _scrollController = ScrollController();
   final _profileKey = GlobalKey();
   final _securityKey = GlobalKey();
-  final _themeKey = GlobalKey();
-  final _aiKey = GlobalKey();
   final ImagePicker _picker = ImagePicker();
   bool _isUploadingPhoto = false;
 
@@ -66,17 +65,43 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     final auth = Provider.of<AuthProvider>(context);
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
+    final appBar = AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    );
+
     if (isDesktop) {
       return Scaffold(
         backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-        body: _buildDesktopLayout(context, isDark, primaryColor, settings, auth),
+        appBar: appBar,
+        body: _buildDesktopLayout(
+          context,
+          isDark,
+          primaryColor,
+          settings,
+          auth,
+        ),
       );
     }
-    return _buildMobileLayout(context, isDark, primaryColor, settings, auth);
+    return Scaffold(
+      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+      appBar: appBar,
+      body: _buildMobileLayout(context, isDark, primaryColor, settings, auth),
+    );
   }
 
   // ─── MOBILE LAYOUT ────────────────────────────────────────────────
-  Widget _buildMobileLayout(BuildContext context, bool isDark, Color primaryColor, SettingsProvider settings, AuthProvider auth) {
+  Widget _buildMobileLayout(
+    BuildContext context,
+    bool isDark,
+    Color primaryColor,
+    SettingsProvider settings,
+    AuthProvider auth,
+  ) {
     final notes = Provider.of<NotesProvider>(context);
 
     return SafeArea(
@@ -99,14 +124,24 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                           color: primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.person_rounded, color: primaryColor, size: 22),
+                        child: Icon(
+                          Icons.person_rounded,
+                          color: primaryColor,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
                         'Profile',
-                        style: AppTheme.headline3(
-                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-                        ).copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                        style:
+                            AppTheme.headline3(
+                              color: isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary,
+                            ).copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
                       ),
                     ],
                   ),
@@ -125,37 +160,15 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
 
               const SizedBox(height: 32),
 
-              // ─── Section: Appearance ──────────────────
-              _buildSectionHeader('Appearance', Icons.palette_outlined, primaryColor, isDark, 300),
-
-              const SizedBox(height: 16),
-
-              _SettingTile(
-                icon: Icons.contrast,
-                iconColor: primaryColor,
-                title: 'App Theme',
-                subtitle: settings.themeMode == ThemeMode.dark
-                    ? 'Dark Mode'
-                    : settings.themeMode == ThemeMode.light
-                        ? 'Light Mode'
-                        : 'System Default',
-                isDark: isDark,
-                onTap: () => _showThemePicker(context, settings),
-              ).animate().fadeIn(delay: 350.ms, duration: 400.ms),
-
-              const SizedBox(height: 24),
-
-              // ─── Section: AI Engine ────────────────────
-              _buildSectionHeader('AI Engine', Icons.auto_awesome, const Color(0xFF8B5CF6), isDark, 400),
-
-              const SizedBox(height: 16),
-
-              _buildAiConfigSection(context, settings, isDark, primaryColor),
-
-              const SizedBox(height: 24),
 
               // ─── Section: Security ─────────────────────
-              _buildSectionHeader('Security', Icons.shield_outlined, AppTheme.teal, isDark, 500),
+              _buildSectionHeader(
+                'Security',
+                Icons.shield_outlined,
+                AppTheme.teal,
+                isDark,
+                500,
+              ),
 
               const SizedBox(height: 16),
 
@@ -173,7 +186,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
   }
 
   // ─── DESKTOP LAYOUT ───────────────────────────────────────────────
-  Widget _buildDesktopLayout(BuildContext context, bool isDark, Color primaryColor, SettingsProvider settings, AuthProvider auth) {
+  Widget _buildDesktopLayout(
+    BuildContext context,
+    bool isDark,
+    Color primaryColor,
+    SettingsProvider settings,
+    AuthProvider auth,
+  ) {
     final notes = Provider.of<NotesProvider>(context);
 
     return SingleChildScrollView(
@@ -187,14 +206,20 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             children: [
               Text(
                 'PREFERENCES',
-                style: AppTheme.labelSmall(color: primaryColor).copyWith(letterSpacing: 2, fontWeight: FontWeight.w900),
+                style: AppTheme.labelSmall(
+                  color: primaryColor,
+                ).copyWith(letterSpacing: 2, fontWeight: FontWeight.w900),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 8),
               Text(
                 'Settings & Identity',
-                style: AppTheme.headline1(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary).copyWith(fontSize: 48),
+                style: AppTheme.headline1(
+                  color: isDark
+                      ? AppTheme.darkTextPrimary
+                      : Theme.of(context).colorScheme.tertiary,
+                ).copyWith(fontSize: 48),
               ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-              
+
               const SizedBox(height: 48),
 
               Row(
@@ -206,29 +231,45 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ACCOUNT', style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline).copyWith(fontWeight: FontWeight.w900, letterSpacing: 2)),
+                        Text(
+                          'ACCOUNT',
+                          style:
+                              AppTheme.labelSmall(
+                                color: isDark
+                                    ? AppTheme.darkTextSecondary
+                                    : Theme.of(context).colorScheme.outline,
+                              ).copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                        ),
                         const SizedBox(height: 16),
                         _buildSidebarItem(context, 'Profile Details', isDark),
                         _buildSidebarItem(context, 'Security', isDark),
-                        
-                        const SizedBox(height: 32),
-                        Text('SYSTEM', style: AppTheme.labelSmall(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.outline).copyWith(fontWeight: FontWeight.w900, letterSpacing: 2)),
-                        const SizedBox(height: 16),
-                        _buildSidebarItem(context, 'Theme & UI', isDark),
-                        _buildSidebarItem(context, 'AI Models', isDark),
-                        
+
                         const SizedBox(height: 48),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () => _handleLogout(context),
                             icon: const Icon(Icons.logout, size: 18),
-                            label: const Text('SIGN OUT', style: TextStyle(fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              'SIGN OUT',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context).colorScheme.error,
-                              side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5)),
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                              side: BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.error.withValues(alpha: 0.5),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
@@ -236,7 +277,7 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     ),
                   ),
                   const SizedBox(width: 64),
-                  
+
                   // Main content
                   Expanded(
                     flex: 8,
@@ -244,31 +285,33 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Profile header
-                        _buildDesktopProfileHeader(context, auth, isDark, primaryColor, notes),
-                        
-                        const SizedBox(height: 48),
-
-                        // Security section
-                        Text('Security', key: _securityKey, style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
-                        const SizedBox(height: 24),
-                        _buildSecuritySection(context, auth, isDark, primaryColor),
-
-                        const SizedBox(height: 48),
-                        
-                        Text('Theme & Locale', key: _themeKey, style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(child: _SettingTile(icon: Icons.contrast, iconColor: primaryColor, title: 'App Theme', subtitle: settings.themeMode == ThemeMode.dark ? 'Dark' : 'Light', isDark: isDark, onTap: () => _showThemePicker(context, settings))),
-                          ],
+                        _buildDesktopProfileHeader(
+                          context,
+                          auth,
+                          isDark,
+                          primaryColor,
+                          notes,
                         ),
 
                         const SizedBox(height: 48),
 
-                        Text('AI Engine Configuration', key: _aiKey, style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
+                        // Security section
+                        Text(
+                          'Security',
+                          key: _securityKey,
+                          style: AppTheme.headline3(
+                            color: isDark
+                                ? AppTheme.darkTextPrimary
+                                : Theme.of(context).colorScheme.tertiary,
+                          ),
+                        ),
                         const SizedBox(height: 24),
-                        _buildAiConfigSection(context, settings, isDark, primaryColor),
-                      ],
+                        _buildSecuritySection(
+                          context,
+                          auth,
+                          isDark,
+                          primaryColor,
+                        ),                      ],
                     ),
                   ),
                 ],
@@ -282,7 +325,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
 
   // ─── REUSABLE WIDGETS ─────────────────────────────────────────────
 
-  Widget _buildProfileCard(BuildContext context, AuthProvider auth, bool isDark, Color primaryColor, NotesProvider notes) {
+  Widget _buildProfileCard(
+    BuildContext context,
+    AuthProvider auth,
+    bool isDark,
+    Color primaryColor,
+    NotesProvider notes,
+  ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -290,7 +339,10 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [AppTheme.darkSurface, AppTheme.darkSurface.withValues(alpha: 0.7)]
+              ? [
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurface.withValues(alpha: 0.7),
+                ]
               : [Colors.white, primaryColor.withValues(alpha: 0.03)],
         ),
         borderRadius: BorderRadius.circular(24),
@@ -299,7 +351,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
         ),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.black : primaryColor).withValues(alpha: 0.06),
+            color: (isDark ? Colors.black : primaryColor).withValues(
+              alpha: 0.06,
+            ),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -313,19 +367,29 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           // Name
           Text(
             auth.user?.displayName ?? 'Explorer',
-            style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
+            style: AppTheme.headline3(
+              color: isDark
+                  ? AppTheme.darkTextPrimary
+                  : AppTheme.lightTextPrimary,
+            ),
           ),
           const SizedBox(height: 6),
           // Email
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: 0.05,
+              ),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               auth.user?.email ?? '',
-              style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+              style: AppTheme.bodySmall(
+                color: isDark
+                    ? AppTheme.darkTextSecondary
+                    : AppTheme.lightTextSecondary,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -340,7 +404,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                 foregroundColor: primaryColor,
                 side: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -349,7 +415,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     ).animate().fadeIn(delay: 100.ms, duration: 500.ms).slideY(begin: 0.05);
   }
 
-  Widget _buildDesktopProfileHeader(BuildContext context, AuthProvider auth, bool isDark, Color primaryColor, NotesProvider notes) {
+  Widget _buildDesktopProfileHeader(
+    BuildContext context,
+    AuthProvider auth,
+    bool isDark,
+    Color primaryColor,
+    NotesProvider notes,
+  ) {
     return Container(
       key: _profileKey,
       padding: const EdgeInsets.all(32),
@@ -358,7 +430,10 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [AppTheme.darkSurface, AppTheme.darkSurface.withValues(alpha: 0.7)]
+              ? [
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurface.withValues(alpha: 0.7),
+                ]
               : [Colors.white, primaryColor.withValues(alpha: 0.03)],
         ),
         borderRadius: BorderRadius.circular(24),
@@ -374,9 +449,23 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(auth.user?.displayName ?? 'Explorer', style: AppTheme.headline2(color: isDark ? AppTheme.darkTextPrimary : Theme.of(context).colorScheme.tertiary)),
+                Text(
+                  auth.user?.displayName ?? 'Explorer',
+                  style: AppTheme.headline2(
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : Theme.of(context).colorScheme.tertiary,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(auth.user?.email ?? '', style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant)),
+                Text(
+                  auth.user?.email ?? '',
+                  style: AppTheme.bodyMedium(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -386,17 +475,32 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                       label: const Text('Edit Profile'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: primaryColor,
-                        side: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        side: BorderSide(
+                          color: primaryColor.withValues(alpha: 0.3),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    _buildMiniStat(Icons.article_outlined, '${notes.notes.length}', 'Notes', isDark, primaryColor),
+                    _buildMiniStat(
+                      Icons.article_outlined,
+                      '${notes.notes.length}',
+                      'Notes',
+                      isDark,
+                      primaryColor,
+                    ),
                     const SizedBox(width: 12),
                     _buildMiniStat(
                       Icons.calendar_today_outlined,
-                      auth.user != null ? DateFormat('MMM yyyy').format(auth.user!.createdAt) : '—',
+                      auth.user != null
+                          ? DateFormat('MMM yyyy').format(auth.user!.createdAt)
+                          : '—',
                       'Joined',
                       isDark,
                       AppTheme.teal,
@@ -411,7 +515,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildMiniStat(IconData icon, String value, String label, bool isDark, Color color) {
+  Widget _buildMiniStat(
+    IconData icon,
+    String value,
+    String label,
+    bool isDark,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -426,8 +536,22 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary).copyWith(fontSize: 12)),
-              Text(label, style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary).copyWith(fontSize: 9)),
+              Text(
+                value,
+                style: AppTheme.labelLarge(
+                  color: isDark
+                      ? AppTheme.darkTextPrimary
+                      : AppTheme.lightTextPrimary,
+                ).copyWith(fontSize: 12),
+              ),
+              Text(
+                label,
+                style: AppTheme.bodySmall(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ).copyWith(fontSize: 9),
+              ),
             ],
           ),
         ],
@@ -435,18 +559,42 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, AuthProvider auth, bool isDark, Color primaryColor, NotesProvider notes) {
+  Widget _buildStatsRow(
+    BuildContext context,
+    AuthProvider auth,
+    bool isDark,
+    Color primaryColor,
+    NotesProvider notes,
+  ) {
     final favCount = notes.notes.where((n) => n.isFavorite).length;
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Notes', '${notes.notes.length}', Icons.article_outlined, primaryColor, isDark)),
+        Expanded(
+          child: _buildStatCard(
+            'Notes',
+            '${notes.notes.length}',
+            Icons.article_outlined,
+            primaryColor,
+            isDark,
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Favorites', '$favCount', Icons.bookmark_outlined, AppTheme.coral, isDark)),
+        Expanded(
+          child: _buildStatCard(
+            'Favorites',
+            '$favCount',
+            Icons.bookmark_outlined,
+            AppTheme.coral,
+            isDark,
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
             'Member Since',
-            auth.user != null ? DateFormat('MMM yy').format(auth.user!.createdAt) : '—',
+            auth.user != null
+                ? DateFormat('MMM yy').format(auth.user!.createdAt)
+                : '—',
             Icons.calendar_today_outlined,
             AppTheme.teal,
             isDark,
@@ -456,7 +604,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color, bool isDark) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -475,15 +629,35 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(height: 10),
-          Text(value, style: AppTheme.titleMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary).copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            value,
+            style: AppTheme.titleMedium(
+              color: isDark
+                  ? AppTheme.darkTextPrimary
+                  : AppTheme.lightTextPrimary,
+            ).copyWith(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary).copyWith(fontSize: 10)),
+          Text(
+            label,
+            style: AppTheme.bodySmall(
+              color: isDark
+                  ? AppTheme.darkTextSecondary
+                  : AppTheme.lightTextSecondary,
+            ).copyWith(fontSize: 10),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, Color color, bool isDark, int delayMs) {
+  Widget _buildSectionHeader(
+    String title,
+    IconData icon,
+    Color color,
+    bool isDark,
+    int delayMs,
+  ) {
     return Row(
       children: [
         Container(
@@ -497,7 +671,11 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
         const SizedBox(width: 12),
         Text(
           title,
-          style: AppTheme.titleLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
+          style: AppTheme.titleLarge(
+            color: isDark
+                ? AppTheme.darkTextPrimary
+                : AppTheme.lightTextPrimary,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -511,10 +689,19 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           ),
         ),
       ],
-    ).animate().fadeIn(delay: Duration(milliseconds: delayMs), duration: 400.ms);
+    ).animate().fadeIn(
+      delay: Duration(milliseconds: delayMs),
+      duration: 400.ms,
+    );
   }
 
-  Widget _buildAvatarWidget(BuildContext context, AuthProvider auth, bool isDark, Color primaryColor, {double radius = 48}) {
+  Widget _buildAvatarWidget(
+    BuildContext context,
+    AuthProvider auth,
+    bool isDark,
+    Color primaryColor, {
+    double radius = 48,
+  }) {
     return Stack(
       children: [
         Container(
@@ -529,7 +716,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           ),
           child: CircleAvatar(
             radius: radius,
-            backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            backgroundColor: isDark
+                ? AppTheme.darkSurface
+                : AppTheme.lightSurface,
             backgroundImage: auth.user?.photoUrl != null
                 ? CachedNetworkImageProvider(auth.user!.photoUrl!)
                 : null,
@@ -543,11 +732,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     ),
                   )
                 : auth.user?.photoUrl == null
-                    ? Text(
-                        (auth.user?.displayName ?? 'U')[0].toUpperCase(),
-                        style: AppTheme.headline1(color: primaryColor).copyWith(fontSize: radius * 0.7),
-                      )
-                    : null,
+                ? Text(
+                    (auth.user?.displayName ?? 'U')[0].toUpperCase(),
+                    style: AppTheme.headline1(
+                      color: primaryColor,
+                    ).copyWith(fontSize: radius * 0.7),
+                  )
+                : null,
           ),
         ),
         // Camera overlay button
@@ -585,12 +776,19 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildSecuritySection(BuildContext context, AuthProvider auth, bool isDark, Color primaryColor) {
+  Widget _buildSecuritySection(
+    BuildContext context,
+    AuthProvider auth,
+    bool isDark,
+    Color primaryColor,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppTheme.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05)),
+        border: Border.all(
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+        ),
       ),
       child: Column(
         children: [
@@ -605,7 +803,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           Divider(
             height: 1,
             indent: 56,
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.05,
+            ),
           ),
           _SettingTile(
             icon: Icons.email_outlined,
@@ -613,14 +813,19 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             title: 'Email Address',
             subtitle: auth.user?.email ?? 'Not set',
             isDark: isDark,
-            onTap: () => _showToast('Email cannot be changed for security reasons'),
+            onTap: () =>
+                _showToast('Email cannot be changed for security reasons'),
           ),
         ],
       ),
     ).animate().fadeIn(delay: 550.ms, duration: 400.ms);
   }
 
-  Widget _buildLogoutButton(BuildContext context, bool isDark, Color primaryColor) {
+  Widget _buildLogoutButton(
+    BuildContext context,
+    bool isDark,
+    Color primaryColor,
+  ) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -628,10 +833,14 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
         icon: const Icon(Icons.logout_rounded, size: 20),
         label: const Text('SIGN OUT'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+          backgroundColor: isDark
+              ? AppTheme.darkTextPrimary
+              : AppTheme.lightTextPrimary,
           foregroundColor: isDark ? AppTheme.darkBg : Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           elevation: 0,
         ),
       ),
@@ -674,41 +883,23 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             const SizedBox(width: 12),
             Text(
               title,
-              style: AppTheme.bodyMedium(
-                color: isSelected
-                    ? primaryColor
-                    : (isDark ? AppTheme.darkTextSecondary : Theme.of(context).colorScheme.onSurfaceVariant),
-              ).copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
+              style:
+                  AppTheme.bodyMedium(
+                    color: isSelected
+                        ? primaryColor
+                        : (isDark
+                              ? AppTheme.darkTextSecondary
+                              : Theme.of(context).colorScheme.onSurfaceVariant),
+                  ).copyWith(
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildAiConfigSection(BuildContext context, SettingsProvider settings, bool isDark, Color primaryColor) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        children: [
-          _SettingTile(
-            icon: Icons.auto_awesome,
-            iconColor: const Color(0xFF8B5CF6),
-            title: 'Preferred Model',
-            subtitle: settings.aiModelLabel,
-            isDark: isDark,
-            onTap: () => _showModelPicker(context, settings),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 450.ms, duration: 400.ms);
   }
 
   // ─── DIALOGS ──────────────────────────────────────────────────────
@@ -732,12 +923,21 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: 0.15,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 20),
-            Text('Profile Photo', style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),
+            Text(
+              'Profile Photo',
+              style: AppTheme.headline3(
+                color: isDark
+                    ? AppTheme.darkTextPrimary
+                    : AppTheme.lightTextPrimary,
+              ),
+            ),
             const SizedBox(height: 24),
             ListTile(
               leading: Container(
@@ -749,7 +949,14 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                 child: Icon(Icons.photo_library_outlined, color: primaryColor),
               ),
               title: const Text('Choose from Gallery'),
-              subtitle: Text('Select an existing photo', style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+              subtitle: Text(
+                'Select an existing photo',
+                style: AppTheme.bodySmall(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickAndUploadPhoto(ImageSource.gallery, auth);
@@ -763,10 +970,20 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                   color: AppTheme.teal.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.camera_alt_outlined, color: AppTheme.teal),
+                child: const Icon(
+                  Icons.camera_alt_outlined,
+                  color: AppTheme.teal,
+                ),
               ),
               title: const Text('Take a Photo'),
-              subtitle: Text('Use your camera', style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+              subtitle: Text(
+                'Use your camera',
+                style: AppTheme.bodySmall(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickAndUploadPhoto(ImageSource.camera, auth);
@@ -781,10 +998,20 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                     color: AppTheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.delete_outline, color: AppTheme.error),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: AppTheme.error,
+                  ),
                 ),
                 title: const Text('Remove Photo'),
-                subtitle: Text('Use default avatar', style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+                subtitle: Text(
+                  'Use default avatar',
+                  style: AppTheme.bodySmall(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
+                  ),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   setState(() => _isUploadingPhoto = true);
@@ -806,7 +1033,10 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     );
   }
 
-  Future<void> _pickAndUploadPhoto(ImageSource source, AuthProvider auth) async {
+  Future<void> _pickAndUploadPhoto(
+    ImageSource source,
+    AuthProvider auth,
+  ) async {
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
@@ -834,127 +1064,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
     }
   }
 
-  void _showThemePicker(BuildContext context, SettingsProvider settings) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(2)),
-            ),
-            const SizedBox(height: 20),
-            Text('Theme Mode', style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),
-            const SizedBox(height: 24),
-            _buildThemeOption(context, 'System Default', Icons.brightness_auto, settings.themeMode == ThemeMode.system, () { settings.setThemeMode(ThemeMode.system); Navigator.pop(context); }),
-            _buildThemeOption(context, 'Light Mode', Icons.light_mode, settings.themeMode == ThemeMode.light, () { settings.setThemeMode(ThemeMode.light); Navigator.pop(context); }),
-            _buildThemeOption(context, 'Dark Mode', Icons.dark_mode, settings.themeMode == ThemeMode.dark, () { settings.setThemeMode(ThemeMode.dark); Navigator.pop(context); }),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThemeOption(BuildContext context, String title, IconData icon, bool isSelected, VoidCallback onTap) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: (isSelected ? primaryColor : (isDark ? Colors.white : Colors.black)).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: isSelected ? primaryColor : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
-      ),
-      title: Text(title),
-      trailing: isSelected ? Icon(Icons.check_circle, color: primaryColor) : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      onTap: onTap,
-    );
-  }
-
-  void _showModelPicker(BuildContext context, SettingsProvider settings) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(2)),
-            ),
-            const SizedBox(height: 20),
-            Text('Select AI Model', style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),
-            const SizedBox(height: 12),
-            Text(
-              'Choose your preferred intelligence engine for note generation.',
-              textAlign: TextAlign.center,
-              style: AppTheme.bodyMedium(
-                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.teal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.flash_on, color: AppTheme.teal),
-              ),
-              title: const Text('AIdea Cloud'),
-              subtitle: const Text('Optimized for speed and quality (Recommended)'),
-              trailing: settings.aiModel == AiModel.aidea
-                  ? const Icon(Icons.check_circle, color: AppTheme.teal)
-                  : null,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              onTap: () {
-                settings.setAiModel(AiModel.aidea);
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4285F4).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.auto_awesome, color: Color(0xFF4285F4)),
-              ),
-              title: const Text('Google Gemini Pro'),
-              subtitle: const Text('Direct access to Gemini using your API key'),
-              trailing: settings.aiModel == AiModel.gemini
-                  ? const Icon(Icons.check_circle, color: Color(0xFF4285F4))
-                  : null,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              onTap: () {
-                settings.setAiModel(AiModel.gemini);
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _scrollToSection(String title) {
     GlobalKey? targetKey;
@@ -964,12 +1073,6 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
         break;
       case 'Security':
         targetKey = _securityKey;
-        break;
-      case 'Theme & UI':
-        targetKey = _themeKey;
-        break;
-      case 'AI Models':
-        targetKey = _aiKey;
         break;
     }
     if (targetKey?.currentContext != null) {
@@ -982,10 +1085,12 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
   }
 
   void _showEditProfileDialog(BuildContext context, AuthProvider auth) {
-    final nameController = TextEditingController(text: auth.user?.displayName ?? '');
+    final nameController = TextEditingController(
+      text: auth.user?.displayName ?? '',
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -996,22 +1101,47 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
           mainAxisSize: MainAxisSize.min,
           children: [
             // Avatar at top
-            _buildAvatarWidget(dialogContext, auth, isDark, primaryColor, radius: 44),
+            _buildAvatarWidget(
+              dialogContext,
+              auth,
+              isDark,
+              primaryColor,
+              radius: 44,
+            ),
             const SizedBox(height: 24),
-            Text('Edit Profile', style: AppTheme.headline3(
-              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-            )),
+            Text(
+              'Edit Profile',
+              style: AppTheme.headline3(
+                color: isDark
+                    ? AppTheme.darkTextPrimary
+                    : AppTheme.lightTextPrimary,
+              ),
+            ),
             const SizedBox(height: 24),
             TextField(
               controller: nameController,
-              style: AppTheme.bodyLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
+              style: AppTheme.bodyLarge(
+                color: isDark
+                    ? AppTheme.darkTextPrimary
+                    : AppTheme.lightTextPrimary,
+              ),
               decoration: InputDecoration(
                 labelText: 'DISPLAY NAME',
-                prefixIcon: Icon(Icons.person_outline, color: primaryColor, size: 20),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                prefixIcon: Icon(
+                  Icons.person_outline,
+                  color: primaryColor,
+                  size: 20,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
+                  borderSide: BorderSide(
+                    color: (isDark ? Colors.white : Colors.black).withValues(
+                      alpha: 0.1,
+                    ),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -1023,17 +1153,27 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: 0.03,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.email_outlined, size: 16, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                  Icon(
+                    Icons.email_outlined,
+                    size: 16,
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     auth.user?.email ?? 'N/A',
                     style: AppTheme.bodySmall(
-                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                      color: isDark
+                          ? AppTheme.darkTextSecondary
+                          : AppTheme.lightTextSecondary,
                     ),
                   ),
                 ],
@@ -1044,7 +1184,14 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Cancel', style: TextStyle(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark
+                    ? AppTheme.darkTextSecondary
+                    : AppTheme.lightTextSecondary,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1063,7 +1210,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Save Changes'),
@@ -1087,7 +1236,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: Row(
             children: [
               Container(
@@ -1096,12 +1247,21 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                   color: AppTheme.teal.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.lock_outline, color: AppTheme.teal, size: 20),
+                child: const Icon(
+                  Icons.lock_outline,
+                  color: AppTheme.teal,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              Text('Change Password', style: AppTheme.headline3(
-                color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-              ).copyWith(fontSize: 18)),
+              Text(
+                'Change Password',
+                style: AppTheme.headline3(
+                  color: isDark
+                      ? AppTheme.darkTextPrimary
+                      : AppTheme.lightTextPrimary,
+                ).copyWith(fontSize: 18),
+              ),
             ],
           ),
           content: Column(
@@ -1114,13 +1274,23 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                   labelText: 'Current Password',
                   prefixIcon: const Icon(Icons.lock, size: 20),
                   suffixIcon: IconButton(
-                    icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
-                    onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                    icon: Icon(
+                      obscureCurrent ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setDialogState(() => obscureCurrent = !obscureCurrent),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
+                    borderSide: BorderSide(
+                      color: (isDark ? Colors.white : Colors.black).withValues(
+                        alpha: 0.1,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1132,13 +1302,23 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                   labelText: 'New Password',
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
-                    icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
-                    onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                    icon: Icon(
+                      obscureNew ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setDialogState(() => obscureNew = !obscureNew),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
+                    borderSide: BorderSide(
+                      color: (isDark ? Colors.white : Colors.black).withValues(
+                        alpha: 0.1,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1149,10 +1329,16 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1)),
+                    borderSide: BorderSide(
+                      color: (isDark ? Colors.white : Colors.black).withValues(
+                        alpha: 0.1,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1174,7 +1360,10 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                   return;
                 }
                 if (newPass.length < 6) {
-                  _showToast('Password must be at least 6 characters', isError: true);
+                  _showToast(
+                    'Password must be at least 6 characters',
+                    isError: true,
+                  );
                   return;
                 }
                 if (newPass != confirm) {
@@ -1190,7 +1379,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
                 if (context.mounted) {
                   _showToast(
-                    success ? 'Password changed successfully!' : auth.errorMessage ?? 'Failed to change password',
+                    success
+                        ? 'Password changed successfully!'
+                        : auth.errorMessage ?? 'Failed to change password',
                     isError: !success,
                   );
                 }
@@ -1198,7 +1389,9 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
               ),
               child: const Text('Update Password'),
             ),
@@ -1210,19 +1403,26 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
 
   void _handleLogout(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Sign Out', style: AppTheme.headline3(
-          color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-        )),
+        title: Text(
+          'Sign Out',
+          style: AppTheme.headline3(
+            color: isDark
+                ? AppTheme.darkTextPrimary
+                : AppTheme.lightTextPrimary,
+          ),
+        ),
         content: Text(
           'Are you sure you want to sign out?',
           style: AppTheme.bodyMedium(
-            color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+            color: isDark
+                ? AppTheme.darkTextSecondary
+                : AppTheme.lightTextSecondary,
           ),
         ),
         actions: [
@@ -1245,9 +1445,13 @@ class _AccountTabState extends State<AccountTab> with SingleTickerProviderStateM
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+              backgroundColor: isDark
+                  ? AppTheme.darkTextPrimary
+                  : AppTheme.lightTextPrimary,
               foregroundColor: isDark ? AppTheme.darkBg : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
             ),
             child: const Text('Sign Out'),
           ),
@@ -1313,16 +1517,32 @@ class _SettingTileState extends State<_SettingTile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.title, style: AppTheme.titleMedium(color: widget.isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary).copyWith(fontSize: 14)),
+                    Text(
+                      widget.title,
+                      style: AppTheme.titleMedium(
+                        color: widget.isDark
+                            ? AppTheme.darkTextPrimary
+                            : AppTheme.lightTextPrimary,
+                      ).copyWith(fontSize: 14),
+                    ),
                     const SizedBox(height: 2),
-                    Text(widget.subtitle, style: AppTheme.bodySmall(color: widget.isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+                    Text(
+                      widget.subtitle,
+                      style: AppTheme.bodySmall(
+                        color: widget.isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: (widget.isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
+                color: (widget.isDark ? Colors.white : Colors.black).withValues(
+                  alpha: 0.2,
+                ),
               ),
             ],
           ),

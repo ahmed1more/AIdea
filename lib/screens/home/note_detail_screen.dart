@@ -10,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/app_theme.dart';
 // Removed: import '../../widgets/custom_youtube_player.dart';
 // Removed: import 'package:youtube_player_flutter/youtube_player_flutter.dart' show YoutubePlayer;
 
@@ -789,13 +788,11 @@ class _MetaChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isDark;
-  final VoidCallback? onTap;
 
   const _MetaChip({
     required this.icon,
     required this.label,
     required this.isDark,
-    this.onTap,
   });
 
   @override
@@ -817,17 +814,6 @@ class _MetaChip extends StatelessWidget {
         ),
       ],
     );
-
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: content,
-        ),
-      );
-    }
 
     return content;
   }

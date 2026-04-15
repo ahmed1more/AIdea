@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -6,17 +8,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
-import '../../widgets/note_card.dart';
-import '../../widgets/editorial_quote_card.dart';
-import '../main_shell.dart';
+import '../../providers/settings_provider.dart';
 import 'add_note_screen.dart';
+import '../../widgets/note_card.dart';
+import '../account/account_tab.dart';
 
-/// Home tab — editorial-inspired landing with URL input and recent notes.
-class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomeTab> createState() => _HomeTabState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -45,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     if (authProvider.user != null) {
       notesProvider.loadUserNotes(authProvider.user!.id);
+      notesProvider.loadFavoriteNotes(authProvider.user!.id);
     }
   }
 
@@ -106,23 +108,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => AddNoteScreen(
-          initialUrl: url,
-          initialTitle: fetchedTitle,
-        ),
+        builder: (_) =>
+            AddNoteScreen(initialUrl: url, initialTitle: fetchedTitle),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 900;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -130,6 +132,42 @@ class _HomeScreenState extends State<HomeScreen> {
         title: settings.logo(size: 64),
         centerTitle: false,
         actions: [
+          // ── Theme Toggle ──────────────────────────────────────────────
+          Consumer<SettingsProvider>(
+            builder: (context, settingsP, _) {
+              final IconData themeIcon;
+              final String themeTooltip;
+              switch (settingsP.themeMode) {
+                case ThemeMode.light:
+                  themeIcon = Icons.light_mode_rounded;
+                  themeTooltip = 'Switch to Dark Mode';
+                  break;
+                case ThemeMode.dark:
+                  themeIcon = Icons.dark_mode_rounded;
+                  themeTooltip = 'Switch to System Mode';
+                  break;
+                default:
+                  themeIcon = Icons.brightness_auto_rounded;
+                  themeTooltip = 'Switch to Light Mode';
+              }
+              return IconButton(
+                icon: Icon(
+                  themeIcon,
+                  size: 20,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+                tooltip: themeTooltip,
+                onPressed: () {
+                  final next = settingsP.themeMode == ThemeMode.system
+                      ? ThemeMode.light
+                      : settingsP.themeMode == ThemeMode.light
+                          ? ThemeMode.dark
+                          : ThemeMode.system;
+                  settingsP.setThemeMode(next);
+                },
+              );
+            },
+          ),
           IconButton(
             icon: FaIcon(
               FontAwesomeIcons.circleUser,
@@ -137,9 +175,9 @@ class _HomeScreenState extends State<HomeScreen> {
               color: isDark ? Colors.white70 : Colors.black54,
             ),
             tooltip: 'Account & Settings',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AccountTab())),
           ),
           const SizedBox(width: 8),
         ],
@@ -147,15 +185,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── URL Input Section ──────────────────────────────────────────
+          // ── URL Input Section ────────────────────────────────────────
           _buildUrlInputSection(settings, isDark, isWide),
 
-          // ── Tab Row ───────────────────────────────────────────────────
+          // ── Tab Row ──────────────────────────────────────────────────
           _buildTabRow(settings, isDark),
 
           const SizedBox(height: 8),
 
-          // ── Notes Content ─────────────────────────────────────────────
+          // ── Notes Content ────────────────────────────────────────────
           Expanded(
             child: _selectedTab == 0
                 ? _buildNotesGrid(isWide)
@@ -166,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── URL Input + Summarize button ───────────────────────────────────────
+  // ── URL Input + Summarize button ─────────────────────────────────────
   Widget _buildUrlInputSection(
     SettingsProvider settings,
     bool isDark,
@@ -182,15 +220,15 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 52,
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.06)
-                    : Colors.black.withOpacity(0.04),
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _urlIsValid
-                      ? settings.accentColor.withOpacity(0.6)
+                      ? settings.accentColor.withValues(alpha: 0.6)
                       : (isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.black.withOpacity(0.08)),
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.08)),
                 ),
               ),
               child: TextField(
@@ -203,7 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: InputDecoration(
                   hintText: 'Paste YouTube or article URL…',
                   hintStyle: GoogleFonts.inter(
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.38)
+                        : Colors.black.withValues(alpha: 0.38),
                     fontSize: 14,
                   ),
                   prefixIcon: Padding(
@@ -213,7 +253,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       size: 14,
                       color: _urlIsValid
                           ? settings.accentColor
-                          : (isDark ? Colors.white38 : Colors.black38),
+                          : (isDark
+                                ? Colors.white.withValues(alpha: 0.38)
+                                : Colors.black.withValues(alpha: 0.38)),
                     ),
                   ),
                   prefixIconConstraints: const BoxConstraints(
@@ -225,7 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icon(
                             Icons.clear,
                             size: 16,
-                            color: isDark ? Colors.white38 : Colors.black38,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.38)
+                                : Colors.black.withValues(alpha: 0.38),
                           ),
                           onPressed: () {
                             _urlController.clear();
@@ -257,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 colors: [
                   settings.accentColor,
                   Color.alphaBlend(
-                    Colors.blue.withOpacity(0.25),
+                    Colors.blue.withValues(alpha: 0.25),
                     settings.accentColor,
                   ),
                 ],
@@ -265,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
               boxShadow: _urlIsValid
                   ? [
                       BoxShadow(
-                        color: settings.accentColor.withOpacity(0.35),
+                        color: settings.accentColor.withValues(alpha: 0.35),
                         blurRadius: 14,
                         offset: const Offset(0, 6),
                       ),
@@ -318,17 +362,27 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.15);
   }
 
-  // ── Tab Row (All Notes / Favorites + Search) ───────────────────────────
+  // ── Tab Row (All Notes / Favorites + Search) ──────────────────────────
   Widget _buildTabRow(SettingsProvider settings, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          _tabChip(settings, isDark, 0, 'Recent Notes',
-              FontAwesomeIcons.noteSticky),
+          _tabChip(
+            settings,
+            isDark,
+            0,
+            'Recent Notes',
+            FontAwesomeIcons.noteSticky,
+          ),
           const SizedBox(width: 10),
           _tabChip(
-              settings, isDark, 1, 'Favorites', FontAwesomeIcons.solidHeart),
+            settings,
+            isDark,
+            1,
+            'Favorites',
+            FontAwesomeIcons.solidHeart,
+          ),
           const Spacer(),
           // Mini search field
           SizedBox(
@@ -341,18 +395,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 hintText: 'Search…',
                 hintStyle: GoogleFonts.inter(
                   fontSize: 13,
-                  color: isDark ? Colors.white38 : Colors.black38,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.38)
+                      : Colors.black.withValues(alpha: 0.38),
                 ),
                 prefixIcon: Icon(
                   FontAwesomeIcons.magnifyingGlass,
                   size: 13,
-                  color: isDark ? Colors.white38 : Colors.black38,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.38)
+                      : Colors.black.withValues(alpha: 0.38),
                 ),
                 contentPadding: EdgeInsets.zero,
                 filled: true,
                 fillColor: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.04),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.04),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -364,13 +422,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: settings.accentColor.withOpacity(0.4),
+                    color: settings.accentColor.withValues(alpha: 0.4),
                   ),
                 ),
               ),
               onChanged: (val) {
-                Provider.of<NotesProvider>(context, listen: false)
-                    .setSearchQuery(val);
+                Provider.of<NotesProvider>(
+                  context,
+                  listen: false,
+                ).setSearchQuery(val);
                 setState(() {});
               },
             ),
@@ -397,13 +457,13 @@ class _HomeScreenState extends State<HomeScreen> {
           color: selected
               ? settings.accentColor
               : (isDark
-                    ? Colors.white.withOpacity(0.07)
-                    : Colors.black.withOpacity(0.05)),
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(12),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: settings.accentColor.withOpacity(0.3),
+                    color: settings.accentColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -418,7 +478,9 @@ class _HomeScreenState extends State<HomeScreen> {
               size: 12,
               color: selected
                   ? Colors.white
-                  : (isDark ? Colors.white54 : Colors.black45),
+                  : (isDark
+                        ? Colors.white.withValues(alpha: 0.54)
+                        : Colors.black.withValues(alpha: 0.45)),
             ),
             const SizedBox(width: 7),
             Text(
@@ -428,7 +490,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.w600,
                 color: selected
                     ? Colors.white
-                    : (isDark ? Colors.white54 : Colors.black45),
+                    : (isDark
+                          ? Colors.white.withValues(alpha: 0.54)
+                          : Colors.black.withValues(alpha: 0.45)),
               ),
             ),
           ],
@@ -437,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Notes Grid ─────────────────────────────────────────────────────────
+  // ── Notes Grid ───────────────────────────────────────────────────────
   Widget _buildNotesGrid(bool isWide) {
     return Consumer<NotesProvider>(
       builder: (context, provider, _) {
@@ -497,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Empty State ────────────────────────────────────────────────────────
+  // ── Empty State ──────────────────────────────────────────────────────
   Widget _buildEmptyState(String title, String subtitle) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     return Center(
@@ -509,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
             FaIcon(
               FontAwesomeIcons.folderOpen,
               size: 52,
-              color: Colors.grey.withOpacity(0.25),
+              color: Colors.grey.withValues(alpha: 0.25),
             ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 3.seconds),
             const SizedBox(height: 20),
             Text(
@@ -526,14 +590,13 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: Colors.grey.withOpacity(0.7),
+                color: Colors.grey.withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 28),
             OutlinedButton.icon(
               onPressed: () {
-                // Scroll to top / focus URL field
                 _urlController.clear();
                 setState(() => _urlIsValid = false);
               },
@@ -544,7 +607,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: settings.accentColor,
-                side: BorderSide(color: settings.accentColor.withOpacity(0.5)),
+                side: BorderSide(
+                  color: settings.accentColor.withValues(alpha: 0.5),
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

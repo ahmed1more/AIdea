@@ -20,7 +20,7 @@ class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   final List<Widget> _tabs = const [
-    HomeTab(),
+    HomeScreen(),
     FavoritesTab(),
     AccountTab(),
   ];
