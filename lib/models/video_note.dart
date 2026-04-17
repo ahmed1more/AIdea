@@ -7,6 +7,7 @@ class VideoNote {
   final String videoTitle;
   final String thumbnail;
   final String notes;
+  final String category;
   final List<String> keyPoints;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -19,6 +20,7 @@ class VideoNote {
     required this.videoTitle,
     required this.thumbnail,
     required this.notes,
+    this.category = 'Uncategorized',
     required this.keyPoints,
     required this.createdAt,
     required this.updatedAt,
@@ -33,6 +35,7 @@ class VideoNote {
       'videoTitle': videoTitle,
       'thumbnail': thumbnail,
       'notes': notes,
+      'category': category,
       'keyPoints': keyPoints,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
@@ -50,6 +53,7 @@ class VideoNote {
       videoTitle: data['videoTitle'] ?? '',
       thumbnail: data['thumbnail'] ?? '',
       notes: data['notes'] ?? '',
+      category: data['category'] ?? 'Uncategorized',
       keyPoints: List<String>.from(data['keyPoints'] ?? []),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
@@ -65,6 +69,7 @@ class VideoNote {
     String? videoTitle,
     String? thumbnail,
     String? notes,
+    String? category,
     List<String>? keyPoints,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -77,6 +82,7 @@ class VideoNote {
       videoTitle: videoTitle ?? this.videoTitle,
       thumbnail: thumbnail ?? this.thumbnail,
       notes: notes ?? this.notes,
+      category: category ?? this.category,
       keyPoints: keyPoints ?? this.keyPoints,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

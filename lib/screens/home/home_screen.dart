@@ -11,7 +11,8 @@ import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'add_note_screen.dart';
 import '../../widgets/note_card.dart';
-import '../account/account_tab.dart';
+import '../recommendations/recommendations_screen.dart';
+import '../dashboard/dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +25,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final _urlController = TextEditingController();
   final _searchController = TextEditingController();
   int _selectedTab = 0; // 0 = All Notes, 1 = Favorites
+  bool _showCategoryFilter = false;
+
+  final List<String> _categories = [
+    'All',
+    'Technology & AI',
+    'Business & Finance',
+    'Education & Science',
+    'Productivity & Self-Growth',
+    'News & Politics',
+    'Entertainment & Lifestyle',
+    'Health & Sports'
+  ];
 
   bool _isValidatingUrl = false;
   bool _urlIsValid = false;
@@ -170,14 +183,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: FaIcon(
-              FontAwesomeIcons.circleUser,
-              size: 20,
+              FontAwesomeIcons.tags,
+              size: 18,
               color: isDark ? Colors.white70 : Colors.black54,
             ),
-            tooltip: 'Account & Settings',
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const AccountTab())),
+            tooltip: 'Filter by Category',
+            onPressed: () {
+              setState(() {
+                _showCategoryFilter = !_showCategoryFilter;
+              });
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -191,17 +206,33 @@ class _HomeScreenState extends State<HomeScreen> {
           // ── Tab Row ──────────────────────────────────────────────────
           _buildTabRow(settings, isDark),
 
+          // ── Category Filter Row ───────────────────────────────────────
+          if (_showCategoryFilter) _buildCategoryFilterRow(settings, isDark),
+
           const SizedBox(height: 8),
 
           // ── Notes Content ────────────────────────────────────────────
           Expanded(
-            child: _selectedTab == 0
-                ? _buildNotesGrid(isWide)
-                : _buildFavoritesGrid(isWide),
+            child: _buildSelectedTabContent(isWide),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildSelectedTabContent(bool isWide) {
+    switch (_selectedTab) {
+      case 0:
+        return _buildNotesGrid(isWide);
+      case 1:
+        return _buildFavoritesGrid(isWide);
+      case 2:
+        return const RecommendationsScreen();
+      case 3:
+        return const DashboardScreen();
+      default:
+        return const SizedBox();
+    }
   }
 
   // ── URL Input + Summarize button ─────────────────────────────────────
@@ -372,8 +403,8 @@ class _HomeScreenState extends State<HomeScreen> {
             settings,
             isDark,
             0,
-            'Recent Notes',
-            FontAwesomeIcons.noteSticky,
+            'Home',
+            FontAwesomeIcons.house,
           ),
           const SizedBox(width: 10),
           _tabChip(
@@ -382,6 +413,22 @@ class _HomeScreenState extends State<HomeScreen> {
             1,
             'Favorites',
             FontAwesomeIcons.solidHeart,
+          ),
+          const SizedBox(width: 10),
+          _tabChip(
+            settings,
+            isDark,
+            2,
+            'Recommendations',
+            FontAwesomeIcons.lightbulb,
+          ),
+          const SizedBox(width: 10),
+          _tabChip(
+            settings,
+            isDark,
+            3,
+            'Dashboard',
+            FontAwesomeIcons.chartLine,
           ),
           const Spacer(),
           // Mini search field
@@ -499,6 +546,57 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  // ── Category Filter Row ─────────────────────────────────────────────
+  Widget _buildCategoryFilterRow(SettingsProvider settings, bool isDark) {
+    final notesProvider = Provider.of<NotesProvider>(context);
+    final currentFilter = notesProvider.categoryFilter;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _categories.map((category) {
+            final isSelected = currentFilter == category;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: GestureDetector(
+                onTap: () {
+                  notesProvider.setCategoryFilter(category);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? settings.accentColor
+                        : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04)),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? settings.accentColor
+                          : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08)),
+                    ),
+                  ),
+                  child: Text(
+                    category,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : Colors.black87),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.1, end: 0);
   }
 
   // ── Notes Grid ───────────────────────────────────────────────────────

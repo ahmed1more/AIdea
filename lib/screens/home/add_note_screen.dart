@@ -37,6 +37,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   // Result state
   String _generatedNotes = '';
+  String _generatedCategory = 'Uncategorized';
   List<String> _generatedKeyPoints = [];
   bool _isComplete = false;
 
@@ -186,6 +187,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       setState(() {
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
+        _generatedCategory = result['category'] as String? ?? 'Uncategorized';
         _isComplete = true;
       });
     } catch (e) {
@@ -231,6 +233,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       videoTitle: _videoTitleController.text.trim(),
       thumbnail: _getThumbnail(_videoUrlController.text),
       notes: _generatedNotes,
+      category: _generatedCategory,
       keyPoints: _generatedKeyPoints,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -269,6 +272,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
+      _generatedCategory = 'Uncategorized';
       _generatedKeyPoints = [];
     });
   }

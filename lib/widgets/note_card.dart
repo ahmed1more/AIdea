@@ -23,6 +23,28 @@ class NoteCard extends StatelessWidget {
     context.read<NotesProvider>().toggleFavorite(note.id, note.isFavorite);
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Technology & AI':
+        return FontAwesomeIcons.microchip;
+      case 'Business & Finance':
+        return FontAwesomeIcons.chartLine;
+      case 'Education & Science':
+        return FontAwesomeIcons.flask;
+      case 'Productivity & Self-Growth':
+        return FontAwesomeIcons.rocket;
+      case 'News & Politics':
+        return FontAwesomeIcons.newspaper;
+      case 'Entertainment & Lifestyle':
+        return FontAwesomeIcons.mugHot;
+      case 'Health & Sports':
+        return FontAwesomeIcons.heartPulse;
+      case 'Uncategorized':
+      default:
+        return FontAwesomeIcons.folderOpen;
+    }
+  }
+
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -212,14 +234,45 @@ class NoteCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '# YouTube Video',
-                            style: GoogleFonts.inter(
-                              color: isDark ? settings.accentColor.withValues(alpha: 0.7) : settings.accentColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: settings.accentColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    FaIcon(
+                                      _getCategoryIcon(note.category),
+                                      size: 10,
+                                      color: settings.accentColor,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      note.category,
+                                      style: GoogleFonts.inter(
+                                        color: settings.accentColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '# Video Note',
+                                style: GoogleFonts.inter(
+                                  color: isDark ? Colors.white38 : Colors.grey[400],
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           

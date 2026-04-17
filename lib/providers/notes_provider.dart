@@ -11,25 +11,37 @@ class NotesProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   String _searchQuery = '';
+  String _categoryFilter = 'All';
   StreamSubscription? _notesSubscription;
   StreamSubscription? _favoritesSubscription;
 
-  List<VideoNote> get notes => _searchQuery.isEmpty
-      ? _notes
-      : _notes
-            .where(
-              (note) =>
-                  note.videoTitle.toLowerCase().contains(
-                    _searchQuery.toLowerCase(),
-                  ) ||
-                  note.notes.toLowerCase().contains(_searchQuery.toLowerCase()),
-            )
-            .toList();
+  List<VideoNote> get notes {
+    List<VideoNote> filtered = _notes;
+    if (_categoryFilter != 'All') {
+      filtered = filtered.where((note) => note.category == _categoryFilter).toList();
+    }
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where(
+        (note) =>
+            note.videoTitle.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            note.notes.toLowerCase().contains(_searchQuery.toLowerCase()),
+      ).toList();
+    }
+    return filtered;
+  }
 
-  List<VideoNote> get favoriteNotes => _favoriteNotes;
+  List<VideoNote> get favoriteNotes {
+    List<VideoNote> filtered = _favoriteNotes;
+    if (_categoryFilter != 'All') {
+      filtered = filtered.where((note) => note.category == _categoryFilter).toList();
+    }
+    return filtered;
+  }
+
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
+  String get categoryFilter => _categoryFilter;
 
   // Load user notes
   void loadUserNotes(String userId) {
@@ -247,6 +259,12 @@ class NotesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Set category filter
+  void setCategoryFilter(String category) {
+    _categoryFilter = category;
+    notifyListeners();
+  }
+
   // Clear search
   void clearSearch() {
     _searchQuery = '';
@@ -266,6 +284,7 @@ class NotesProvider extends ChangeNotifier {
     _notes = [];
     _favoriteNotes = [];
     _searchQuery = '';
+    _categoryFilter = 'All';
     _errorMessage = null;
     notifyListeners();
   }
