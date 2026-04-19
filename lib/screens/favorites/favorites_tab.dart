@@ -130,7 +130,10 @@ class _FavoritesTabState extends State<FavoritesTab> {
                     Row(
                       children: [
                         const SizedBox(width: 4),
-                        Image.asset('assets/icon/aidea-logo.png', height: 28),
+                        Image.asset(
+                          context.read<SettingsProvider>().logoAssetPath(context),
+                          height: 28,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'AiDea',

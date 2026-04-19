@@ -101,6 +101,13 @@ class SettingsProvider extends ChangeNotifier {
   ThemeData getLightTheme() => AppTheme.buildLightTheme(accentColor);
   ThemeData getDarkTheme() => AppTheme.buildDarkTheme(accentColor);
 
+  String logoAssetPath(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark
+        ? 'assets/icon/aidea-logo-dark.png'
+        : 'assets/icon/aidea-logo-light.png';
+  }
+
   // Glassmorphism helper
   BoxDecoration glassDecoration({
     required BuildContext context,
@@ -109,11 +116,13 @@ class SettingsProvider extends ChangeNotifier {
     BorderRadius? borderRadius,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.white : AppTheme.lightSurface;
+    final borderColor = isDark ? Colors.white : AppTheme.lightDivider;
     return BoxDecoration(
-      color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
+      color: baseColor.withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(16),
       border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+        color: borderColor.withValues(alpha: isDark ? 0.1 : 0.7),
         width: 1.5,
       ),
     );
@@ -129,6 +138,8 @@ class SettingsProvider extends ChangeNotifier {
     Border? border,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.white : Colors.white;
+    final borderColor = isDark ? Colors.white : AppTheme.lightDivider;
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.circular(24),
       child: BackdropFilter(
@@ -136,15 +147,15 @@ class SettingsProvider extends ChangeNotifier {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withValues(
+            color: baseColor.withValues(
               alpha: opacity,
             ),
             borderRadius: borderRadius ?? BorderRadius.circular(24),
             border:
                 border ??
                 Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withValues(
-                    alpha: 0.1,
+                  color: borderColor.withValues(
+                    alpha: isDark ? 0.1 : 0.9,
                   ),
                   width: 1.5,
                 ),
@@ -158,17 +169,13 @@ class SettingsProvider extends ChangeNotifier {
   Widget logo({double size = 80, bool applyTheme = true}) {
     return Builder(
       builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final assetPath = applyTheme
+            ? logoAssetPath(context)
+            : 'assets/icon/aidea-logo-light.png';
         return Image.asset(
-          'assets/icon/aidea-logo.png',
+          assetPath,
           width: size,
           height: size,
-          color: applyTheme
-              ? (isDark ? Colors.white.withValues(alpha: 0.9) : null)
-              : null,
-          colorBlendMode: applyTheme
-              ? (isDark ? BlendMode.modulate : null)
-              : null,
         );
       },
     );

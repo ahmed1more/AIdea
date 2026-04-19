@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
               centerTitle: false,
               automaticallyImplyLeading: false,
               title: Image.asset(
-                'assets/icon/aidea-logo.png',
+                settings.logoAssetPath(context),
                 width: 32,
                 height: 32,
               ),
@@ -666,11 +666,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Transform.translate(
               offset: const Offset(0, -4),
-              child: Image.asset(
-                'assets/icon/aidea-logo.png',
-                width: 36,
-                height: 36,
-              ),
+            child: Image.asset(
+              settings.logoAssetPath(context),
+              width: 36,
+              height: 36,
+            ),
             ),
           ),
           // ── App Logo in Sidebar ──
