@@ -1,9 +1,4 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../theme/app_theme.dart';
-import '../providers/auth_provider.dart';
 import 'home/home_screen.dart';
 import 'favorites/favorites_tab.dart';
 import 'account/account_tab.dart';
@@ -33,10 +28,6 @@ class MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final isDesktop = MediaQuery.of(context).size.width > 800;
-
     return Scaffold(
       extendBody: true,
       appBar: null,
@@ -54,35 +45,7 @@ class MainShellState extends State<MainShell> {
     );
   }
 
-  /// Reusable profile avatar that shows photo or initials
-  static Widget _buildProfileAvatar({
-    required AuthProvider auth,
-    required bool isDark,
-    required Color primaryColor,
-    double radius = 20,
-  }) {
-    final name = auth.user?.displayName ?? 'U';
-    final photoUrl = auth.user?.photoUrl;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      child: CircleAvatar(
-        radius: radius,
-        backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-        backgroundImage: photoUrl != null
-            ? CachedNetworkImageProvider(photoUrl)
-            : null,
-        child: photoUrl == null
-            ? Text(
-                name[0].toUpperCase(),
-                style: AppTheme.labelLarge(color: primaryColor).copyWith(
-                  fontSize: radius * 0.8,
-                ),
-              )
-            : null,
-      ),
-    );
-  }
 }
 
 

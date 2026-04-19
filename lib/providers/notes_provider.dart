@@ -35,6 +35,13 @@ class NotesProvider extends ChangeNotifier {
     if (_categoryFilter != 'All') {
       filtered = filtered.where((note) => note.category == _categoryFilter).toList();
     }
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where(
+        (note) =>
+            note.videoTitle.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            note.notes.toLowerCase().contains(_searchQuery.toLowerCase()),
+      ).toList();
+    }
     return filtered;
   }
 

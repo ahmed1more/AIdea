@@ -67,21 +67,15 @@ class _AccountTabState extends State<AccountTab>
 
 
     if (isDesktop) {
-      return Scaffold(
-        backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-        body: _buildDesktopLayout(
-          context,
-          isDark,
-          primaryColor,
-          settings,
-          auth,
-        ),
+      return _buildDesktopLayout(
+        context,
+        isDark,
+        primaryColor,
+        settings,
+        auth,
       );
     }
-    return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      body: _buildMobileLayout(context, isDark, primaryColor, settings, auth),
-    );
+    return _buildMobileLayout(context, isDark, primaryColor, settings, auth);
   }
 
   // ─── MOBILE LAYOUT ────────────────────────────────────────────────
@@ -187,7 +181,7 @@ class _AccountTabState extends State<AccountTab>
 
     return SingleChildScrollView(
       controller: _scrollController,
-      padding: const EdgeInsets.only(top: 100, bottom: 80, left: 32, right: 32),
+      padding: const EdgeInsets.only(top: 40, bottom: 80, left: 32, right: 32),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),
