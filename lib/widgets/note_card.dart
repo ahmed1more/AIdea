@@ -196,7 +196,7 @@ class NoteCard extends StatelessWidget {
                       ),
 
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -234,7 +234,7 @@ class NoteCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
                               Container(
@@ -274,9 +274,9 @@ class NoteCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           
-                          const Divider(height: 24, thickness: 0.5),
+                          const Divider(height: 16, thickness: 0.5),
 
                           Row(
                             children: [
@@ -329,7 +329,7 @@ class NoteCard extends StatelessWidget {
                             ],
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [

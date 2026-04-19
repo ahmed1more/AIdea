@@ -138,73 +138,79 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: isDark
           ? const Color(0xFF0F172A)
           : const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: settings.logo(size: 64),
-        centerTitle: false,
-        actions: [
-          // ── Theme Toggle ──────────────────────────────────────────────
-          Consumer<SettingsProvider>(
-            builder: (context, settingsP, _) {
-              final IconData themeIcon;
-              final String themeTooltip;
-              switch (settingsP.themeMode) {
-                case ThemeMode.light:
-                  themeIcon = Icons.light_mode_rounded;
-                  themeTooltip = 'Switch to Dark Mode';
-                  break;
-                case ThemeMode.dark:
-                  themeIcon = Icons.dark_mode_rounded;
-                  themeTooltip = 'Switch to System Mode';
-                  break;
-                default:
-                  themeIcon = Icons.brightness_auto_rounded;
-                  themeTooltip = 'Switch to Light Mode';
-              }
-              return IconButton(
-                icon: Icon(
-                  themeIcon,
-                  size: 20,
-                  color: isDark ? Colors.white70 : Colors.black54,
+      // On desktop the AppBar is absent – controls live in the tab row instead.
+      appBar: isWide
+          ? null
+          : AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              centerTitle: false,
+              automaticallyImplyLeading: false,
+              actions: [
+                // ── Theme Toggle ────────────────────────────────────────
+                Consumer<SettingsProvider>(
+                  builder: (context, settingsP, _) {
+                    final IconData themeIcon;
+                    final String themeTooltip;
+                    switch (settingsP.themeMode) {
+                      case ThemeMode.light:
+                        themeIcon = Icons.light_mode_rounded;
+                        themeTooltip = 'Switch to Dark Mode';
+                        break;
+                      case ThemeMode.dark:
+                        themeIcon = Icons.dark_mode_rounded;
+                        themeTooltip = 'Switch to System Mode';
+                        break;
+                      default:
+                        themeIcon = Icons.brightness_auto_rounded;
+                        themeTooltip = 'Switch to Light Mode';
+                    }
+                    return IconButton(
+                      icon: Icon(
+                        themeIcon,
+                        size: 20,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
+                      tooltip: themeTooltip,
+                      onPressed: () {
+                        final next = settingsP.themeMode == ThemeMode.system
+                            ? ThemeMode.light
+                            : settingsP.themeMode == ThemeMode.light
+                                ? ThemeMode.dark
+                                : ThemeMode.system;
+                        settingsP.setThemeMode(next);
+                      },
+                    );
+                  },
                 ),
-                tooltip: themeTooltip,
-                onPressed: () {
-                  final next = settingsP.themeMode == ThemeMode.system
-                      ? ThemeMode.light
-                      : settingsP.themeMode == ThemeMode.light
-                          ? ThemeMode.dark
-                          : ThemeMode.system;
-                  settingsP.setThemeMode(next);
-                },
-              );
-            },
-          ),
-          IconButton(
-            icon: FaIcon(
-              FontAwesomeIcons.tags,
-              size: 18,
-              color: isDark ? Colors.white70 : Colors.black54,
+                IconButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.tags,
+                    size: 18,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                  tooltip: 'Filter by Category',
+                  onPressed: () {
+                    setState(() {
+                      _showCategoryFilter = !_showCategoryFilter;
+                    });
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
             ),
-            tooltip: 'Filter by Category',
-            onPressed: () {
-              setState(() {
-                _showCategoryFilter = !_showCategoryFilter;
-              });
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // ── URL Input Section ────────────────────────────────────────
           _buildUrlInputSection(settings, isDark, isWide),
 
-          // ── Tab Row ──────────────────────────────────────────────────
-          _buildTabRow(settings, isDark),
+          // ── Tab Row (desktop only) ────────────────────────────────────────────────
+          if (isWide) _buildTabRow(settings, isDark),
+
+          // ── Mobile Search Bar ────────────────────────────────────────────────
+          if (!isWide) _buildMobileSearchBar(settings, isDark),
 
           // ── Category Filter Row ───────────────────────────────────────
           if (_showCategoryFilter) _buildCategoryFilterRow(settings, isDark),
@@ -393,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.15);
   }
 
-  // ── Tab Row (All Notes / Favorites + Search) ──────────────────────────
+  // ── Tab Row (desktop: chips only) ──────────────────────────────────────────────
   Widget _buildTabRow(SettingsProvider settings, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -431,58 +437,105 @@ class _HomeScreenState extends State<HomeScreen> {
             FontAwesomeIcons.chartLine,
           ),
           const Spacer(),
-          // Mini search field
-          SizedBox(
-            width: 200,
-            height: 38,
-            child: TextField(
-              controller: _searchController,
-              style: GoogleFonts.inter(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Search…',
-                hintStyle: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.38)
-                      : Colors.black.withValues(alpha: 0.38),
+          // ── Desktop-only controls (theme toggle + category filter) ────
+          Consumer<SettingsProvider>(
+            builder: (context, settingsP, _) {
+              final IconData themeIcon;
+              switch (settingsP.themeMode) {
+                case ThemeMode.light:
+                  themeIcon = Icons.light_mode_rounded;
+                  break;
+                case ThemeMode.dark:
+                  themeIcon = Icons.dark_mode_rounded;
+                  break;
+                default:
+                  themeIcon = Icons.brightness_auto_rounded;
+              }
+              return IconButton(
+                icon: Icon(
+                  themeIcon,
+                  size: 20,
+                  color: isDark ? Colors.white70 : Colors.black54,
                 ),
-                prefixIcon: Icon(
-                  FontAwesomeIcons.magnifyingGlass,
-                  size: 13,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.38)
-                      : Colors.black.withValues(alpha: 0.38),
-                ),
-                contentPadding: EdgeInsets.zero,
-                filled: true,
-                fillColor: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.04),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: settings.accentColor.withValues(alpha: 0.4),
-                  ),
-                ),
-              ),
-              onChanged: (val) {
-                Provider.of<NotesProvider>(
-                  context,
-                  listen: false,
-                ).setSearchQuery(val);
-                setState(() {});
-              },
+                tooltip: 'Toggle Theme',
+                onPressed: () {
+                  final next = settingsP.themeMode == ThemeMode.system
+                      ? ThemeMode.light
+                      : settingsP.themeMode == ThemeMode.light
+                          ? ThemeMode.dark
+                          : ThemeMode.system;
+                  settingsP.setThemeMode(next);
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: FaIcon(
+              FontAwesomeIcons.tags,
+              size: 16,
+              color: isDark ? Colors.white70 : Colors.black54,
             ),
+            tooltip: 'Filter by Category',
+            onPressed: () =>
+                setState(() => _showCategoryFilter = !_showCategoryFilter),
           ),
         ],
+      ),
+    ).animate().fadeIn(delay: 150.ms);
+  }
+
+  // ── Mobile Search Bar ──────────────────────────────────────────────────
+  Widget _buildMobileSearchBar(SettingsProvider settings, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      child: SizedBox(
+        height: 44,
+        child: TextField(
+          controller: _searchController,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Search…',
+            hintStyle: GoogleFonts.inter(
+              fontSize: 14,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.38)
+                  : Colors.black.withValues(alpha: 0.38),
+            ),
+            prefixIcon: Icon(
+              FontAwesomeIcons.magnifyingGlass,
+              size: 14,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.38)
+                  : Colors.black.withValues(alpha: 0.38),
+            ),
+            contentPadding: EdgeInsets.zero,
+            filled: true,
+            fillColor: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.04),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: settings.accentColor.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+          onChanged: (val) {
+            Provider.of<NotesProvider>(context, listen: false).setSearchQuery(val);
+            setState(() {});
+          },
+        ),
       ),
     ).animate().fadeIn(delay: 150.ms);
   }
@@ -644,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
           maxCrossAxisExtent: 420,
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
-          childAspectRatio: 0.88,
+          childAspectRatio: 0.82,
         ),
         itemCount: notes.length,
         itemBuilder: (context, i) =>

@@ -64,11 +64,6 @@ class MainShellState extends State<MainShell> {
                       children: [
                         Row(
                           children: [
-                            Image.asset(
-                              'assets/icon/aidea-logo.png',
-                              height: 32,
-                            ),
-                            const SizedBox(width: 12),
                             Text(
                               'AiDea',
                               style: AppTheme.headline3(
@@ -79,34 +74,7 @@ class MainShellState extends State<MainShell> {
                             ),
                           ],
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _DesktopNavItem(
-                              label: 'Home',
-                              isActive: _currentIndex == 0,
-                              activeColor: primaryColor,
-                              isDark: isDark,
-                              onTap: () => setState(() => _currentIndex = 0),
-                            ),
-                            const SizedBox(width: 32),
-                            _DesktopNavItem(
-                              label: 'Favorites',
-                              isActive: _currentIndex == 1,
-                              activeColor: primaryColor,
-                              isDark: isDark,
-                              onTap: () => setState(() => _currentIndex = 1),
-                            ),
-                            const SizedBox(width: 32),
-                            _DesktopNavItem(
-                              label: 'Account',
-                              isActive: _currentIndex == 2,
-                              activeColor: primaryColor,
-                              isDark: isDark,
-                              onTap: () => setState(() => _currentIndex = 2),
-                            ),
-                          ],
-                        ),
+
                         Row(
                           children: [
                             Consumer<AuthProvider>(
