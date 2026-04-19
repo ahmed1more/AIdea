@@ -99,7 +99,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget _buildDropdown(bool isDark, String hint, List<String> items, String? selectedValue, ValueChanged<String?> onChanged) {
     return DropdownButtonFormField<String>(
-      value: selectedValue,
+      initialValue: selectedValue,
       hint: Text(hint, style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary), overflow: TextOverflow.ellipsis),
       items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),)).toList(),
       onChanged: onChanged,
