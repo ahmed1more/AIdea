@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../widgets/note_card.dart';
 import '../../widgets/editorial_quote_card.dart';
 
