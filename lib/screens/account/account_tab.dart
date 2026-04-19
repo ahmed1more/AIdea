@@ -65,19 +65,10 @@ class _AccountTabState extends State<AccountTab>
     final auth = Provider.of<AuthProvider>(context);
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
-    final appBar = AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    );
 
     if (isDesktop) {
       return Scaffold(
         backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-        appBar: appBar,
         body: _buildDesktopLayout(
           context,
           isDark,
@@ -89,7 +80,6 @@ class _AccountTabState extends State<AccountTab>
     }
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      appBar: appBar,
       body: _buildMobileLayout(context, isDark, primaryColor, settings, auth),
     );
   }

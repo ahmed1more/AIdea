@@ -49,11 +49,31 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   late AnimationController _pulseController;
 
   static const _processingSteps = [
-    {'icon': Icons.link, 'label': 'Validating URL', 'desc': 'Checking video link...'},
-    {'icon': Icons.cloud_download_outlined, 'label': 'Extracting Content', 'desc': 'Fetching video transcript...'},
-    {'icon': Icons.auto_awesome, 'label': 'AI Processing', 'desc': 'Generating intelligent summary...'},
-    {'icon': Icons.fact_check_outlined, 'label': 'Structuring Notes', 'desc': 'Organizing key insights...'},
-    {'icon': Icons.check_circle, 'label': 'Complete', 'desc': 'Your notes are ready!'},
+    {
+      'icon': Icons.link,
+      'label': 'Validating URL',
+      'desc': 'Checking video link...',
+    },
+    {
+      'icon': Icons.cloud_download_outlined,
+      'label': 'Extracting Content',
+      'desc': 'Fetching video transcript...',
+    },
+    {
+      'icon': Icons.auto_awesome,
+      'label': 'AI Processing',
+      'desc': 'Generating intelligent summary...',
+    },
+    {
+      'icon': Icons.fact_check_outlined,
+      'label': 'Structuring Notes',
+      'desc': 'Organizing key Recommendations...',
+    },
+    {
+      'icon': Icons.check_circle,
+      'label': 'Complete',
+      'desc': 'Your notes are ready!',
+    },
   ];
 
   @override
@@ -81,7 +101,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 800), () {
-      if (url.isNotEmpty && (url.contains('youtube.com') || url.contains('youtu.be'))) {
+      if (url.isNotEmpty &&
+          (url.contains('youtube.com') || url.contains('youtu.be'))) {
         _fetchMetadata(url);
       }
     });
@@ -159,7 +180,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
       // Step 1: Extracting content
       _updateStep(1, 'Connecting to video source...');
-      
+
       String? idToken = await firebase_auth.FirebaseAuth.instance.currentUser
           ?.getIdToken();
       if (idToken == null) {
@@ -178,7 +199,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       );
 
       // Step 3: Structuring
-      _updateStep(3, 'Organizing insights...');
+      _updateStep(3, 'Organizing Recommendations...');
       await Future.delayed(const Duration(milliseconds: 600));
 
       // Step 4: Complete
@@ -220,7 +241,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
           content: const Text('You must be logged in to save notes'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -259,7 +282,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
           content: const Text('Failed to save note. Please try again.'),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -287,14 +312,18 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         title: Text(
           _isProcessing || _isComplete ? '' : 'New Summary',
           style: AppTheme.headline3(
-            color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+            color: isDark
+                ? AppTheme.darkTextPrimary
+                : AppTheme.lightTextPrimary,
           ),
         ),
         centerTitle: false,
         leading: IconButton(
           icon: Icon(
             _isProcessing && !_isComplete ? Icons.close : Icons.arrow_back,
-            color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+            color: isDark
+                ? AppTheme.darkTextPrimary
+                : AppTheme.lightTextPrimary,
           ),
           onPressed: () {
             if (_isProcessing && !_isComplete) {
@@ -339,7 +368,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         height: 80,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [primaryColor, primaryColor.withValues(alpha: 0.6)],
+                            colors: [
+                              primaryColor,
+                              primaryColor.withValues(alpha: 0.6),
+                            ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -352,13 +384,22 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.auto_awesome, color: Colors.white, size: 36),
-                      ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+                        child: const Icon(
+                          Icons.auto_awesome,
+                          color: Colors.white,
+                          size: 36,
+                        ),
+                      ).animate().scale(
+                        duration: 500.ms,
+                        curve: Curves.elasticOut,
+                      ),
                       const SizedBox(height: 24),
                       Text(
                         'Generate AI Notes',
                         style: AppTheme.headline2(
-                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                          color: isDark
+                              ? AppTheme.darkTextPrimary
+                              : AppTheme.lightTextPrimary,
                         ),
                       ).animate().fadeIn(delay: 100.ms),
                       const SizedBox(height: 8),
@@ -366,7 +407,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         'Paste a video link and let AI create\nstructured notes for you.',
                         textAlign: TextAlign.center,
                         style: AppTheme.bodyMedium(
-                          color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                          color: isDark
+                              ? AppTheme.darkTextSecondary
+                              : AppTheme.lightTextSecondary,
                         ),
                       ).animate().fadeIn(delay: 200.ms),
                     ],
@@ -379,27 +422,35 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                 Text(
                   'VIDEO LINK',
                   style: AppTheme.labelSmall(
-                    color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
                   ).copyWith(letterSpacing: 2),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _videoUrlController,
                   style: AppTheme.bodyMedium(
-                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: 'https://youtube.com/watch?v=...',
                     prefixIcon: Icon(Icons.link, size: 20, color: primaryColor),
                     filled: true,
-                    fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    fillColor: isDark
+                        ? AppTheme.darkSurface
+                        : AppTheme.lightSurface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Link is required';
+                    if (value == null || value.isEmpty) {
+                      return 'Link is required';
+                    }
                     if (!value.startsWith('http')) return 'Invalid URL format';
                     return null;
                   },
@@ -411,20 +462,30 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                 Text(
                   'TOPIC TITLE',
                   style: AppTheme.labelSmall(
-                    color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
                   ).copyWith(letterSpacing: 2),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _videoTitleController,
                   style: AppTheme.bodyMedium(
-                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: 'What is this video about?',
-                    prefixIcon: Icon(Icons.title, size: 20, color: primaryColor),
+                    prefixIcon: Icon(
+                      Icons.title,
+                      size: 20,
+                      color: primaryColor,
+                    ),
                     filled: true,
-                    fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    fillColor: isDark
+                        ? AppTheme.darkSurface
+                        : AppTheme.lightSurface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
@@ -442,7 +503,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         : null,
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Title is required';
+                    if (value == null || value.isEmpty) {
+                      return 'Title is required';
+                    }
                     return null;
                   },
                 ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
@@ -455,11 +518,17 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                     decoration: BoxDecoration(
                       color: AppTheme.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppTheme.error.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppTheme.error,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -498,7 +567,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         const SizedBox(width: 12),
                         Text(
                           'GENERATE NOTES',
-                          style: AppTheme.button(color: Colors.white).copyWith(letterSpacing: 1.5),
+                          style: AppTheme.button(
+                            color: Colors.white,
+                          ).copyWith(letterSpacing: 1.5),
                         ),
                       ],
                     ),
@@ -555,7 +626,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
+                            colors: [
+                              primaryColor,
+                              primaryColor.withValues(alpha: 0.7),
+                            ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -567,7 +641,11 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
+                        child: const Icon(
+                          Icons.auto_awesome,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                       ),
                     ),
                   );
@@ -580,12 +658,12 @@ class _AddNoteScreenState extends State<AddNoteScreen>
               Text(
                 _statusMessage,
                 style: AppTheme.titleLarge(
-                  color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                  color: isDark
+                      ? AppTheme.darkTextPrimary
+                      : AppTheme.lightTextPrimary,
                 ),
                 textAlign: TextAlign.center,
-              ).animate(
-                key: ValueKey(_statusMessage),
-              ).fadeIn(duration: 300.ms),
+              ).animate(key: ValueKey(_statusMessage)).fadeIn(duration: 300.ms),
 
               const SizedBox(height: 48),
 
@@ -600,7 +678,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                   padding: const EdgeInsets.only(bottom: 4),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: isActive
                           ? primaryColor.withValues(alpha: 0.1)
@@ -619,22 +700,31 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                             color: isCompleted
                                 ? AppTheme.success
                                 : isActive
-                                    ? primaryColor
-                                    : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
+                                ? primaryColor
+                                : (isDark
+                                      ? AppTheme.darkSurface
+                                      : AppTheme.lightSurface),
                             border: isPending
                                 ? Border.all(
                                     color: isDark
-                                        ? AppTheme.darkTextSecondary.withValues(alpha: 0.3)
-                                        : AppTheme.lightTextSecondary.withValues(alpha: 0.3),
+                                        ? AppTheme.darkTextSecondary.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : AppTheme.lightTextSecondary
+                                              .withValues(alpha: 0.3),
                                   )
                                 : null,
                           ),
                           child: Icon(
-                            isCompleted ? Icons.check : step['icon'] as IconData,
+                            isCompleted
+                                ? Icons.check
+                                : step['icon'] as IconData,
                             size: 16,
                             color: isCompleted || isActive
                                 ? Colors.white
-                                : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                                : (isDark
+                                      ? AppTheme.darkTextSecondary
+                                      : AppTheme.lightTextSecondary),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -646,16 +736,22 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                                 step['label'] as String,
                                 style: AppTheme.titleMedium(
                                   color: isPending
-                                      ? (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)
-                                          .withValues(alpha: 0.5)
-                                      : (isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
+                                      ? (isDark
+                                                ? AppTheme.darkTextSecondary
+                                                : AppTheme.lightTextSecondary)
+                                            .withValues(alpha: 0.5)
+                                      : (isDark
+                                            ? AppTheme.darkTextPrimary
+                                            : AppTheme.lightTextPrimary),
                                 ),
                               ),
                               if (isActive)
                                 Text(
                                   step['desc'] as String,
                                   style: AppTheme.bodySmall(
-                                    color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : AppTheme.lightTextSecondary,
                                   ),
                                 ),
                             ],
@@ -673,10 +769,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                       ],
                     ),
                   ),
-                ).animate().fadeIn(
-                  delay: (index * 80).ms,
-                  duration: 400.ms,
-                );
+                ).animate().fadeIn(delay: (index * 80).ms, duration: 400.ms);
               }),
             ],
           ),
@@ -709,20 +802,31 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         shape: BoxShape.circle,
                         color: AppTheme.success.withValues(alpha: 0.15),
                       ),
-                      child: const Icon(Icons.check_circle, color: AppTheme.success, size: 40),
-                    ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: AppTheme.success,
+                        size: 40,
+                      ),
+                    ).animate().scale(
+                      duration: 500.ms,
+                      curve: Curves.elasticOut,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Notes Generated!',
                       style: AppTheme.headline2(
-                        color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                        color: isDark
+                            ? AppTheme.darkTextPrimary
+                            : AppTheme.lightTextPrimary,
                       ),
                     ).animate().fadeIn(delay: 200.ms),
                     const SizedBox(height: 8),
                     Text(
                       'Review your AI-generated summary below.',
                       style: AppTheme.bodyMedium(
-                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
                       ),
                     ).animate().fadeIn(delay: 300.ms),
                   ],
@@ -742,7 +846,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                     ],
                   ),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
+                  border: Border.all(
+                    color: primaryColor.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -753,7 +859,11 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         color: primaryColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -763,7 +873,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                           Text(
                             _videoTitleController.text,
                             style: AppTheme.titleMedium(
-                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                              color: isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -810,7 +922,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                 const SizedBox(height: 32),
                 _SectionLabel(
                   icon: Icons.lightbulb_outline,
-                  label: 'KEY INSIGHTS',
+                  label: 'KEY Recommendations',
                   count: _generatedKeyPoints.length,
                   color: primaryColor,
                   isDark: isDark,
@@ -818,48 +930,57 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                 const SizedBox(height: 12),
                 ...List.generate(_generatedKeyPoints.length, (index) {
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${index + 1}',
-                                style: AppTheme.labelSmall(color: Colors.white).copyWith(fontSize: 12),
-                              ),
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusSm,
                             ),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              _generatedKeyPoints[index],
-                              style: AppTheme.bodyMedium(
-                                color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      primaryColor,
+                                      primaryColor.withValues(alpha: 0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: AppTheme.labelSmall(
+                                      color: Colors.white,
+                                    ).copyWith(fontSize: 12),
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  _generatedKeyPoints[index],
+                                  style: AppTheme.bodyMedium(
+                                    color: isDark
+                                        ? AppTheme.darkTextPrimary
+                                        : AppTheme.lightTextPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ).animate().fadeIn(
-                    delay: (600 + index * 80).ms,
-                    duration: 400.ms,
-                  ).slideX(begin: 0.05);
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(delay: (600 + index * 80).ms, duration: 400.ms)
+                      .slideX(begin: 0.05);
                 }),
               ],
 
@@ -876,7 +997,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
                         ),
                       ),
                     ),
@@ -893,7 +1016,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
                         ),
                         elevation: 4,
                         shadowColor: primaryColor.withValues(alpha: 0.3),
@@ -940,7 +1065,9 @@ class _SectionLabel extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+            color: isDark
+                ? AppTheme.darkTextSecondary
+                : AppTheme.lightTextSecondary,
           ),
         ),
         if (count != null) ...[

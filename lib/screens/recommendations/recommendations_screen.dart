@@ -17,13 +17,17 @@ class RecommendationsScreen extends StatelessWidget {
           FaIcon(
             FontAwesomeIcons.lightbulb,
             size: 64,
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.2,
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             'Recommendations',
             style: AppTheme.headline3(
-              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+              color: isDark
+                  ? AppTheme.darkTextPrimary
+                  : AppTheme.lightTextPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -31,7 +35,9 @@ class RecommendationsScreen extends StatelessWidget {
             'Smart suggestions based on your study habits will appear here.',
             textAlign: TextAlign.center,
             style: AppTheme.bodyMedium(
-              color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+              color: isDark
+                  ? AppTheme.darkTextSecondary
+                  : AppTheme.lightTextSecondary,
             ),
           ),
         ],

@@ -17,21 +17,27 @@ class DashboardScreen extends StatelessWidget {
           FaIcon(
             FontAwesomeIcons.chartLine,
             size: 64,
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.2,
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             'Dashboard',
             style: AppTheme.headline3(
-              color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+              color: isDark
+                  ? AppTheme.darkTextPrimary
+                  : AppTheme.lightTextPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Analytics and insights on your learning progress will appear here.',
+            'Analytics and Recommendations on your learning progress will appear here.',
             textAlign: TextAlign.center,
             style: AppTheme.bodyMedium(
-              color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+              color: isDark
+                  ? AppTheme.darkTextSecondary
+                  : AppTheme.lightTextSecondary,
             ),
           ),
         ],

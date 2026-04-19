@@ -13,6 +13,7 @@ import 'add_note_screen.dart';
 import '../../widgets/note_card.dart';
 import '../recommendations/recommendations_screen.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../account/account_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _urlController = TextEditingController();
   final _searchController = TextEditingController();
   int _selectedTab = 0; // 0 = All Notes, 1 = Favorites
-  bool _showCategoryFilter = false;
 
   final List<String> _categories = [
     'All',
@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Productivity & Self-Growth',
     'News & Politics',
     'Entertainment & Lifestyle',
-    'Health & Sports'
+    'Health & Sports',
   ];
 
   bool _isValidatingUrl = false;
@@ -139,88 +139,219 @@ class _HomeScreenState extends State<HomeScreen> {
           ? const Color(0xFF0F172A)
           : const Color(0xFFF8FAFC),
       // On desktop the AppBar is absent – controls live in the tab row instead.
-      appBar: isWide
-          ? null
-          : AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              surfaceTintColor: Colors.transparent,
-              centerTitle: false,
-              automaticallyImplyLeading: false,
-              actions: [
-                // ── Theme Toggle ────────────────────────────────────────
-                Consumer<SettingsProvider>(
-                  builder: (context, settingsP, _) {
-                    final IconData themeIcon;
-                    final String themeTooltip;
-                    switch (settingsP.themeMode) {
-                      case ThemeMode.light:
-                        themeIcon = Icons.light_mode_rounded;
-                        themeTooltip = 'Switch to Dark Mode';
-                        break;
-                      case ThemeMode.dark:
-                        themeIcon = Icons.dark_mode_rounded;
-                        themeTooltip = 'Switch to System Mode';
-                        break;
-                      default:
-                        themeIcon = Icons.brightness_auto_rounded;
-                        themeTooltip = 'Switch to Light Mode';
-                    }
-                    return IconButton(
-                      icon: Icon(
-                        themeIcon,
-                        size: 20,
-                        color: isDark ? Colors.white70 : Colors.black54,
-                      ),
-                      tooltip: themeTooltip,
-                      onPressed: () {
-                        final next = settingsP.themeMode == ThemeMode.system
-                            ? ThemeMode.light
-                            : settingsP.themeMode == ThemeMode.light
-                                ? ThemeMode.dark
-                                : ThemeMode.system;
-                        settingsP.setThemeMode(next);
-                      },
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: FaIcon(
-                    FontAwesomeIcons.tags,
-                    size: 18,
-                    color: isDark ? Colors.white70 : Colors.black54,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: isWide
+            ? Row(
+                children: [
+                  Image.asset(
+                    'assets/icon/aidea-logo.png',
+                    width: 30,
+                    height: 30,
                   ),
-                  tooltip: 'Filter by Category',
-                  onPressed: () {
-                    setState(() {
-                      _showCategoryFilter = !_showCategoryFilter;
-                    });
-                  },
+                  const SizedBox(width: 40),
+                  // ── Navigation Shortcuts (Desktop) ──
+                  _desktopNavbarItem(0, 'Home', FontAwesomeIcons.house),
+                  const SizedBox(width: 24),
+                  _desktopNavbarItem(1, 'Favorites', FontAwesomeIcons.solidHeart),
+                  const SizedBox(width: 24),
+                  _desktopNavbarItem(2, 'Insights', FontAwesomeIcons.lightbulb),
+                  const SizedBox(width: 24),
+                  _desktopNavbarItem(3, 'Dashboard', FontAwesomeIcons.chartLine),
+                  const SizedBox(width: 24),
+                  _desktopNavbarItem(4, 'Account', FontAwesomeIcons.user),
+                ],
+              )
+            : Image.asset(
+                'assets/icon/aidea-logo.png',
+                width: 32,
+                height: 32,
+              ),
+        actions: [
+          if (isWide) ...[
+            // ── Desktop Search Bar (Top) ──
+            SizedBox(
+              width: 240,
+              height: 38,
+              child: TextField(
+                controller: _searchController,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
-                const SizedBox(width: 8),
+                decoration: InputDecoration(
+                  hintText: 'Search notes...',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.38)
+                        : Colors.black.withValues(alpha: 0.38),
+                  ),
+                  prefixIcon: Icon(
+                    FontAwesomeIcons.magnifyingGlass,
+                    size: 13,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.38)
+                        : Colors.black.withValues(alpha: 0.38),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: settings.accentColor.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                onChanged: (val) {
+                  Provider.of<NotesProvider>(context, listen: false)
+                      .setSearchQuery(val);
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          // ── Theme Toggle ────────────────────────────────────────
+          Consumer<SettingsProvider>(
+            builder: (context, settingsP, _) {
+              final IconData themeIcon;
+              final String themeTooltip;
+              switch (settingsP.themeMode) {
+                case ThemeMode.light:
+                  themeIcon = Icons.light_mode_rounded;
+                  themeTooltip = 'Switch to Dark Mode';
+                  break;
+                case ThemeMode.dark:
+                  themeIcon = Icons.dark_mode_rounded;
+                  themeTooltip = 'Switch to System Mode';
+                  break;
+                default:
+                  themeIcon = Icons.brightness_auto_rounded;
+                  themeTooltip = 'Switch to Light Mode';
+              }
+              return IconButton(
+                icon: Icon(
+                  themeIcon,
+                  size: 20,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+                tooltip: themeTooltip,
+                onPressed: () {
+                  final next = settingsP.themeMode == ThemeMode.system
+                      ? ThemeMode.light
+                      : settingsP.themeMode == ThemeMode.light
+                          ? ThemeMode.dark
+                          : ThemeMode.system;
+                  settingsP.setThemeMode(next);
+                },
+              );
+            },
+          ),
+          if (isWide) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: settings.accentColor.withValues(alpha: 0.1),
+              child: Text(
+                'A',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: settings.accentColor,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(width: 16),
+        ],
+      ),
+      floatingActionButton: (isWide || _selectedTab != 0)
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const AddNoteScreen(initialUrl: '', initialTitle: null),
+                  ),
+                );
+              },
+              backgroundColor: settings.accentColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const FaIcon(FontAwesomeIcons.plus, color: Colors.white),
+            ),
+      bottomNavigationBar: isWide
+          ? null
+          : NavigationBar(
+              selectedIndex: _selectedTab,
+              onDestinationSelected: (index) =>
+                  setState(() => _selectedTab = index),
+              backgroundColor: isDark
+                  ? const Color(0xFF0F172A)
+                  : const Color(0xFFF8FAFC),
+              indicatorColor: settings.accentColor.withValues(alpha: 0.2),
+              destinations: const [
+                NavigationDestination(
+                  icon: FaIcon(FontAwesomeIcons.house, size: 20),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: FaIcon(FontAwesomeIcons.solidHeart, size: 20),
+                  label: 'Favorites',
+                ),
+                NavigationDestination(
+                  icon: FaIcon(FontAwesomeIcons.lightbulb, size: 20),
+                  label: 'Insights',
+                ),
+                NavigationDestination(
+                  icon: FaIcon(FontAwesomeIcons.chartLine, size: 20),
+                  label: 'Dashboard',
+                ),
+                NavigationDestination(
+                  icon: FaIcon(FontAwesomeIcons.user, size: 20),
+                  label: 'Account',
+                ),
               ],
             ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── URL Input Section ────────────────────────────────────────
-          _buildUrlInputSection(settings, isDark, isWide),
+          // ── URL Input Section (Desktop) ──
+          if (isWide && _selectedTab == 0) _buildUrlInputSection(settings, isDark),
 
           // ── Tab Row (desktop only) ────────────────────────────────────────────────
-          if (isWide) _buildTabRow(settings, isDark),
+
 
           // ── Mobile Search Bar ────────────────────────────────────────────────
-          if (!isWide) _buildMobileSearchBar(settings, isDark),
+          if (!isWide && (_selectedTab == 0 || _selectedTab == 1))
+            _buildMobileSearchBar(settings, isDark),
 
           // ── Category Filter Row ───────────────────────────────────────
-          if (_showCategoryFilter) _buildCategoryFilterRow(settings, isDark),
+          if (_selectedTab == 0 || _selectedTab == 1)
+            _buildCategoryFilterRow(settings, isDark),
 
           const SizedBox(height: 8),
 
           // ── Notes Content ────────────────────────────────────────────
-          Expanded(
-            child: _buildSelectedTabContent(isWide),
-          ),
+          Expanded(child: _buildSelectedTabContent(isWide)),
         ],
       ),
     );
@@ -236,19 +367,18 @@ class _HomeScreenState extends State<HomeScreen> {
         return const RecommendationsScreen();
       case 3:
         return const DashboardScreen();
+      case 4:
+        return const AccountTab();
       default:
         return const SizedBox();
     }
   }
 
-  // ── URL Input + Summarize button ─────────────────────────────────────
-  Widget _buildUrlInputSection(
-    SettingsProvider settings,
-    bool isDark,
-    bool isWide,
-  ) {
+  // ── URL Input + Summarize button (Desktop) ─────────────────────────────────────
+  Widget _buildUrlInputSection(SettingsProvider settings, bool isDark) {
+    // URL bar should still span normally on desktop.
     return Padding(
-      padding: EdgeInsets.fromLTRB(isWide ? 80 : 20, 12, isWide ? 80 : 20, 20),
+      padding: const EdgeInsets.fromLTRB(80, 12, 80, 20),
       child: Row(
         children: [
           // Text Field
@@ -399,90 +529,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.15);
   }
 
-  // ── Tab Row (desktop: chips only) ──────────────────────────────────────────────
-  Widget _buildTabRow(SettingsProvider settings, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          _tabChip(
-            settings,
-            isDark,
-            0,
-            'Home',
-            FontAwesomeIcons.house,
-          ),
-          const SizedBox(width: 10),
-          _tabChip(
-            settings,
-            isDark,
-            1,
-            'Favorites',
-            FontAwesomeIcons.solidHeart,
-          ),
-          const SizedBox(width: 10),
-          _tabChip(
-            settings,
-            isDark,
-            2,
-            'Recommendations',
-            FontAwesomeIcons.lightbulb,
-          ),
-          const SizedBox(width: 10),
-          _tabChip(
-            settings,
-            isDark,
-            3,
-            'Dashboard',
-            FontAwesomeIcons.chartLine,
-          ),
-          const Spacer(),
-          // ── Desktop-only controls (theme toggle + category filter) ────
-          Consumer<SettingsProvider>(
-            builder: (context, settingsP, _) {
-              final IconData themeIcon;
-              switch (settingsP.themeMode) {
-                case ThemeMode.light:
-                  themeIcon = Icons.light_mode_rounded;
-                  break;
-                case ThemeMode.dark:
-                  themeIcon = Icons.dark_mode_rounded;
-                  break;
-                default:
-                  themeIcon = Icons.brightness_auto_rounded;
-              }
-              return IconButton(
-                icon: Icon(
-                  themeIcon,
-                  size: 20,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                ),
-                tooltip: 'Toggle Theme',
-                onPressed: () {
-                  final next = settingsP.themeMode == ThemeMode.system
-                      ? ThemeMode.light
-                      : settingsP.themeMode == ThemeMode.light
-                          ? ThemeMode.dark
-                          : ThemeMode.system;
-                  settingsP.setThemeMode(next);
-                },
-              );
-            },
-          ),
-          IconButton(
-            icon: FaIcon(
-              FontAwesomeIcons.tags,
-              size: 16,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-            tooltip: 'Filter by Category',
-            onPressed: () =>
-                setState(() => _showCategoryFilter = !_showCategoryFilter),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 150.ms);
-  }
+// Removed unused _buildMobileAddNoteButton as navigation is now handled by FAB.
+
+
+
+// Removed unused _buildMobileTabRow as navigation is now handled by the bottom NavigationBar.
 
   // ── Mobile Search Bar ──────────────────────────────────────────────────
   Widget _buildMobileSearchBar(SettingsProvider settings, bool isDark) {
@@ -532,7 +583,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           onChanged: (val) {
-            Provider.of<NotesProvider>(context, listen: false).setSearchQuery(val);
+            Provider.of<NotesProvider>(
+              context,
+              listen: false,
+            ).setSearchQuery(val);
             setState(() {});
           },
         ),
@@ -540,71 +594,65 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(delay: 150.ms);
   }
 
-  Widget _tabChip(
-    SettingsProvider settings,
-    bool isDark,
-    int index,
-    String label,
-    IconData icon,
-  ) {
+  Widget _desktopNavbarItem(int index, String label, IconData icon) {
     final selected = _selectedTab == index;
-    return GestureDetector(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = Provider.of<SettingsProvider>(context).accentColor;
+
+    return InkWell(
       onTap: () => setState(() => _selectedTab = index),
-      child: AnimatedContainer(
-        duration: 250.ms,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? settings.accentColor
-              : (isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : Colors.black.withValues(alpha: 0.05)),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: settings.accentColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FaIcon(
-              icon,
-              size: 12,
-              color: selected
-                  ? Colors.white
-                  : (isDark
-                        ? Colors.white.withValues(alpha: 0.54)
-                        : Colors.black.withValues(alpha: 0.45)),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FaIcon(
+                  icon,
+                  size: 14,
+                  color: selected
+                      ? accentColor
+                      : (isDark ? Colors.white60 : Colors.black54),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: selected
+                        ? accentColor
+                        : (isDark ? Colors.white60 : Colors.black54),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 7),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: selected
-                    ? Colors.white
-                    : (isDark
-                          ? Colors.white.withValues(alpha: 0.54)
-                          : Colors.black.withValues(alpha: 0.45)),
-              ),
-            ),
+            if (selected)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                height: 2,
+                width: 20,
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ).animate().scaleX(duration: 200.ms),
           ],
         ),
       ),
     );
   }
 
+
+
   // ── Category Filter Row ─────────────────────────────────────────────
   Widget _buildCategoryFilterRow(SettingsProvider settings, bool isDark) {
     final notesProvider = Provider.of<NotesProvider>(context);
     final currentFilter = notesProvider.categoryFilter;
+    final isWide = MediaQuery.of(context).size.width > 900;
 
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 12),
@@ -621,23 +669,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? settings.accentColor
-                        : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04)),
+                        : (isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.04)),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
                           ? settings.accentColor
-                          : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08)),
+                          : (isDark
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.black.withValues(alpha: 0.08)),
                     ),
                   ),
                   child: Text(
                     category,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                       color: isSelected
                           ? Colors.white
                           : (isDark ? Colors.white70 : Colors.black87),
@@ -704,8 +761,14 @@ class _HomeScreenState extends State<HomeScreen> {
             NoteCard(note: notes[i]).animate().fadeIn(delay: (i * 40).ms),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.68,
+      ),
       itemCount: notes.length,
       itemBuilder: (context, i) =>
           NoteCard(note: notes[i]).animate().fadeIn(delay: (i * 40).ms),

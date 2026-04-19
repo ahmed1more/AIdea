@@ -29,7 +29,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late List<TextEditingController> _keyPointsControllers;
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
-  
+
   // Video player state
   // Video player state removed
   // final GlobalKey _videoSectionKey = GlobalKey();
@@ -44,7 +44,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         .map((kp) => TextEditingController(text: kp))
         .toList();
     _scrollController.addListener(_updateScrollProgress);
-    
+
     // Check if video exists logic removed
   }
 
@@ -62,9 +62,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   void _updateScrollProgress() {
     if (_scrollController.position.maxScrollExtent > 0) {
       setState(() {
-        _scrollProgress = (_scrollController.offset /
-                _scrollController.position.maxScrollExtent)
-            .clamp(0.0, 1.0);
+        _scrollProgress =
+            (_scrollController.offset /
+                    _scrollController.position.maxScrollExtent)
+                .clamp(0.0, 1.0);
       });
     }
   }
@@ -154,7 +155,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ),
           backgroundColor: AppTheme.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } else if (mounted) {
@@ -163,7 +166,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           content: const Text('Failed to update note'),
           backgroundColor: AppTheme.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -180,7 +185,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   String _readTime() {
-    final words = _note.notes.split(' ').length +
+    final words =
+        _note.notes.split(' ').length +
         _note.keyPoints.fold<int>(0, (sum, kp) => sum + kp.split(' ').length);
     final minutes = (words / 200).ceil();
     return '$minutes min read';
@@ -233,7 +239,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           const SizedBox(height: 32),
 
                           // ─── Video Section Removed ───────────
-
                           const SizedBox(height: 32),
 
                           // ─── Source Card ─────────────────────
@@ -269,8 +274,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ),
 
           // ─── Floating Action Bar ───────────────────────────
-          if (!_isEditing)
-            _buildFloatingActionBar(isDark, primaryColor),
+          if (!_isEditing) _buildFloatingActionBar(isDark, primaryColor),
         ],
       ),
     );
@@ -278,9 +282,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   // ─── HERO APP BAR ─────────────────────────────────────────────────
   SliverAppBar _buildHeroAppBar(
-      BuildContext context, bool isDark, Color primaryColor) {
-    final hasThumbnail = _note.thumbnail.isNotEmpty &&
-        !_note.thumbnail.contains('placeholder');
+    BuildContext context,
+    bool isDark,
+    Color primaryColor,
+  ) {
+    final hasThumbnail =
+        _note.thumbnail.isNotEmpty && !_note.thumbnail.contains('placeholder');
 
     return SliverAppBar(
       expandedHeight: hasThumbnail ? 260 : 180,
@@ -290,10 +297,15 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       leading: Padding(
         padding: const EdgeInsets.all(8),
         child: CircleAvatar(
-          backgroundColor: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.7),
+          backgroundColor: (isDark ? Colors.black : Colors.white).withValues(
+            alpha: 0.7,
+          ),
           child: IconButton(
-            icon: Icon(Icons.arrow_back,
-                color: isDark ? Colors.white : Colors.black, size: 20),
+            icon: Icon(
+              Icons.arrow_back,
+              color: isDark ? Colors.white : Colors.black,
+              size: 20,
+            ),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -302,12 +314,16 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         if (_isEditing) ...[
           TextButton(
             onPressed: _saveChanges,
-            child: Text('Save', style: AppTheme.labelLarge(color: primaryColor)),
+            child: Text(
+              'Save',
+              style: AppTheme.labelLarge(color: primaryColor),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: CircleAvatar(
-              backgroundColor: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.7),
+              backgroundColor: (isDark ? Colors.black : Colors.white)
+                  .withValues(alpha: 0.7),
               child: IconButton(
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: _cancelEditing,
@@ -338,7 +354,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    (isDark ? AppTheme.darkBg : AppTheme.lightBg).withValues(alpha: 0.3),
+                    (isDark ? AppTheme.darkBg : AppTheme.lightBg).withValues(
+                      alpha: 0.3,
+                    ),
                     isDark ? AppTheme.darkBg : AppTheme.lightBg,
                   ],
                   stops: const [0.0, 0.6, 1.0],
@@ -353,20 +371,23 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               bottom: 16,
               child: Text(
                 _note.videoTitle,
-                style: AppTheme.headline2(
-                  color: hasThumbnail
-                      ? Colors.white
-                      : (isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                ).copyWith(
-                  shadows: hasThumbnail
-                      ? [
-                          Shadow(
-                            blurRadius: 12,
-                            color: Colors.black.withValues(alpha: 0.5),
-                          ),
-                        ]
-                      : null,
-                ),
+                style:
+                    AppTheme.headline2(
+                      color: hasThumbnail
+                          ? Colors.white
+                          : (isDark
+                                ? AppTheme.darkTextPrimary
+                                : AppTheme.lightTextPrimary),
+                    ).copyWith(
+                      shadows: hasThumbnail
+                          ? [
+                              Shadow(
+                                blurRadius: 12,
+                                color: Colors.black.withValues(alpha: 0.5),
+                              ),
+                            ]
+                          : null,
+                    ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
@@ -408,11 +429,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             isDark: isDark,
           ),
           _metaDot(isDark),
-          _MetaChip(
-            icon: Icons.schedule,
-            label: _readTime(),
-            isDark: isDark,
-          ),
+          _MetaChip(icon: Icons.schedule, label: _readTime(), isDark: isDark),
           /* Watch Video meta chip removed */
           _metaDot(isDark),
           _MetaChip(
@@ -424,7 +441,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             _metaDot(isDark),
             _MetaChip(
               icon: Icons.lightbulb_outline,
-              label: '${_note.keyPoints.length} insights',
+              label: '${_note.keyPoints.length} Recommendations',
               isDark: isDark,
             ),
           ],
@@ -493,9 +510,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             color: isDark ? AppTheme.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
-              color: isDark
-                  ? AppTheme.darkDivider
-                  : AppTheme.lightDivider,
+              color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
             ),
             boxShadow: [
               BoxShadow(
@@ -512,7 +527,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     height: 1.8,
-                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
                   ),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
@@ -540,7 +557,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       children: [
         _SectionHeader(
           icon: Icons.lightbulb_outline,
-          label: 'KEY INSIGHTS',
+          label: 'KEY Recommendations',
           count: _note.keyPoints.length,
           isDark: isDark,
           color: primaryColor,
@@ -548,88 +565,88 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         const SizedBox(height: 16),
         ...List.generate(_note.keyPoints.length, (index) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(
-                  color: isDark
-                      ? AppTheme.darkDivider
-                      : AppTheme.lightDivider,
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Number badge
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          primaryColor,
-                          primaryColor.withValues(alpha: 0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: primaryColor.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: GoogleFonts.manrope(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(
+                      color: isDark
+                          ? AppTheme.darkDivider
+                          : AppTheme.lightDivider,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _isEditing
-                        ? TextFormField(
-                            controller: _keyPointsControllers[index],
-                            maxLines: null,
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              height: 1.6,
-                              color: isDark
-                                  ? AppTheme.darkTextPrimary
-                                  : AppTheme.lightTextPrimary,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Number badge
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              primaryColor,
+                              primaryColor.withValues(alpha: 0.7),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          )
-                        : SelectableText(
-                            _note.keyPoints[index],
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              height: 1.6,
-                              color: isDark
-                                  ? AppTheme.darkTextPrimary
-                                  : AppTheme.lightTextPrimary,
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: GoogleFonts.manrope(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
                             ),
                           ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _isEditing
+                            ? TextFormField(
+                                controller: _keyPointsControllers[index],
+                                maxLines: null,
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  height: 1.6,
+                                  color: isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              )
+                            : SelectableText(
+                                _note.keyPoints[index],
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  height: 1.6,
+                                  color: isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary,
+                                ),
+                              ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          )
+                ),
+              )
               .animate()
               .fadeIn(delay: (300 + 60 * index).ms, duration: 400.ms)
               .slideX(begin: 0.03, duration: 300.ms);
@@ -663,7 +680,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               color: primaryColor,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -672,13 +693,17 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               children: [
                 Text(
                   'SOURCE VIDEO',
-                  style: AppTheme.labelSmall(color: primaryColor).copyWith(letterSpacing: 2),
+                  style: AppTheme.labelSmall(
+                    color: primaryColor,
+                  ).copyWith(letterSpacing: 2),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _note.videoUrl,
                   style: AppTheme.bodySmall(
-                    color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -692,7 +717,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: primaryColor,
               side: BorderSide(color: primaryColor.withValues(alpha: 0.4)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
             child: const Text('Watch'),
@@ -708,66 +735,75 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       bottom: 24,
       left: 24,
       right: 24,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppTheme.darkSurface.withValues(alpha: 0.95)
-                  : Colors.white.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
+      child:
+          Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppTheme.darkSurface.withValues(alpha: 0.95)
+                          : Colors.white.withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: isDark
+                            ? AppTheme.darkDivider
+                            : AppTheme.lightDivider,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _FloatingAction(
+                          icon: Icons.edit_outlined,
+                          label: 'Edit',
+                          isDark: isDark,
+                          onTap: () => setState(() => _isEditing = true),
+                        ),
+                        _floatingDivider(isDark),
+                        _FloatingAction(
+                          icon: _note.isFavorite
+                              ? Icons.bookmark
+                              : Icons.bookmark_outline,
+                          label: _note.isFavorite ? 'Saved' : 'Save',
+                          isDark: isDark,
+                          isActive: _note.isFavorite,
+                          activeColor: AppTheme.teal,
+                          onTap: () => _toggleFavorite(context),
+                        ),
+                        _floatingDivider(isDark),
+                        _FloatingAction(
+                          icon: Icons.copy_outlined,
+                          label: 'Copy',
+                          isDark: isDark,
+                          onTap: _copyToClipboard,
+                        ),
+                        _floatingDivider(isDark),
+                        _FloatingAction(
+                          icon: Icons.share_outlined,
+                          label: 'Share',
+                          isDark: isDark,
+                          onTap: () => _shareNote(context),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-              border: Border.all(
-                color: isDark
-                    ? AppTheme.darkDivider
-                    : AppTheme.lightDivider,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _FloatingAction(
-                  icon: Icons.edit_outlined,
-                  label: 'Edit',
-                  isDark: isDark,
-                  onTap: () => setState(() => _isEditing = true),
-                ),
-                _floatingDivider(isDark),
-                _FloatingAction(
-                  icon: _note.isFavorite ? Icons.bookmark : Icons.bookmark_outline,
-                  label: _note.isFavorite ? 'Saved' : 'Save',
-                  isDark: isDark,
-                  isActive: _note.isFavorite,
-                  activeColor: AppTheme.teal,
-                  onTap: () => _toggleFavorite(context),
-                ),
-                _floatingDivider(isDark),
-                _FloatingAction(
-                  icon: Icons.copy_outlined,
-                  label: 'Copy',
-                  isDark: isDark,
-                  onTap: _copyToClipboard,
-                ),
-                _floatingDivider(isDark),
-                _FloatingAction(
-                  icon: Icons.share_outlined,
-                  label: 'Share',
-                  isDark: isDark,
-                  onTap: () => _shareNote(context),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.3, curve: Curves.easeOutCubic),
+              )
+              .animate()
+              .fadeIn(delay: 600.ms)
+              .slideY(begin: 0.3, curve: Curves.easeOutCubic),
     );
   }
 
@@ -775,9 +811,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     return Container(
       width: 1,
       height: 32,
-      color: isDark
-          ? AppTheme.darkDivider
-          : AppTheme.lightDivider,
+      color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
     );
   }
 }
@@ -797,8 +831,10 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
-    
+    final color = isDark
+        ? AppTheme.darkTextSecondary
+        : AppTheme.lightTextSecondary;
+
     Widget content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -846,7 +882,9 @@ class _SectionHeader extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+            color: isDark
+                ? AppTheme.darkTextSecondary
+                : AppTheme.lightTextSecondary,
           ),
         ),
         if (count != null) ...[
@@ -859,7 +897,11 @@ class _SectionHeader extends StatelessWidget {
             ),
             child: Text(
               '$count',
-              style: GoogleFonts.manrope(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+              style: GoogleFonts.manrope(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -901,7 +943,11 @@ class _ActionChip extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: GoogleFonts.manrope(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ],
         ),
@@ -945,7 +991,11 @@ class _FloatingAction extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ],
         ),

@@ -177,7 +177,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                 const SizedBox(height: 8),
 
                 Text(
-                      'Saved Insights',
+                      'Saved Recommendations',
                       style: AppTheme.headline2(
                         color: isDark
                             ? AppTheme.darkTextPrimary
@@ -277,7 +277,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No saved insights yet',
+                              'No saved Recommendations yet',
                               style: AppTheme.titleMedium(
                                 color: isDark
                                     ? AppTheme.darkTextSecondary
@@ -403,7 +403,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                       ).animate().fadeIn(delay: 100.ms),
                       const SizedBox(height: 8),
                       Text(
-                        'Saved Insights',
+                        'Saved Recommendations',
                         style: AppTheme.headline1(
                           color: isDark
                               ? AppTheme.darkTextPrimary
@@ -444,7 +444,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                         icon: const Icon(Icons.auto_stories, size: 16),
                         label: const Text('Digest Mode'),
                         onPressed: () => _showToast(
-                          'Digest Mode provides a condensed view of your saved insights',
+                          'Digest Mode provides a condensed view of your saved Recommendations',
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
@@ -582,7 +582,9 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                 : Theme.of(
                                     context,
                                   ).colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMd,
+                            ),
                           ),
                           child: TextField(
                             controller: _searchController,
@@ -644,7 +646,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                     vertical: 80,
                                   ),
                                   child: Text(
-                                    'No saved insights yet.',
+                                    'No saved Recommendations yet.',
                                     style: AppTheme.bodyLarge(
                                       color: Theme.of(
                                         context,
