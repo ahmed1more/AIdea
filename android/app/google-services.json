@@ -9,10 +9,23 @@
       "client_info": {
         "mobilesdk_app_id": "1:91184701354:android:8f968608ceeb40c03e95d3",
         "android_client_info": {
-          "package_name": "com.aideaApp.aidea"
+          "package_name": "com.AIdeaApp.aidea"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "91184701354-dd2m4jfv5opeecq9nrdp7tg5m2v423t3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.AIdeaApp.aidea",
+            "certificate_hash": "8c394f6e50833a13be0b964358e768925a562c99"
+          }
+        },
+        {
+          "client_id": "91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAPlZGNlf5yGCKB7UmbM8yX5VpZTEswjrM"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "91184701354-nn9tikrkkbr79q5ss8emo9hm0eg966m2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.AIdeaApp.aidea"
+              }
+            }
+          ]
         }
       }
     }

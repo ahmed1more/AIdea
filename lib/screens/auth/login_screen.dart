@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -42,17 +43,46 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => const MainShell()),
         );
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? 'Login failed'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        _showErrorSnackBar(authProvider.errorMessage ?? 'Login failed');
       }
     }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    bool success = await authProvider.signInWithGoogle();
+
+    if (success && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainShell()),
+      );
+    } else if (mounted && authProvider.errorMessage != null) {
+      _showErrorSnackBar(authProvider.errorMessage!);
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    bool success = await authProvider.signInWithFacebook();
+
+    if (success && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainShell()),
+      );
+    } else if (mounted && authProvider.errorMessage != null) {
+      _showErrorSnackBar(authProvider.errorMessage!);
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
@@ -121,7 +151,123 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.center,
                 ).animate().fadeIn(delay: 250.ms),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 36),
+
+                // ─── Continue with Google ─────────────────
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return SizedBox(
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        onPressed: auth.isLoading ? null : _handleGoogleSignIn,
+                        icon: Image.network(
+                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                          width: 20,
+                          height: 20,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
+                            Icons.g_mobiledata,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                        ),
+                        label: Text(
+                          'Continue with Google',
+                          style: AppTheme.button(
+                            color: isDark
+                                ? AppTheme.darkTextPrimary
+                                : AppTheme.lightTextPrimary,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: isDark
+                              ? AppTheme.darkSurface
+                              : AppTheme.lightSurface,
+                          side: BorderSide(
+                            color: isDark
+                                ? AppTheme.darkDivider
+                                : AppTheme.lightDivider,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ).animate().fadeIn(delay: 300.ms),
+
+                const SizedBox(height: 12),
+
+                // ─── Continue with Facebook ───────────────
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return SizedBox(
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            auth.isLoading ? null : _handleFacebookSignIn,
+                        icon: const FaIcon(
+                          FontAwesomeIcons.facebookF,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          'Continue with Facebook',
+                          style: AppTheme.button(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1877F2),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor:
+                              const Color(0xFF1877F2).withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    );
+                  },
+                ).animate().fadeIn(delay: 350.ms),
+
+                const SizedBox(height: 28),
+
+                // ─── Or Divider ───────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: isDark
+                            ? AppTheme.darkDivider
+                            : AppTheme.lightDivider,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Or',
+                        style: AppTheme.bodySmall(
+                          color: isDark
+                              ? AppTheme.darkTextSecondary
+                              : AppTheme.lightTextSecondary,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: isDark
+                            ? AppTheme.darkDivider
+                            : AppTheme.lightDivider,
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 400.ms),
+
+                const SizedBox(height: 28),
 
                 // ─── Email Label + Field ──────────────────
                 Text(
@@ -131,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? AppTheme.darkTextSecondary
                         : AppTheme.lightTextSecondary,
                   ).copyWith(letterSpacing: 2),
-                ).animate().fadeIn(delay: 300.ms),
+                ).animate().fadeIn(delay: 450.ms),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailController,
@@ -158,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (!value.contains('@')) return 'Enter a valid email';
                     return null;
                   },
-                ).animate().fadeIn(delay: 350.ms),
+                ).animate().fadeIn(delay: 500.ms),
 
                 const SizedBox(height: 24),
 
@@ -186,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ).animate().fadeIn(delay: 400.ms),
+                ).animate().fadeIn(delay: 550.ms),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _passwordController,
@@ -225,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     }
                     return null;
                   },
-                ).animate().fadeIn(delay: 450.ms),
+                ).animate().fadeIn(delay: 600.ms),
 
                 const SizedBox(height: 32),
 
@@ -265,7 +411,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                ).animate().fadeIn(delay: 500.ms),
+                ).animate().fadeIn(delay: 650.ms),
 
                 const SizedBox(height: 40),
 
@@ -299,7 +445,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ).animate().fadeIn(delay: 600.ms),
+                ).animate().fadeIn(delay: 750.ms),
               ],
             ),
           ),
@@ -337,4 +483,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

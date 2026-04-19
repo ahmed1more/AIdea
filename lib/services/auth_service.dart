@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
@@ -11,6 +13,8 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final FacebookAuth _facebookAuth = FacebookAuth.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -133,9 +137,129 @@ class AuthService {
     }
   }
 
+  // ─── Social Sign-In: Google ─────────────────────────────────────
+  Future<AppUser?> signInWithGoogle() async {
+    try {
+      UserCredential result;
+
+      if (kIsWeb) {
+        // Firebase Auth handles Web perfectly with popup
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        result = await _auth.signInWithPopup(googleProvider);
+      } else {
+        // Native mobile uses the google_sign_in plugin
+        final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+
+        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+
+        result = await _auth.signInWithCredential(credential);
+      }
+
+      return _handleSocialSignIn(result, 'google');
+    } catch (e) {
+      debugPrint('Error signing in with Google: $e');
+      rethrow;
+    }
+  }
+
+  // ─── Social Sign-In: Facebook ───────────────────────────────────
+  Future<AppUser?> signInWithFacebook() async {
+    try {
+      UserCredential result;
+
+      if (kIsWeb) {
+        // Firebase Auth handles Web perfectly with popup
+        final FacebookAuthProvider facebookProvider = FacebookAuthProvider();
+        result = await _auth.signInWithPopup(facebookProvider);
+      } else {
+        // Native mobile uses the flutter_facebook_auth plugin
+        final LoginResult fbResult = await _facebookAuth.login();
+
+        if (fbResult.status == LoginStatus.cancelled) return null;
+        if (fbResult.status == LoginStatus.failed) {
+          throw Exception('Facebook sign in failed: ${fbResult.message}');
+        }
+
+        final credential = FacebookAuthProvider.credential(
+          fbResult.accessToken!.tokenString,
+        );
+        result = await _auth.signInWithCredential(credential);
+      }
+
+      return _handleSocialSignIn(result, 'facebook');
+    } catch (e) {
+      debugPrint('Error signing in with Facebook: $e');
+      rethrow;
+    }
+  }
+
+  // Helper method for social sign ins
+  Future<AppUser?> _handleSocialSignIn(
+      UserCredential result, String provider) async {
+    final User? user = result.user;
+    if (user == null) return null;
+
+    try {
+      // Check if user exists in Firestore
+      final DocumentSnapshot doc =
+          await _firestore.collection('users').doc(user.uid).get();
+
+      if (doc.exists) {
+        final appUser = AppUser.fromFirestore(doc);
+        await cacheUser(appUser);
+        return appUser;
+      } else {
+        // Create new user in Firestore if they don't exist
+        final newUser = AppUser(
+          id: user.uid,
+          email: user.email ?? '',
+          displayName: user.displayName ?? 'AIdea User',
+          photoUrl: user.photoURL,
+          createdAt: DateTime.now(),
+          notesCount: 0,
+        );
+
+        await _firestore.collection('users').doc(user.uid).set({
+          ...newUser.toMap(),
+          'provider': provider,
+        });
+        await cacheUser(newUser);
+        return newUser;
+      }
+    } catch (e) {
+      debugPrint('Error fetching/creating user doc after social signin: $e');
+      // Return a basic AppUser object even if Firestore fails
+      final fallbackUser = AppUser(
+        id: user.uid,
+        email: user.email ?? '',
+        displayName: user.displayName ?? 'AIdea User',
+        photoUrl: user.photoURL,
+        createdAt: DateTime.now(),
+        notesCount: 0,
+      );
+      await cacheUser(fallbackUser);
+      return fallbackUser;
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     try {
+      if (!kIsWeb) {
+        // Sign out from social providers on native platforms
+        try {
+          await _googleSignIn.signOut();
+        } catch (_) {
+          // May fail if not signed in with Google, ignore
+        }
+        await _facebookAuth.logOut();
+      }
+      
+      // Clear Firebase session
       await _auth.signOut();
       await clearCachedUser();
     } catch (e) {

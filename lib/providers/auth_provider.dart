@@ -86,6 +86,44 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Sign in with Google
+  Future<bool> signInWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _user = await _authService.signInWithGoogle();
+      _isLoading = false;
+      notifyListeners();
+      return _user != null;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Sign in with Facebook
+  Future<bool> signInWithFacebook() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _user = await _authService.signInWithFacebook();
+      _isLoading = false;
+      notifyListeners();
+      return _user != null;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     _isLoading = true;
@@ -268,6 +306,14 @@ class AuthProvider extends ChangeNotifier {
           return 'No internet connection. Please check your network.';
         case 'requires-recent-login':
           return 'Please sign in again before making this change.';
+        case 'account-exists-with-different-credential':
+          return 'An account already exists with this email using a different sign-in method.';
+        case 'popup-blocked':
+          return 'Sign-in popup was blocked. Please allow popups and try again.';
+        case 'cancelled-popup-request':
+          return 'Sign-in was cancelled. Please try again.';
+        case 'credential-already-in-use':
+          return 'This credential is already linked to another account.';
         default:
           return error.message ?? 'An error occurred. Please try again.';
       }
