@@ -246,7 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isWide) RepaintBoundary(child: _buildDesktopSidebar(settings, isDark)),
+          if (isWide)
+            RepaintBoundary(child: _buildDesktopSidebar(settings, isDark)),
           Expanded(
             child: Column(
               children: [
@@ -522,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildDesktopHeader(SettingsProvider settings, bool isDark) {
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 28),
       decoration: BoxDecoration(
         color: Colors.transparent,
         border: Border(
@@ -651,17 +652,30 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 16),
-          // ── App Logo in Sidebar ──
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Image.asset(
-              'assets/icon/aidea-logo.png',
-              width: 36,
-              height: 36,
+          Container(
+            height: 64,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: (isDark ? Colors.white : Colors.black).withValues(
+                    alpha: 0.05,
+                  ),
+                ),
+              ),
+            ),
+            child: Transform.translate(
+              offset: const Offset(0, -4),
+              child: Image.asset(
+                'assets/icon/aidea-logo.png',
+                width: 36,
+                height: 36,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          // ── App Logo in Sidebar ──
+          
+          const SizedBox(height: 18),
           _desktopSidebarItem(0, 'Home', FontAwesomeIcons.house),
           _desktopSidebarItem(1, 'Favorites', FontAwesomeIcons.solidHeart),
           _desktopSidebarItem(2, 'Insights', FontAwesomeIcons.lightbulb),
@@ -709,8 +723,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: -0.2, end: 0);
   }
-
-
 
   // ── Category Filter Row ─────────────────────────────────────────────
   Widget _buildCategoryFilterRow(SettingsProvider settings, bool isDark) {
