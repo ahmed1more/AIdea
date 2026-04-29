@@ -2,12 +2,13 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../main_shell.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -61,18 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _handleFacebookSignIn() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    bool success = await authProvider.signInWithFacebook();
 
-    if (success && mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainShell()),
-      );
-    } else if (mounted && authProvider.errorMessage != null) {
-      _showErrorSnackBar(authProvider.errorMessage!);
-    }
-  }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -197,40 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ).animate().fadeIn(delay: 300.ms),
 
-                const SizedBox(height: 12),
-
-                // ─── Continue with Facebook ───────────────
-                Consumer<AuthProvider>(
-                  builder: (context, auth, _) {
-                    return SizedBox(
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            auth.isLoading ? null : _handleFacebookSignIn,
-                        icon: const FaIcon(
-                          FontAwesomeIcons.facebookF,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          'Continue with Facebook',
-                          style: AppTheme.button(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1877F2),
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor:
-                              const Color(0xFF1877F2).withValues(alpha: 0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMd),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    );
-                  },
-                ).animate().fadeIn(delay: 350.ms),
 
                 const SizedBox(height: 28),
 
@@ -320,16 +276,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             : AppTheme.lightTextSecondary,
                       ).copyWith(letterSpacing: 2),
                     ),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Text(
-                        'Forgot Password?',
-                        style: AppTheme.bodySmall(
-                          color: isDark
-                              ? AppTheme.darkTextSecondary
-                              : AppTheme.lightTextSecondary,
-                        ),
-                      ),
+                    _ForgotPasswordLink(
+                      isDark: isDark,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ).animate().fadeIn(delay: 550.ms),
@@ -479,6 +434,49 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Hyperlink-style "Forgot Password?" text with hover underline effect.
+class _ForgotPasswordLink extends StatefulWidget {
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ForgotPasswordLink({
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  State<_ForgotPasswordLink> createState() => _ForgotPasswordLinkState();
+}
+
+class _ForgotPasswordLinkState extends State<_ForgotPasswordLink> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.isDark
+        ? AppTheme.darkTextSecondary
+        : AppTheme.lightTextSecondary;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 150),
+          style: AppTheme.bodySmall(color: color).copyWith(
+            decoration:
+                _isHovered ? TextDecoration.underline : TextDecoration.none,
+            decorationColor: color,
+          ),
+          child: const Text('Forgot Password?'),
+        ),
       ),
     );
   }

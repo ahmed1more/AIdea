@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
@@ -26,16 +26,6 @@ void main() async {
   await GoogleSignIn.instance.initialize(
     clientId: kIsWeb ? '91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com' : null,
   );
-
-  // Initialize Facebook SDK for Web
-  if (kIsWeb) {
-    await FacebookAuth.instance.webAndDesktopInitialize(
-      appId: "905268655852729",
-      cookie: true,
-      xfbml: true,
-      version: "v15.0",
-    );
-  }
 
   runApp(const AIdea());
 }

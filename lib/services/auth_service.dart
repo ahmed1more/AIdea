@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
@@ -14,7 +14,7 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
-  final FacebookAuth _facebookAuth = FacebookAuth.instance;
+
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -166,36 +166,7 @@ class AuthService {
     }
   }
 
-  // ─── Social Sign-In: Facebook ───────────────────────────────────
-  Future<AppUser?> signInWithFacebook() async {
-    try {
-      UserCredential result;
 
-      if (kIsWeb) {
-        // Firebase Auth handles Web perfectly with popup
-        final FacebookAuthProvider facebookProvider = FacebookAuthProvider();
-        result = await _auth.signInWithPopup(facebookProvider);
-      } else {
-        // Native mobile uses the flutter_facebook_auth plugin
-        final LoginResult fbResult = await _facebookAuth.login();
-
-        if (fbResult.status == LoginStatus.cancelled) return null;
-        if (fbResult.status == LoginStatus.failed) {
-          throw Exception('Facebook sign in failed: ${fbResult.message}');
-        }
-
-        final credential = FacebookAuthProvider.credential(
-          fbResult.accessToken!.tokenString,
-        );
-        result = await _auth.signInWithCredential(credential);
-      }
-
-      return _handleSocialSignIn(result, 'facebook');
-    } catch (e) {
-      debugPrint('Error signing in with Facebook: $e');
-      rethrow;
-    }
-  }
 
   // Helper method for social sign ins
   Future<AppUser?> _handleSocialSignIn(
@@ -256,7 +227,7 @@ class AuthService {
         } catch (_) {
           // May fail if not signed in with Google, ignore
         }
-        await _facebookAuth.logOut();
+
       }
       
       // Clear Firebase session

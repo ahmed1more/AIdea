@@ -21,6 +21,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _contactController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  double _passwordStrength = 0;
+  String _passwordStrengthLabel = '';
 
   String? _selectedDay;
   String? _selectedMonth;
@@ -28,7 +30,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedGender;
 
   @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_updatePasswordStrength);
+  }
+
+  void _updatePasswordStrength() {
+    final password = _passwordController.text;
+    double strength = 0;
+    if (password.length >= 8) strength += 0.25;
+    if (RegExp(r'[A-Z]').hasMatch(password)) strength += 0.25;
+    if (RegExp(r'[0-9]').hasMatch(password)) strength += 0.25;
+    if (RegExp(r'[!@#\$%\^&\*(),.?":{}|<>]').hasMatch(password)) strength += 0.25;
+
+    String label;
+    if (strength <= 0.25) {
+      label = 'Weak';
+    } else if (strength <= 0.5) {
+      label = 'Fair';
+    } else if (strength <= 0.75) {
+      label = 'Good';
+    } else {
+      label = 'Strong';
+    }
+
+    setState(() {
+      _passwordStrength = password.isEmpty ? 0 : strength;
+      _passwordStrengthLabel = password.isEmpty ? '' : label;
+    });
+  }
+
+  @override
   void dispose() {
+    _passwordController.removeListener(_updatePasswordStrength);
     _firstNameController.dispose();
     _surnameController.dispose();
     _contactController.dispose();
@@ -327,8 +361,68 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
-                  validator: (value) => value == null || value.length < 6 ? 'At least 6 characters' : null,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Password is required';
+                    if (value.length < 8) return 'At least 8 characters';
+                    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Include at least one uppercase letter';
+                    if (!RegExp(r'[a-z]').hasMatch(value)) return 'Include at least one lowercase letter';
+                    if (!RegExp(r'[0-9]').hasMatch(value)) return 'Include at least one number';
+                    if (!RegExp(r'[!@#\$%\^&\*(),.?":{}|<>]').hasMatch(value)) return 'Include at least one special character';
+                    return null;
+                  },
                 ).animate().fadeIn(delay: 700.ms),
+
+                // ─── Password Strength Indicator ──────────
+                if (_passwordController.text.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            height: 4,
+                            child: LinearProgressIndicator(
+                              value: _passwordStrength,
+                              backgroundColor: (isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _passwordStrength <= 0.25
+                                    ? Colors.red
+                                    : _passwordStrength <= 0.5
+                                        ? Colors.orange
+                                        : _passwordStrength <= 0.75
+                                            ? Colors.amber
+                                            : Colors.green,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _passwordStrengthLabel,
+                        style: AppTheme.labelSmall(
+                          color: _passwordStrength <= 0.25
+                              ? Colors.red
+                              : _passwordStrength <= 0.5
+                                  ? Colors.orange
+                                  : _passwordStrength <= 0.75
+                                      ? Colors.amber
+                                      : Colors.green,
+                        ).copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Use 8+ characters with uppercase, lowercase, numbers & symbols',
+                    style: AppTheme.bodySmall(
+                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                    ).copyWith(fontSize: 11),
+                  ),
+                ],
+
                 const SizedBox(height: 24),
 
                 // ─── Legal Text ──────────────────────────
