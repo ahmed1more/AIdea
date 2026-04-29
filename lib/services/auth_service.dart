@@ -153,8 +153,10 @@ class AuthService {
         result = await _auth.signInWithPopup(googleProvider);
       } else {
         // Native mobile uses the google_sign_in plugin
-        final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+        // Always sign out first to clear any stuck/pending previous attempts
+        await _googleSignIn.signOut();
 
+        final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
         final GoogleSignInAuthentication googleAuth = googleUser.authentication;
         final credential = GoogleAuthProvider.credential(
           idToken: googleAuth.idToken,
@@ -164,6 +166,12 @@ class AuthService {
       }
 
       return _handleSocialSignIn(result, 'google');
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        return null;
+      }
+      debugPrint('Error signing in with Google: $e');
+      rethrow;
     } catch (e) {
       debugPrint('Error signing in with Google: $e');
       rethrow;
