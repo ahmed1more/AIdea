@@ -27,6 +27,8 @@ class AuthService {
     required String email,
     required String password,
     required String displayName,
+    String? gender,
+    String? birthDate,
   }) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -46,6 +48,8 @@ class AuthService {
           displayName: displayName,
           createdAt: DateTime.now(),
           notesCount: 0,
+          gender: gender,
+          birthDate: birthDate,
         );
 
         // Create user document in Firestore

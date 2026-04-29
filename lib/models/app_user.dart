@@ -8,6 +8,8 @@ class AppUser {
   final String? photoUrl;
   final DateTime createdAt;
   final int notesCount;
+  final String? gender;
+  final String? birthDate;
 
   AppUser({
     required this.id,
@@ -16,6 +18,8 @@ class AppUser {
     this.photoUrl,
     required this.createdAt,
     this.notesCount = 0,
+    this.gender,
+    this.birthDate,
   });
 
   // Convert to Map for Firestore
@@ -26,6 +30,8 @@ class AppUser {
       'photoUrl': photoUrl,
       'createdAt': Timestamp.fromDate(createdAt),
       'notesCount': notesCount,
+      'gender': gender,
+      'birthDate': birthDate,
     };
   }
 
@@ -39,6 +45,8 @@ class AppUser {
       photoUrl: data['photoUrl'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       notesCount: data['notesCount'] ?? 0,
+      gender: data['gender'],
+      birthDate: data['birthDate'],
     );
   }
 
@@ -50,6 +58,8 @@ class AppUser {
     String? photoUrl,
     DateTime? createdAt,
     int? notesCount,
+    String? gender,
+    String? birthDate,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -58,6 +68,8 @@ class AppUser {
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt ?? this.createdAt,
       notesCount: notesCount ?? this.notesCount,
+      gender: gender ?? this.gender,
+      birthDate: birthDate ?? this.birthDate,
     );
   }
 
@@ -70,6 +82,8 @@ class AppUser {
       'photoUrl': photoUrl,
       'createdAt': createdAt.toIso8601String(),
       'notesCount': notesCount,
+      'gender': gender,
+      'birthDate': birthDate,
     };
   }
 
@@ -84,6 +98,8 @@ class AppUser {
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
       notesCount: map['notesCount'] ?? 0,
+      gender: map['gender'],
+      birthDate: map['birthDate'],
     );
   }
 
