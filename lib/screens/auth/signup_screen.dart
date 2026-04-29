@@ -34,6 +34,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool get _useBackdropBlur =>
       !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
 
+  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
+
   void _handleBackNavigation() {
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
@@ -129,10 +131,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   InputDecoration _inputDecoration(bool isDark, String hint) {
+    final fillColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkSurfaceHigh.withValues(alpha: 0.88)
+            : AppTheme.darkSurface.withValues(alpha: 0.5))
+        : AppTheme.lightSurface;
+    final secondaryTextColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkTextPrimary.withValues(alpha: 0.82)
+            : AppTheme.darkTextSecondary)
+        : AppTheme.lightTextSecondary;
+
     return InputDecoration(
       hintText: hint,
       filled: true,
-      fillColor: isDark ? AppTheme.darkSurface.withValues(alpha: 0.5) : AppTheme.lightSurface,
+      fillColor: fillColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
         borderSide: BorderSide(color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
@@ -146,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      hintStyle: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+      hintStyle: AppTheme.bodyMedium(color: secondaryTextColor),
     );
   }
 
@@ -167,6 +180,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
+    final secondaryTextColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkTextPrimary.withValues(alpha: 0.82)
+            : AppTheme.darkTextSecondary)
+        : AppTheme.lightTextSecondary;
 
     Widget formContent = LayoutBuilder(
       builder: (context, constraints) {
@@ -220,7 +238,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Create an account to access your editorial intelligence and connect with your team.',
-                        style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                        style: AppTheme.bodyMedium(color: secondaryTextColor),
                       ).animate().fadeIn(delay: 150.ms),
                       const SizedBox(height: 24),
 
@@ -322,7 +340,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 4),
                       Text(
                         'You may receive notifications from us.',
-                        style: AppTheme.bodySmall(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                        style: AppTheme.bodySmall(color: secondaryTextColor),
                       ).animate().fadeIn(delay: 600.ms),
                       const SizedBox(height: 20),
 
@@ -403,7 +421,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Text(
                         'Use 8+ characters with uppercase, lowercase, numbers & symbols',
                         style: AppTheme.bodySmall(
-                          color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                          color: secondaryTextColor,
                         ).copyWith(fontSize: 11),
                       ),
 

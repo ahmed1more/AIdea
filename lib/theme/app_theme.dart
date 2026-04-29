@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
@@ -27,8 +28,10 @@ class AppTheme {
   static const Color darkSurface = Color(0xFF1E293B);
   static const Color darkSurfaceHigh = Color(0xFF334155);
   static const Color darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color darkTextSecondary = Color(0xFFA1B0C5);
+  static const Color darkTextSecondary = Color(0xFFCBD5E1);
   static const Color darkDivider = Color(0xFF334155);
+
+  static bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
 
   // ─── Spacing ──────────────────────────────────────────────────────
   static const double xs = 4;
@@ -55,9 +58,10 @@ class AppTheme {
       );
 
   static TextStyle headline2({Color? color}) => GoogleFonts.manrope(
-        fontSize: 28,
+        fontSize: _isAndroid ? 30 : 28,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.3,
+        height: 1.12,
+        letterSpacing: _isAndroid ? -0.2 : -0.3,
         color: color,
       );
 
@@ -74,49 +78,49 @@ class AppTheme {
       );
 
   static TextStyle titleMedium({Color? color}) => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: _isAndroid ? 17 : 16,
         fontWeight: FontWeight.w600,
         color: color,
       );
 
   static TextStyle bodyLarge({Color? color}) => GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        height: 1.6,
+        fontSize: _isAndroid ? 17 : 16,
+        fontWeight: _isAndroid ? FontWeight.w500 : FontWeight.w400,
+        height: _isAndroid ? 1.55 : 1.6,
         color: color,
       );
 
   static TextStyle bodyMedium({Color? color}) => GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        height: 1.5,
+        fontSize: _isAndroid ? 16 : 14,
+        fontWeight: _isAndroid ? FontWeight.w500 : FontWeight.w400,
+        height: _isAndroid ? 1.45 : 1.5,
         color: color,
       );
 
   static TextStyle bodySmall({Color? color}) => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
+        fontSize: _isAndroid ? 13 : 12,
+        fontWeight: _isAndroid ? FontWeight.w500 : FontWeight.w400,
         color: color,
       );
 
   static TextStyle labelLarge({Color? color}) => GoogleFonts.manrope(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
+        fontSize: _isAndroid ? 15 : 14,
+        fontWeight: FontWeight.w800,
+        letterSpacing: _isAndroid ? 0.2 : 0.5,
         color: color,
       );
 
   static TextStyle labelSmall({Color? color}) => GoogleFonts.manrope(
-        fontSize: 10,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.5,
+        fontSize: _isAndroid ? 11.5 : 10,
+        fontWeight: FontWeight.w800,
+        letterSpacing: _isAndroid ? 1.2 : 1.5,
         color: color,
       );
 
   static TextStyle button({Color? color}) => GoogleFonts.manrope(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.3,
+        fontSize: _isAndroid ? 17 : 15,
+        fontWeight: FontWeight.w800,
+        letterSpacing: _isAndroid ? 0.1 : 0.3,
         color: color,
       );
 

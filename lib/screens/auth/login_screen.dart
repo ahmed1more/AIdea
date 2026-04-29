@@ -79,6 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool get _useBackdropBlur =>
       !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
 
+  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
+
   Widget _buildGoogleIcon(bool isDark) {
     return Container(
       width: 20,
@@ -103,6 +105,16 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
+    final secondaryTextColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkTextPrimary.withValues(alpha: 0.82)
+            : AppTheme.darkTextSecondary)
+        : AppTheme.lightTextSecondary;
+    final fieldFillColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkSurfaceHigh.withValues(alpha: 0.88)
+            : AppTheme.darkSurface)
+        : AppTheme.lightSurface;
 
     Widget formContent = Center(
       child: SingleChildScrollView(
@@ -158,9 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Access your editorial intelligence',
                   style: AppTheme.bodyMedium(
-                    color: isDark
-                        ? AppTheme.darkTextSecondary
-                        : AppTheme.lightTextSecondary,
+                    color: secondaryTextColor,
                   ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn(delay: 250.ms),
@@ -185,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         style: OutlinedButton.styleFrom(
                           backgroundColor: isDark
-                              ? AppTheme.darkSurface
+                              ? fieldFillColor
                               : AppTheme.lightSurface,
                           side: BorderSide(
                             color: isDark
@@ -221,9 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'Or',
                         style: AppTheme.bodySmall(
-                          color: isDark
-                              ? AppTheme.darkTextSecondary
-                              : AppTheme.lightTextSecondary,
+                          color: secondaryTextColor,
                         ),
                       ),
                     ),
@@ -244,10 +252,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'EMAIL ADDRESS',
                   style: AppTheme.labelSmall(
-                    color: isDark
-                        ? AppTheme.darkTextSecondary
-                        : AppTheme.lightTextSecondary,
-                  ).copyWith(letterSpacing: 2),
+                    color: secondaryTextColor,
+                  ).copyWith(letterSpacing: _isAndroid ? 1.4 : 2),
                 ).animate().fadeIn(delay: 450.ms),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -261,8 +267,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     hintText: 'editor@aidea.com',
                     filled: true,
-                    fillColor:
-                        isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    fillColor: fieldFillColor,
+                    hintStyle: AppTheme.bodyMedium(
+                      color: isDark
+                          ? AppTheme.darkTextPrimary.withValues(alpha: 0.62)
+                          : AppTheme.lightTextSecondary,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide: BorderSide.none,
@@ -286,10 +296,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       'PASSWORD',
                       style: AppTheme.labelSmall(
-                        color: isDark
-                            ? AppTheme.darkTextSecondary
-                            : AppTheme.lightTextSecondary,
-                      ).copyWith(letterSpacing: 2),
+                        color: secondaryTextColor,
+                      ).copyWith(letterSpacing: _isAndroid ? 1.4 : 2),
                     ),
                     _ForgotPasswordLink(
                       isDark: isDark,
@@ -392,9 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       "Don't have an account? ",
                       style: AppTheme.bodyMedium(
-                        color: isDark
-                            ? AppTheme.darkTextSecondary
-                            : AppTheme.lightTextSecondary,
+                        color: secondaryTextColor,
                       ),
                     ),
                     GestureDetector(
@@ -411,7 +417,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: isDark
                               ? AppTheme.darkTextPrimary
                               : AppTheme.lightTextPrimary,
-                        ),
+                        ).copyWith(decoration: TextDecoration.underline),
                       ),
                     ),
                   ],
@@ -476,7 +482,7 @@ class _ForgotPasswordLinkState extends State<_ForgotPasswordLink> {
   @override
   Widget build(BuildContext context) {
     final color = widget.isDark
-        ? AppTheme.darkTextSecondary
+        ? AppTheme.darkTextPrimary.withValues(alpha: 0.88)
         : AppTheme.lightTextSecondary;
 
     return MouseRegion(

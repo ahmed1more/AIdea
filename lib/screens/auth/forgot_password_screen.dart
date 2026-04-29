@@ -23,6 +23,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool get _useBackdropBlur =>
       !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
 
+  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -67,6 +69,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
+    final secondaryTextColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkTextPrimary.withValues(alpha: 0.82)
+            : AppTheme.darkTextSecondary)
+        : AppTheme.lightTextSecondary;
+    final fieldFillColor = isDark
+        ? (_isAndroid
+            ? AppTheme.darkSurfaceHigh.withValues(alpha: 0.88)
+            : AppTheme.darkSurface)
+        : AppTheme.lightSurface;
 
     Widget formContent = Center(
       child: SingleChildScrollView(
@@ -75,7 +87,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           constraints: const BoxConstraints(maxWidth: 400),
           child: Form(
             key: _formKey,
-            child: _emailSent ? _buildSuccessView(isDark) : _buildFormView(isDark, settings),
+            child: _emailSent
+                ? _buildSuccessView(isDark, secondaryTextColor)
+                : _buildFormView(
+                    isDark, settings, secondaryTextColor, fieldFillColor),
           ),
         ),
       ),
@@ -113,7 +128,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildFormView(bool isDark, SettingsProvider settings) {
+  Widget _buildFormView(bool isDark, SettingsProvider settings,
+      Color secondaryTextColor, Color fieldFillColor) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -182,9 +198,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           'Enter the email address associated with your account and we\'ll send you a link to reset your password.',
           style: AppTheme.bodyMedium(
-            color: isDark
-                ? AppTheme.darkTextSecondary
-                : AppTheme.lightTextSecondary,
+            color: secondaryTextColor,
           ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 250.ms),
@@ -195,10 +209,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           'EMAIL ADDRESS',
           style: AppTheme.labelSmall(
-            color: isDark
-                ? AppTheme.darkTextSecondary
-                : AppTheme.lightTextSecondary,
-          ).copyWith(letterSpacing: 2),
+            color: secondaryTextColor,
+          ).copyWith(letterSpacing: _isAndroid ? 1.4 : 2),
         ).animate().fadeIn(delay: 300.ms),
         const SizedBox(height: 8),
         TextFormField(
@@ -212,7 +224,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: InputDecoration(
             hintText: 'editor@aidea.com',
             filled: true,
-            fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            fillColor: fieldFillColor,
+            hintStyle: AppTheme.bodyMedium(
+              color: isDark
+                  ? AppTheme.darkTextPrimary.withValues(alpha: 0.62)
+                  : AppTheme.lightTextSecondary,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               borderSide: BorderSide.none,
@@ -292,7 +309,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildSuccessView(bool isDark) {
+  Widget _buildSuccessView(bool isDark, Color secondaryTextColor) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -394,9 +411,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: _HoverUnderlineText(
             text: 'Didn\'t receive the email? Resend',
             style: AppTheme.bodySmall(
-              color: isDark
-                  ? AppTheme.darkTextSecondary
-                  : AppTheme.lightTextSecondary,
+              color: secondaryTextColor,
             ),
             onTap: () {
               setState(() {
