@@ -13,7 +13,11 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb
+        ? '91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com'
+        : null,
+  );
 
 
   // Get current user
@@ -156,8 +160,9 @@ class AuthService {
         // Always sign out first to clear any stuck/pending previous attempts
         await _googleSignIn.signOut();
 
-        final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) return null;
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         final credential = GoogleAuthProvider.credential(
           idToken: googleAuth.idToken,
         );
