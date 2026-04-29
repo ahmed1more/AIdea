@@ -89,6 +89,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _contactController.text.trim(),
         password: _passwordController.text,
         displayName: '${_firstNameController.text.trim()} ${_surnameController.text.trim()}',
+        gender: _selectedGender,
+        birthDate: '$_selectedYear-$_selectedMonth-$_selectedDay',
       );
 
       if (success && mounted) {
