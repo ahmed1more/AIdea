@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -140,29 +141,34 @@ class SettingsProvider extends ChangeNotifier {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? Colors.white : Colors.white;
     final borderColor = isDark ? Colors.white : AppTheme.lightDivider;
+    final useBackdropBlur =
+        !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
+    final content = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: baseColor.withValues(
+          alpha: opacity,
+        ),
+        borderRadius: borderRadius ?? BorderRadius.circular(24),
+        border:
+            border ??
+            Border.all(
+              color: borderColor.withValues(
+                alpha: isDark ? 0.1 : 0.9,
+              ),
+              width: 1.5,
+            ),
+      ),
+      child: child,
+    );
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: baseColor.withValues(
-              alpha: opacity,
-            ),
-            borderRadius: borderRadius ?? BorderRadius.circular(24),
-            border:
-                border ??
-                Border.all(
-                  color: borderColor.withValues(
-                    alpha: isDark ? 0.1 : 0.9,
-                  ),
-                  width: 1.5,
-                ),
-          ),
-          child: child,
-        ),
-      ),
+      child: useBackdropBlur
+          ? BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: content,
+            )
+          : content,
     );
   }
 

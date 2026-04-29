@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -18,6 +19,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isSubmitting = false;
   bool _emailSent = false;
+
+  bool get _useBackdropBlur =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
 
   @override
   void dispose() {
@@ -97,10 +101,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
           // ─── Main Content ────────────────────────────
           SafeArea(
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: formContent,
-            ),
+            child: _useBackdropBlur
+                ? BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: formContent,
+                  )
+                : formContent,
           ),
         ],
       ),

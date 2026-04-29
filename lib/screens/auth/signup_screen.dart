@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -29,6 +30,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedMonth;
   String? _selectedYear;
   String? _selectedGender;
+
+  bool get _useBackdropBlur =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
 
   void _handleBackNavigation() {
     final navigator = Navigator.of(context);
@@ -477,10 +481,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
           // ─── Main Content ────────────────────────────
           SafeArea(
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: formContent,
-            ),
+            child: _useBackdropBlur
+                ? BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: formContent,
+                  )
+                : formContent,
           ),
         ],
       ),

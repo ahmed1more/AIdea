@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AIdea</string>
-    <string name="facebook_app_id">905268655852729</string>
-    <string name="facebook_client_token">319d2c02f11ac3b422ff02a2aeb2a59c</string>
-    <string name="fb_login_protocol_scheme">fb905268655852729</string>
 </resources>

@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -71,6 +72,29 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  bool get _useBackdropBlur =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
+
+  Widget _buildGoogleIcon(bool isDark) {
+    return Container(
+      width: 20,
+      height: 20,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        'G',
+        style: TextStyle(
+          color: isDark ? AppTheme.darkBg : AppTheme.lightTextPrimary,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -150,16 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 52,
                       child: OutlinedButton.icon(
                         onPressed: auth.isLoading ? null : _handleGoogleSignIn,
-                        icon: Image.network(
-                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                          width: 20,
-                          height: 20,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.g_mobiledata,
-                            size: 24,
-                            color: Colors.white,
-                          ),
-                        ),
+                        icon: _buildGoogleIcon(isDark),
                         label: Text(
                           'Continue with Google',
                           style: AppTheme.button(
@@ -428,10 +443,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // ─── Main Content ────────────────────────────
           SafeArea(
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: formContent,
-            ),
+            child: _useBackdropBlur
+                ? BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: formContent,
+                  )
+                : formContent,
           ),
         ],
       ),
