@@ -13,11 +13,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: kIsWeb
-        ? '91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com'
-        : null,
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
 
   // Get current user
