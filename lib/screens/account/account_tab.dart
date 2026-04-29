@@ -9,7 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/notes_provider.dart';
-import '../auth/signup_screen.dart';
+import '../auth/login_screen.dart';
 
 /// Account tab — profile, settings, AI config, and sign-out.
 class AccountTab extends StatefulWidget {
@@ -1424,7 +1424,7 @@ class _AccountTabState extends State<AccountTab>
               notes.clearSearch();
 
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
                 (route) => false,
               );
             },

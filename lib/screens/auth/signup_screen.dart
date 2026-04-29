@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
+import 'login_screen.dart';
 import '../main_shell.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -28,6 +29,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedMonth;
   String? _selectedYear;
   String? _selectedGender;
+
+  void _handleBackNavigation() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+
+    navigator.pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
 
   @override
   void initState() {
@@ -169,7 +182,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: [
                           IconButton(
                             icon: Icon(Icons.arrow_back, color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: _handleBackNavigation,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                           ),
@@ -427,7 +440,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         width: double.infinity,
                         height: 48,
                         child: OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: _handleBackNavigation,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXl)),
