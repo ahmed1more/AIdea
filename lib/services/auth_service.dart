@@ -156,9 +156,8 @@ class AuthService {
         // Always sign out first to clear any stuck/pending previous attempts
         await _googleSignIn.signOut();
 
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-        if (googleUser == null) return null;
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
         final credential = GoogleAuthProvider.credential(
           idToken: googleAuth.idToken,
         );
