@@ -156,8 +156,14 @@ class AuthService {
         // Always sign out first to clear any stuck/pending previous attempts
         await _googleSignIn.signOut();
 
-        final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+        final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+        if (googleUser == null) return null;
+        
         final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+        if (googleAuth.idToken == null) {
+          throw Exception('Google Sign-In failed: Missing ID Token');
+        }
+
         final credential = GoogleAuthProvider.credential(
           idToken: googleAuth.idToken,
         );
@@ -264,9 +270,9 @@ class AuthService {
         await cacheUser(appUser);
         return appUser;
       } else {
-        debugPrint('User document missing from Firestore. Signing out.');
-        await _auth.signOut();
-        await clearCachedUser();
+        debugPrint('User document missing from Firestore for uid: $uid');
+        // We don't sign out here because this could be a new user 
+        // in the middle of a social sign-in process.
         return null;
       }
     } catch (e) {

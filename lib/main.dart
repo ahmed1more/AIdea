@@ -24,11 +24,15 @@ void main() async {
 
 
   // Initialize Google Sign-In (required by google_sign_in v7+)
-  await GoogleSignIn.instance.initialize(
-    clientId: kIsWeb
-        ? '91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com'
-        : null,
-  );
+  try {
+    await GoogleSignIn.instance.initialize(
+      clientId: kIsWeb
+          ? '91184701354-sofrn8qnm418fd9lu2o11td8lev5okiq.apps.googleusercontent.com'
+          : null,
+    );
+  } catch (e) {
+    debugPrint('Google Sign-In initialization failed: $e');
+  }
 
   runApp(const AIdea());
 }
