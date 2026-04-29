@@ -144,61 +144,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildLegalText(bool isDark) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final mutedColor = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
-    final style = AppTheme.bodySmall(color: mutedColor).copyWith(height: 1.4, fontSize: 11);
-    final linkStyle = style.copyWith(color: primaryColor, fontWeight: FontWeight.bold);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'People who use our service may have uploaded your contact information to AIdea.',
-          style: style,
-        ),
-        const SizedBox(height: 12),
-        RichText(
-          text: TextSpan(
-            style: style,
-            children: [
-              const TextSpan(text: 'By tapping Submit, you agree to create an account and to AIdea\'s '),
-              TextSpan(text: 'Terms', style: linkStyle),
-              const TextSpan(text: ', '),
-              TextSpan(text: 'Privacy Policy', style: linkStyle),
-              const TextSpan(text: ' and '),
-              TextSpan(text: 'Cookies Policy', style: linkStyle),
-              const TextSpan(text: '.'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'The Privacy Policy describes the ways we can use the information we collect when you create an account. For example, we use this information to provide, personalise and improve our products.',
-          style: style,
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
 
-    Widget formContent = CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+    Widget formContent = LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+            child: Center(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 400),
+                constraints: const BoxConstraints(maxWidth: 440),
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // ─── Top Bar ────────────────────────────────
@@ -230,7 +193,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ],
                       ).animate().fadeIn(duration: 500.ms),
-                      const SizedBox(height: 24),
+                      const Spacer(),
 
                       // ─── Headline ────────────────────────────
                       Text(
@@ -430,8 +393,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 24),
 
                       // ─── Legal Text ──────────────────────────
-                      _buildLegalText(isDark).animate().fadeIn(delay: 750.ms),
-                      const SizedBox(height: 32),
 
                       // ─── Buttons ─────────────────────────────
                       Consumer<AuthProvider>(
@@ -460,7 +421,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           );
                         },
-                      ).animate().fadeIn(delay: 800.ms),
+                      ).animate().fadeIn(delay: 750.ms),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -474,15 +435,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           child: Text('I already have an account', style: AppTheme.button().copyWith(fontSize: 16)),
                         ),
-                      ).animate().fadeIn(delay: 850.ms),
+                      ).animate().fadeIn(delay: 800.ms),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
 
     return Scaffold(
