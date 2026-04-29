@@ -153,17 +153,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
       builder: (context, constraints) {
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                       // ─── Top Bar ────────────────────────────────
                       Row(
                         children: [
@@ -193,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ],
                       ).animate().fadeIn(duration: 500.ms),
-                      const Spacer(),
+                      const SizedBox(height: 24),
 
                       // ─── Headline ────────────────────────────
                       Text(
@@ -340,32 +338,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ).animate().fadeIn(delay: 700.ms),
 
                       // ─── Password Strength Indicator ──────────
-                      if (_passwordController.text.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  height: 4,
-                                  child: LinearProgressIndicator(
-                                    value: _passwordStrength,
-                                    backgroundColor: (isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      _passwordStrength <= 0.25
-                                          ? Colors.red
-                                          : _passwordStrength <= 0.5
-                                              ? Colors.orange
-                                              : _passwordStrength <= 0.75
-                                                  ? Colors.amber
-                                                  : Colors.green,
-                                    ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                height: 4,
+                                child: LinearProgressIndicator(
+                                  value: _passwordStrength,
+                                  backgroundColor: (isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    _passwordStrength <= 0.25
+                                        ? Colors.red
+                                        : _passwordStrength <= 0.5
+                                            ? Colors.orange
+                                            : _passwordStrength <= 0.75
+                                                ? Colors.amber
+                                                : Colors.green,
                                   ),
                                 ),
                               ),
                             ),
+                          ),
+                          if (_passwordStrengthLabel.isNotEmpty) ...[
                             const SizedBox(width: 10),
                             Text(
                               _passwordStrengthLabel,
@@ -380,15 +378,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ).copyWith(fontWeight: FontWeight.w600),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Use 8+ characters with uppercase, lowercase, numbers & symbols',
-                          style: AppTheme.bodySmall(
-                            color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-                          ).copyWith(fontSize: 11),
-                        ),
-                      ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Use 8+ characters with uppercase, lowercase, numbers & symbols',
+                        style: AppTheme.bodySmall(
+                          color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                        ).copyWith(fontSize: 11),
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -436,15 +434,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: Text('I already have an account', style: AppTheme.button().copyWith(fontSize: 16)),
                         ),
                       ).animate().fadeIn(delay: 800.ms),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
         );
-      },
-    );
+    },
+  );
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
