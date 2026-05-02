@@ -61,15 +61,18 @@ class VideoNote {
     'Architecture & Design',
   ];
 
-  // Convert to Map for Firestore
+  // Convert to Map for Firestore — field names must match note.txt schema exactly
   Map<String, dynamic> toMap() {
     return {
-      'user_id': userId,
-      'video_url': videoUrl,
-      'video_title': videoTitle,
-      'summary_content': notes,
+      'userId': userId,
+      'videoUrl': videoUrl,
+      'videoTitle': videoTitle,
+      'notes': notes,
+      'thumbnail': thumbnail,
       'category': categories,
+      'keyPoints': keyPoints,
       'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
       'isFavorite': isFavorite,
     };
   }
@@ -110,7 +113,7 @@ class VideoNote {
       return DateTime.now();
     }
 
-    final videoUrl = data['video_url'] ?? data['videoUrl'] ?? '';
+    final videoUrl = data['videoUrl'] ?? data['video_url'] ?? '';
     String thumbnail = data['thumbnail'] ?? '';
 
     // Reconstruct thumbnail if missing (since we don't store it anymore to match reference)
@@ -127,11 +130,11 @@ class VideoNote {
 
     return VideoNote(
       id: doc.id,
-      userId: data['user_id'] ?? data['userId'] ?? '',
+      userId: data['userId'] ?? data['user_id'] ?? '',
       videoUrl: videoUrl,
-      videoTitle: data['video_title'] ?? data['videoTitle'] ?? '',
+      videoTitle: data['videoTitle'] ?? data['video_title'] ?? '',
       thumbnail: thumbnail,
-      notes: data['summary_content'] ?? data['notes'] ?? '',
+      notes: data['notes'] ?? data['summary_content'] ?? '',
       categories: categoriesList,
       keyPoints: List<String>.from(data['keyPoints'] ?? []),
       createdAt: parseDate('createdAt'),
