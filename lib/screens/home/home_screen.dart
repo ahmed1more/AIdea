@@ -289,9 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 if (isWide)
-                  RepaintBoundary(
-                    child: _buildDesktopHeader(settings, isDark),
-                  ),
+                  RepaintBoundary(child: _buildDesktopHeader(settings, isDark)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -523,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isDark ? Colors.white : Colors.black87,
           ),
           decoration: InputDecoration(
-            hintText: 'Search    ¦',
+            hintText: 'Search',
             hintStyle: GoogleFonts.inter(
               fontSize: 14,
               color: isDark
@@ -876,10 +874,14 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Listener(
         onPointerSignal: (pointerSignal) {
           if (pointerSignal is PointerScrollEvent) {
-            final newOffset = _categoryScrollController.offset + pointerSignal.scrollDelta.dy;
+            final newOffset =
+                _categoryScrollController.offset + pointerSignal.scrollDelta.dy;
             if (_categoryScrollController.hasClients) {
               _categoryScrollController.jumpTo(
-                newOffset.clamp(0, _categoryScrollController.position.maxScrollExtent),
+                newOffset.clamp(
+                  0,
+                  _categoryScrollController.position.maxScrollExtent,
+                ),
               );
             }
           }
@@ -950,7 +952,10 @@ class _HomeScreenState extends State<HomeScreen> {
           if (notes.isEmpty) {
             return _buildEmptyState(
               'No notes yet',
-              'Paste a YouTube URL above and tap Summarize to get started.',
+              isWide 
+                  ? 'Paste a YouTube URL above and tap Summarize to get started.'
+                  : 'Go to Home and click on the plus sign to get started.',
+              isWide: isWide,
             );
           }
           return _notesGridView(notes, isWide);
@@ -972,6 +977,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return _buildEmptyState(
               'No favorites yet',
               'Tap the heart on any note to save it here.',
+              isWide: isWide,
             );
           }
           return _notesGridView(notes, isWide);
@@ -999,7 +1005,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   //    Empty State
-  Widget _buildEmptyState(String title, String subtitle) {
+  Widget _buildEmptyState(String title, String subtitle, {bool isWide = true}) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     return Center(
       child: Padding(
@@ -1031,30 +1037,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 28),
-            Center(
-              child: OutlinedButton.icon(
-                onPressed: _focusSummarizeInput,
-                icon: const FaIcon(FontAwesomeIcons.arrowUp, size: 13),
-                label: Text(
-                  'Paste a URL above',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: settings.accentColor,
-                  side: BorderSide(
-                    color: settings.accentColor.withValues(alpha: 0.5),
+            if (isWide) ...[
+              const SizedBox(height: 28),
+              Center(
+                child: OutlinedButton.icon(
+                  onPressed: _focusSummarizeInput,
+                  icon: const FaIcon(FontAwesomeIcons.arrowUp, size: 13),
+                  label: Text(
+                    'Paste a URL above',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: settings.accentColor,
+                    side: BorderSide(
+                      color: settings.accentColor.withValues(alpha: 0.5),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ]
           ],
         ),
       ),

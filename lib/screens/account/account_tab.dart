@@ -1028,24 +1028,41 @@ class _AccountTabState extends State<AccountTab>
       if (!mounted) return;
 
       // Crop the image to ensure it's a square
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: image.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Photo',
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Crop Photo',
-            aspectRatioLockEnabled: true,
-          ),
-          WebUiSettings(
-            context: context,
-          ),
-        ],
-      );
+      CroppedFile? croppedFile;
+      
+      try {
+        croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Photo',
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+            ),
+            IOSUiSettings(
+              title: 'Crop Photo',
+              aspectRatioLockEnabled: true,
+            ),
+            WebUiSettings(
+              context: context,
+              presentStyle: WebPresentStyle.dialog,
+              size: const CropperSize(
+                width: 520,
+                height: 520,
+              ),
+            ),
+          ],
+        );
+      } catch (e) {
+        debugPrint('Cropping failed or not supported: $e');
+        if (kIsWeb) {
+          // If cropping fails on web (e.g. MissingPluginException), fall back to original image
+          croppedFile = CroppedFile(image.path);
+        } else {
+          rethrow;
+        }
+      }
 
       if (croppedFile == null) return;
 
