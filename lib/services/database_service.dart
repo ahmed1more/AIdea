@@ -87,7 +87,7 @@ class DatabaseService {
         } else if (key == 'keyPoints') {
           mappedUpdates['key_points'] = value;
         } else if (key == 'categories') {
-          mappedUpdates['video_categories'] = value;
+          mappedUpdates['category'] = value;
         } else {
           mappedUpdates[key] = value;
         }

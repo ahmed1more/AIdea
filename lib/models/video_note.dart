@@ -69,7 +69,7 @@ class VideoNote {
       'video_title': videoTitle,
       'thumbnail': thumbnail,
       'summary_content': notes,
-      'video_categories': categories,
+      'category': categories,
       'key_points': keyPoints,
       'created_at': Timestamp.fromDate(createdAt),
       'updated_at': Timestamp.fromDate(updatedAt),
@@ -83,13 +83,19 @@ class VideoNote {
 
     // Backward-compat for categories
     List<String> categoriesList;
-    if (data.containsKey('video_categories') && data['video_categories'] is List) {
+    if (data.containsKey('category')) {
+      final catData = data['category'];
+      if (catData is List) {
+        categoriesList = List<String>.from(catData);
+      } else if (catData is String) {
+        categoriesList = catData.isNotEmpty ? [catData] : ['Uncategorized'];
+      } else {
+        categoriesList = ['Uncategorized'];
+      }
+    } else if (data.containsKey('video_categories') && data['video_categories'] is List) {
       categoriesList = List<String>.from(data['video_categories'] as List);
     } else if (data.containsKey('categories') && data['categories'] is List) {
       categoriesList = List<String>.from(data['categories'] as List);
-    } else if (data.containsKey('category') && data['category'] is String) {
-      final cat = data['category'] as String;
-      categoriesList = cat.isNotEmpty ? [cat] : ['Uncategorized'];
     } else {
       categoriesList = ['Uncategorized'];
     }
