@@ -5,7 +5,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../models/video_note.dart';
@@ -142,15 +141,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     return match?.group(1);
   }
 
-  String _getThumbnail(String url) {
-    if (url.contains('youtube.com') || url.contains('youtu.be')) {
-      final videoId = _extractYouTubeId(url);
-      if (videoId != null) {
-        return 'https://img.youtube.com/vi/$videoId/mqdefault.jpg';
-      }
-    }
-    return 'https://via.placeholder.com/320x180';
-  }
+
 
   Future<void> _startGeneration() async {
     if (!_formKey.currentState!.validate()) return;

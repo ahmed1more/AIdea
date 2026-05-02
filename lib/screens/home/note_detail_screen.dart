@@ -25,6 +25,7 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late VideoNote _note;
   bool _isEditing = false;
+  late TextEditingController _titleController;
   late TextEditingController _notesController;
   late List<TextEditingController> _keyPointsControllers;
   late List<String> _selectedCategories;
@@ -40,6 +41,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   void initState() {
     super.initState();
     _note = widget.note;
+    _titleController = TextEditingController(text: _note.videoTitle);
     _notesController = TextEditingController(text: _note.notes);
     _keyPointsControllers = _note.keyPoints
         .map((kp) => TextEditingController(text: kp))
@@ -52,6 +54,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   @override
   void dispose() {
+    _titleController.dispose();
     _notesController.dispose();
     for (var controller in _keyPointsControllers) {
       controller.dispose();
@@ -133,10 +136,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Future<void> _saveChanges() async {
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
+    final newTitle = _titleController.text;
     final newNotes = _notesController.text;
     final newKeyPoints = _keyPointsControllers.map((c) => c.text).toList();
 
     bool success = await notesProvider.updateNote(_note.id, {
+      'videoTitle': newTitle,
       'notes': newNotes,
       'keyPoints': newKeyPoints,
       'categories': _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
@@ -145,6 +150,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     if (success && mounted) {
       setState(() {
         _note = _note.copyWith(
+          videoTitle: newTitle,
           notes: newNotes,
           keyPoints: newKeyPoints,
           categories: _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
@@ -184,6 +190,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   void _cancelEditing() {
     setState(() {
       _isEditing = false;
+      _titleController.text = _note.videoTitle;
       _notesController.text = _note.notes;
       for (int i = 0; i < _keyPointsControllers.length; i++) {
         _keyPointsControllers[i].text = _note.keyPoints[i];
@@ -382,28 +389,54 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               left: 24,
               right: 24,
               bottom: 16,
-              child: Text(
-                _note.videoTitle,
-                style:
-                    AppTheme.headline2(
-                      color: hasThumbnail
-                          ? Colors.white
-                          : (isDark
-                                ? AppTheme.darkTextPrimary
-                                : AppTheme.lightTextPrimary),
-                    ).copyWith(
-                      shadows: hasThumbnail
-                          ? [
-                              Shadow(
-                                blurRadius: 12,
-                                color: Colors.black.withValues(alpha: 0.5),
-                              ),
-                            ]
-                          : null,
-                    ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
+              child: _isEditing
+                  ? TextFormField(
+                      controller: _titleController,
+                      style: AppTheme.headline2(
+                        color: hasThumbnail
+                            ? Colors.white
+                            : (isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary),
+                      ).copyWith(
+                        shadows: hasThumbnail
+                            ? [
+                                Shadow(
+                                  blurRadius: 12,
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      maxLines: null,
+                    )
+                  : Text(
+                      _note.videoTitle,
+                      style:
+                          AppTheme.headline2(
+                            color: hasThumbnail
+                                ? Colors.white
+                                : (isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary),
+                          ).copyWith(
+                            shadows: hasThumbnail
+                                ? [
+                                    Shadow(
+                                      blurRadius: 12,
+                                      color: Colors.black.withValues(alpha: 0.5),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
             ),
           ],
         ),
