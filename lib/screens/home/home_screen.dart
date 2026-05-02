@@ -41,9 +41,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _urlFocusNode.addListener(_handleUrlFocusChange);
-    _loadNotes();
-    // Show profile completion prompt once after login for social users
+    // Load notes and show profile completion prompt after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadNotes();
       _showProfileCompletionIfNeeded();
     });
   }

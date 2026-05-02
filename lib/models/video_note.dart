@@ -64,16 +64,16 @@ class VideoNote {
   // Convert to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'user_id': userId,
-      'video_url': videoUrl,
-      'video_title': videoTitle,
+      'userId': userId,
+      'videoUrl': videoUrl,
+      'videoTitle': videoTitle,
       'thumbnail': thumbnail,
-      'summary_content': notes,
+      'notes': notes,
       'category': categories,
-      'key_points': keyPoints,
-      'created_at': Timestamp.fromDate(createdAt),
-      'updated_at': Timestamp.fromDate(updatedAt),
-      'is_favorite': isFavorite,
+      'keyPoints': keyPoints,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+      'isFavorite': isFavorite,
     };
   }
 
@@ -101,8 +101,8 @@ class VideoNote {
     }
 
     // Helper for Timestamp conversion
-    DateTime parseDate(String camel, String snake) {
-      final val = data[camel] ?? data[snake];
+    DateTime parseDate(String camel) {
+      final val = data[camel];
       if (val is Timestamp) {
         return val.toDate();
       }
@@ -114,16 +114,16 @@ class VideoNote {
 
     return VideoNote(
       id: doc.id,
-      userId: data['user_id'] ?? data['userId'] ?? '',
-      videoUrl: data['video_url'] ?? data['videoUrl'] ?? '',
-      videoTitle: data['video_title'] ?? data['videoTitle'] ?? '',
+      userId: data['userId'] ?? '',
+      videoUrl: data['videoUrl'] ?? '',
+      videoTitle: data['videoTitle'] ?? '',
       thumbnail: data['thumbnail'] ?? '',
-      notes: data['summary_content'] ?? data['notes'] ?? '',
+      notes: data['notes'] ?? '',
       categories: categoriesList,
-      keyPoints: List<String>.from(data['key_points'] ?? data['keyPoints'] ?? []),
-      createdAt: parseDate('createdAt', 'created_at'),
-      updatedAt: parseDate('updatedAt', 'updated_at'),
-      isFavorite: data['is_favorite'] ?? data['isFavorite'] ?? false,
+      keyPoints: List<String>.from(data['keyPoints'] ?? []),
+      createdAt: parseDate('createdAt'),
+      updatedAt: parseDate('updatedAt'),
+      isFavorite: data['isFavorite'] ?? false,
     );
   }
 

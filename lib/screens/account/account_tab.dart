@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
@@ -1022,20 +1023,64 @@ class _AccountTabState extends State<AccountTab>
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
       );
       if (image == null) return;
+      if (!mounted) return;
+
+      // Crop the image to ensure it's a square
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Photo',
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Crop Photo',
+            aspectRatioLockEnabled: true,
+          ),
+          WebUiSettings(
+            context: context,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) return;
+
+      final bytes = await croppedFile.readAsBytes();
+
+      // 1. Validate file size (max 1MB = 1048576 bytes)
+      if (bytes.length > 1048576) {
+        if (mounted) {
+          _showToast(
+            'Image is too large. Maximum size is 1MB.',
+            isError: true,
+          );
+        }
+        return;
+      }
+
+      // 2. Validate dimensions (min 256x256)
+      final decodedImage = await decodeImageFromList(bytes);
+      if (decodedImage.width < 256 || decodedImage.height < 256) {
+        if (mounted) {
+          _showToast(
+            'Image is too small. Minimum size is 256x256 pixels.',
+            isError: true,
+          );
+        }
+        return;
+      }
 
       bool success;
       if (kIsWeb) {
         // Web: dart:io File is unavailable — use bytes instead
-        final bytes = await image.readAsBytes();
         success = await auth.updateProfilePhotoBytes(bytes);
       } else {
         // Mobile / desktop
-        success = await auth.updateProfilePhoto(File(image.path));
+        success = await auth.updateProfilePhoto(File(croppedFile.path));
       }
 
       if (mounted) {
