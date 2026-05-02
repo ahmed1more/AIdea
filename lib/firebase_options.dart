@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -46,30 +47,30 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBkvsGdsoPM04_1ODCcdwlAzXRXtGBRfEc',
-    appId: '1:91184701354:web:2b31543b06b96da03e95d3',
-    messagingSenderId: '91184701354',
-    projectId: 'aidea-90e12',
-    authDomain: 'aidea-90e12.firebaseapp.com',
-    storageBucket: 'aidea-90e12.firebasestorage.app',
-    measurementId: 'G-F3WBVJ1FZ3',
-  );
+  static FirebaseOptions get web => FirebaseOptions(
+        apiKey: dotenv.get('FIREBASE_WEB_API_KEY'),
+        appId: dotenv.get('FIREBASE_WEB_APP_ID'),
+        messagingSenderId: dotenv.get('FIREBASE_WEB_MESSAGING_SENDER_ID'),
+        projectId: dotenv.get('FIREBASE_WEB_PROJECT_ID'),
+        authDomain: dotenv.get('FIREBASE_WEB_AUTH_DOMAIN'),
+        storageBucket: dotenv.get('FIREBASE_WEB_STORAGE_BUCKET'),
+        measurementId: dotenv.get('FIREBASE_WEB_MEASUREMENT_ID'),
+      );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAPlZGNlf5yGCKB7UmbM8yX5VpZTEswjrM',
-    appId: '1:91184701354:android:8f968608ceeb40c03e95d3',
-    messagingSenderId: '91184701354',
-    projectId: 'aidea-90e12',
-    storageBucket: 'aidea-90e12.firebasestorage.app',
-  );
+  static FirebaseOptions get android => FirebaseOptions(
+        apiKey: dotenv.get('FIREBASE_ANDROID_API_KEY'),
+        appId: dotenv.get('FIREBASE_ANDROID_APP_ID'),
+        messagingSenderId: dotenv.get('FIREBASE_ANDROID_MESSAGING_SENDER_ID'),
+        projectId: dotenv.get('FIREBASE_ANDROID_PROJECT_ID'),
+        storageBucket: dotenv.get('FIREBASE_ANDROID_STORAGE_BUCKET'),
+      );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBTIeXSotoZJlqo_jsOWiCCDtfhFnVjdrc',
-    appId: '1:91184701354:ios:b0e4756f3171e68e3e95d3',
-    messagingSenderId: '91184701354',
-    projectId: 'aidea-90e12',
-    storageBucket: 'aidea-90e12.firebasestorage.app',
-    iosBundleId: 'com.aideaApp.aidea',
-  );
+  static FirebaseOptions get ios => FirebaseOptions(
+        apiKey: dotenv.get('FIREBASE_IOS_API_KEY'),
+        appId: dotenv.get('FIREBASE_IOS_APP_ID'),
+        messagingSenderId: dotenv.get('FIREBASE_IOS_MESSAGING_SENDER_ID'),
+        projectId: dotenv.get('FIREBASE_IOS_PROJECT_ID'),
+        storageBucket: dotenv.get('FIREBASE_IOS_STORAGE_BUCKET'),
+        iosBundleId: dotenv.get('FIREBASE_IOS_BUNDLE_ID'),
+      );
 }

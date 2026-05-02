@@ -93,3 +93,4 @@ flutter:
     - assets/images/
     - assets/icon/
     - assets/icon/aidea-logo.png
+    - .env

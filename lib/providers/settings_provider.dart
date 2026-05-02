@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../theme/app_theme.dart';
 
 enum AiModel { aidea, gemini }
@@ -16,7 +17,7 @@ class SettingsProvider extends ChangeNotifier {
   static const String _autoSaveKey = 'auto_save';
 
   ThemeMode _themeMode = ThemeMode.system;
-  String _aideaUrl = 'https://atinc1-aidea-server.hf.space';
+  String _aideaUrl = dotenv.get('AIDEA_BASE_URL');
   AiModel _aiModel = AiModel.aidea;
   String _apiKey = '';
   bool _smartContext = true;
@@ -44,10 +45,10 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final modeIndex = prefs.getInt(_themeModeKey) ?? 0;
     _themeMode = ThemeMode.values[modeIndex];
-    _aideaUrl = prefs.getString(_aideaUrlKey) ?? 'https://atinc1-aidea-server.hf.space';
+    _aideaUrl = prefs.getString(_aideaUrlKey) ?? dotenv.get('AIDEA_BASE_URL');
     // Migration: If user has old local URL, migrate it to the new Hugging Face Space URL.
     if (_aideaUrl == 'http://127.0.0.1:7860') {
-      _aideaUrl = 'https://atinc1-aidea-server.hf.space';
+      _aideaUrl = dotenv.get('AIDEA_BASE_URL');
       await prefs.setString(_aideaUrlKey, _aideaUrl);
     }
     _aiModel = AiModel.values[prefs.getInt(_aiModelKey) ?? 0];
@@ -251,4 +252,3 @@ class SettingsProvider extends ChangeNotifier {
     );
   }
 }
-
