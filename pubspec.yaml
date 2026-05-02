@@ -2,7 +2,7 @@ name: aidea
 description: "aidea is app that simplifies watching videos by beautiful well written notes."
 publish_to: 'none'
 
-version: 2.4.1
+version: 2.4.2
 
 environment:
   sdk: ^3.9.2
