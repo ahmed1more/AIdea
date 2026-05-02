@@ -321,6 +321,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           _isProcessing || _isComplete ? '' : 'New Summary',
           style: AppTheme.headline3(

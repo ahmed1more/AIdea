@@ -64,15 +64,12 @@ class VideoNote {
   // Convert to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
-      'videoUrl': videoUrl,
-      'videoTitle': videoTitle,
-      'thumbnail': thumbnail,
-      'notes': notes,
+      'user_id': userId,
+      'video_url': videoUrl,
+      'video_title': videoTitle,
+      'summary_content': notes,
       'category': categories,
-      'keyPoints': keyPoints,
       'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
       'isFavorite': isFavorite,
     };
   }
@@ -112,13 +109,28 @@ class VideoNote {
       return DateTime.now();
     }
 
+    final videoUrl = data['video_url'] ?? data['videoUrl'] ?? '';
+    String thumbnail = data['thumbnail'] ?? '';
+
+    // Reconstruct thumbnail if missing (since we don't store it anymore to match reference)
+    if (thumbnail.isEmpty && videoUrl.isNotEmpty) {
+      if (videoUrl.contains('youtube.com') || videoUrl.contains('youtu.be')) {
+        final regExp = RegExp(r'(?:v=|\/)([0-9A-Za-z_-]{11}).*');
+        final match = regExp.firstMatch(videoUrl);
+        final videoId = match?.group(1);
+        if (videoId != null) {
+          thumbnail = 'https://img.youtube.com/vi/$videoId/mqdefault.jpg';
+        }
+      }
+    }
+
     return VideoNote(
       id: doc.id,
-      userId: data['userId'] ?? '',
-      videoUrl: data['videoUrl'] ?? '',
-      videoTitle: data['videoTitle'] ?? '',
-      thumbnail: data['thumbnail'] ?? '',
-      notes: data['notes'] ?? '',
+      userId: data['user_id'] ?? data['userId'] ?? '',
+      videoUrl: videoUrl,
+      videoTitle: data['video_title'] ?? data['videoTitle'] ?? '',
+      thumbnail: thumbnail,
+      notes: data['summary_content'] ?? data['notes'] ?? '',
       categories: categoriesList,
       keyPoints: List<String>.from(data['keyPoints'] ?? []),
       createdAt: parseDate('createdAt'),

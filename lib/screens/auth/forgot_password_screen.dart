@@ -98,32 +98,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      body: Stack(
-        children: [
-          // ─── Background ───────────────────────
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/signup_bg.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightBg)
-                  .withValues(alpha: isDark ? 0.6 : 0.7),
-            ),
-          ),
-
-          // ─── Main Content ────────────────────────────
-          SafeArea(
-            child: _useBackdropBlur
-                ? BackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: formContent,
-                  )
-                : formContent,
-          ),
-        ],
+      body: SafeArea(
+        child: _useBackdropBlur
+            ? BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: formContent,
+              )
+            : formContent,
       ),
     );
   }
@@ -137,15 +118,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         // ─── Logo ────────────────────────────────
         Center(
           child: Container(
-            width: 80,
-            height: 80,
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
               color: isDark ? AppTheme.darkSurface : AppTheme.lightTextPrimary,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(28),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: settings.logo(size: 50, applyTheme: false),
+              borderRadius: BorderRadius.circular(28),
+              child: settings.logo(size: 80, applyTheme: false),
             ),
           ),
         ).animate().fadeIn(duration: 500.ms).scale(

@@ -51,3 +51,7 @@ app.*.map.json
 aidea.env
 *.env
 !aidea.env.example
+
+implementation_plan.md
+note 
+

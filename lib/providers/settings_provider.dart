@@ -6,70 +6,51 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../theme/app_theme.dart';
 
-enum AiModel { aidea, gemini }
-
-class SettingsProvider extends ChangeNotifier {
+class SettingsProvider with ChangeNotifier {
+  static const String _accentColorKey = 'accent_color';
   static const String _themeModeKey = 'theme_mode';
   static const String _aideaUrlKey = 'aidea_url';
-  static const String _aiModelKey = 'ai_model';
   static const String _apiKeyKey = 'api_key';
-  static const String _smartContextKey = 'smart_context';
-  static const String _autoSaveKey = 'auto_save';
 
+  Color _accentColor = AppTheme.teal;
   ThemeMode _themeMode = ThemeMode.system;
-  String _aideaUrl = dotenv.get('AIDEA_BASE_URL');
-  AiModel _aiModel = AiModel.aidea;
+  String _aideaUrl = '';
   String _apiKey = '';
-  bool _smartContext = true;
-  bool _autoSave = true;
-
-  // Default accent color
-  static const Color defaultAccentColor = Color(0xFF6366F1);
-
-  ThemeMode get themeMode => _themeMode;
-  Color get accentColor => defaultAccentColor;
-  AiModel get aiModel => _aiModel;
-  String get apiKey => _apiKey;
-  String get aideaUrl => _aideaUrl;
-  bool get smartContext => _smartContext;
-  bool get autoSave => _autoSave;
-  bool get isAiConfigured => _aiModel == AiModel.aidea ? _aideaUrl.isNotEmpty : _apiKey.isNotEmpty;
-
-  String get aiModelLabel => _aiModel == AiModel.aidea ? 'AIdea Engine' : 'Google Gemini';
 
   SettingsProvider() {
-    _loadPreferences();
+    _loadSettings();
   }
 
-  Future<void> _loadPreferences() async {
+  Color get accentColor => _accentColor;
+  ThemeMode get themeMode => _themeMode;
+  String get aideaUrl => _aideaUrl;
+  String get apiKey => _apiKey;
+
+  bool get isAiConfigured => _aideaUrl.isNotEmpty;
+
+  Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final modeIndex = prefs.getInt(_themeModeKey) ?? 0;
-    _themeMode = ThemeMode.values[modeIndex];
-    _aideaUrl = prefs.getString(_aideaUrlKey) ?? dotenv.get('AIDEA_BASE_URL');
-    // Migration: If user has old local URL, migrate it to the new Hugging Face Space URL.
-    if (_aideaUrl == 'http://127.0.0.1:7860') {
-      _aideaUrl = dotenv.get('AIDEA_BASE_URL');
-      await prefs.setString(_aideaUrlKey, _aideaUrl);
+    final colorValue = prefs.getInt(_accentColorKey);
+    if (colorValue != null) {
+      _accentColor = Color(colorValue);
     }
-    _aiModel = AiModel.values[prefs.getInt(_aiModelKey) ?? 0];
+
+    final modeIndex = prefs.getInt(_themeModeKey);
+    if (modeIndex != null) {
+      _themeMode = ThemeMode.values[modeIndex];
+    }
+
+    _aideaUrl = prefs.getString(_aideaUrlKey) ?? dotenv.maybeGet('AIDEA_BASE_URL') ?? '';
     _apiKey = prefs.getString(_apiKeyKey) ?? '';
-    _smartContext = prefs.getBool(_smartContextKey) ?? true;
-    _autoSave = prefs.getBool(_autoSaveKey) ?? true;
+
     notifyListeners();
   }
 
-  Future<void> setSmartContext(bool value) async {
-    _smartContext = value;
+  Future<void> setAccentColor(Color color) async {
+    _accentColor = color;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_smartContextKey, value);
-  }
-
-  Future<void> setAutoSave(bool value) async {
-    _autoSave = value;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_autoSaveKey, value);
+    await prefs.setInt(_accentColorKey, color.toARGB32());
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -79,35 +60,57 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setInt(_themeModeKey, mode.index);
   }
 
-  Future<void> setAideaUrl(String url) async {
+  Future<void> updateAiSettings({
+    required String url,
+    required String key,
+  }) async {
     _aideaUrl = url;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_aideaUrlKey, url);
-  }
-
-  Future<void> setAiModel(AiModel model) async {
-    _aiModel = model;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_aiModelKey, model.index);
-  }
-
-  Future<void> setApiKey(String key) async {
     _apiKey = key;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_aideaUrlKey, url);
     await prefs.setString(_apiKeyKey, key);
+  }
+
+  String backgroundAssetPath(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark
+        ? 'assets/images/signup_bg.png'
+        : 'assets/images/signup_bg_light.png';
+  }
+
+  Widget buildBackground({
+    required BuildContext context,
+    required Widget child,
+    double darkOpacity = 0.6,
+    double lightOpacity = 0.7,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            backgroundAssetPath(context),
+            fit: BoxFit.cover,
+          ),
+        ),
+        Positioned.fill(
+          child: Container(
+            color: (isDark ? AppTheme.darkBg : AppTheme.lightBg).withValues(
+              alpha: isDark ? darkOpacity : lightOpacity,
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
   }
 
   ThemeData getLightTheme() => AppTheme.buildLightTheme(accentColor);
   ThemeData getDarkTheme() => AppTheme.buildDarkTheme(accentColor);
 
   String logoAssetPath(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark
-        ? 'assets/icon/aidea-logo-dark.png'
-        : 'assets/icon/aidea-logo-light.png';
+    return 'assets/icon/aidea-logo-transparent.png';
   }
 
   // Glassmorphism helper
@@ -173,18 +176,11 @@ class SettingsProvider extends ChangeNotifier {
     );
   }
 
-  Widget logo({double size = 80, bool applyTheme = true}) {
-    return Builder(
-      builder: (context) {
-        final assetPath = applyTheme
-            ? logoAssetPath(context)
-            : 'assets/icon/aidea-logo-light.png';
-        return Image.asset(
-          assetPath,
-          width: size,
-          height: size,
-        );
-      },
+  Widget logo({double size = 120, bool applyTheme = true}) {
+    return Image.asset(
+      'assets/icon/aidea-logo-transparent.png',
+      width: size,
+      height: size,
     );
   }
 

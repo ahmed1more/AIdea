@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'home/home_screen.dart';
 import 'favorites/favorites_tab.dart';
 import 'account/account_tab.dart';
@@ -28,7 +29,9 @@ class MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       extendBody: true,
       appBar: null,
       body: AnimatedSwitcher(

@@ -75,111 +75,111 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(flex: 3),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(flex: 3),
 
-            // Logo
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 40,
-                    offset: const Offset(0, 12),
+              // Logo
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 40,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: settings.logo(size: 140, applyTheme: false),
+                ),
+              )
+                  .animate()
+                  .scale(
+                    begin: const Offset(0.8, 0.8),
+                    end: const Offset(1, 1),
+                    duration: 800.ms,
+                    curve: Curves.easeOutBack,
+                  )
+                  .fadeIn(duration: 600.ms),
+
+              const SizedBox(height: 32),
+
+              // App Name
+              Text(
+                'AiDea',
+                style: AppTheme.headline2(
+                  color: isDark
+                      ? AppTheme.darkTextPrimary
+                      : AppTheme.lightTextPrimary,
+                ),
+              )
+                  .animate()
+                  .fadeIn(delay: 300.ms, duration: 500.ms)
+                  .slideY(begin: 0.2, duration: 500.ms, curve: Curves.easeOut),
+
+              const SizedBox(height: 8),
+
+              // Tagline
+              Text(
+                'Your intelligence, distilled.',
+                style: AppTheme.bodyLarge(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ),
+              ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
+
+              const Spacer(flex: 2),
+
+              // Divider
+              Container(
+                width: 200,
+                height: 1,
+                color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
+              ).animate().fadeIn(delay: 800.ms).scaleX(
+                    begin: 0,
+                    end: 1,
+                    duration: 600.ms,
+                    curve: Curves.easeOut,
+                  ),
+
+              const SizedBox(height: 16),
+
+              // Status
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'SYSTEMS ACTIVE',
+                    style: AppTheme.labelSmall(
+                      color: isDark
+                          ? AppTheme.darkTextSecondary.withValues(alpha: 0.6)
+                          : AppTheme.lightTextSecondary.withValues(alpha: 0.6),
+                    ).copyWith(letterSpacing: 3),
                   ),
                 ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: settings.logo(size: 80, applyTheme: false),
-              ),
-            )
-                .animate()
-                .scale(
-                  begin: const Offset(0.8, 0.8),
-                  end: const Offset(1, 1),
-                  duration: 800.ms,
-                  curve: Curves.easeOutBack,
-                )
-                .fadeIn(duration: 600.ms),
+              ).animate().fadeIn(delay: 1000.ms, duration: 500.ms),
 
-            const SizedBox(height: 32),
-
-            // App Name
-            Text(
-              'AiDea',
-              style: AppTheme.headline2(
-                color: isDark
-                    ? AppTheme.darkTextPrimary
-                    : AppTheme.lightTextPrimary,
-              ),
-            )
-                .animate()
-                .fadeIn(delay: 300.ms, duration: 500.ms)
-                .slideY(begin: 0.2, duration: 500.ms, curve: Curves.easeOut),
-
-            const SizedBox(height: 8),
-
-            // Tagline
-            Text(
-              'Your intelligence, distilled.',
-              style: AppTheme.bodyLarge(
-                color: isDark
-                    ? AppTheme.darkTextSecondary
-                    : AppTheme.lightTextSecondary,
-              ),
-            ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
-
-            const Spacer(flex: 2),
-
-            // Divider
-            Container(
-              width: 200,
-              height: 1,
-              color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
-            ).animate().fadeIn(delay: 800.ms).scaleX(
-                  begin: 0,
-                  end: 1,
-                  duration: 600.ms,
-                  curve: Curves.easeOut,
-                ),
-
-            const SizedBox(height: 16),
-
-            // Status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'SYSTEMS ACTIVE',
-                  style: AppTheme.labelSmall(
-                    color: isDark
-                        ? AppTheme.darkTextSecondary.withValues(alpha: 0.6)
-                        : AppTheme.lightTextSecondary.withValues(alpha: 0.6),
-                  ).copyWith(letterSpacing: 3),
-                ),
-              ],
-            ).animate().fadeIn(delay: 1000.ms, duration: 500.ms),
-
-            const Spacer(),
-          ],
+              const Spacer(),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
+    }
 }

@@ -61,10 +61,6 @@ class _FavoritesTabState extends State<FavoritesTab> {
     // First apply collection filter
     if (_selectedCollection != 'All Items') {
       // In a real app we'd have categories.
-      // For now we'll just mock it by showing only even/odd items or similar if there's no real category field.
-      // Looking at the note object in other files, it might not have 'category'.
-      // However, we can at least show it works by changing the list.
-      // But let's check if 'category' exists.
     }
 
     if (_searchQuery.isEmpty) return filtered;
@@ -133,7 +129,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                         const SizedBox(width: 4),
                         Image.asset(
                           context.read<SettingsProvider>().logoAssetPath(context),
-                          height: 28,
+                          height: 52,
                         ),
                         const SizedBox(width: 8),
                         Text(

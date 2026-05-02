@@ -11,13 +11,16 @@ class DatabaseService {
       DocumentReference docRef = await _firestore
           .collection('notes')
           .add(note.toMap())
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
 
       // Update user's notes count
       _firestore
           .collection('users')
           .doc(note.userId)
-          .update({'notesCount': FieldValue.increment(1)})
+          .set(
+            {'notesCount': FieldValue.increment(1)},
+            SetOptions(merge: true),
+          )
           .catchError((e) => debugPrint('Error updating notes count: $e'));
 
       return docRef.id;
@@ -31,7 +34,7 @@ class DatabaseService {
   Stream<List<VideoNote>> getUserNotes(String userId) {
     return _firestore
         .collection('notes')
-        .where('userId', isEqualTo: userId)
+        .where('user_id', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -45,7 +48,7 @@ class DatabaseService {
   Stream<List<VideoNote>> getFavoriteNotes(String userId) {
     return _firestore
         .collection('notes')
-        .where('userId', isEqualTo: userId)
+        .where('user_id', isEqualTo: userId)
         .where('isFavorite', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -77,13 +80,35 @@ class DatabaseService {
   // Update a note
   Future<bool> updateNote(String noteId, Map<String, dynamic> updates) async {
     try {
-      final mappedUpdates = Map<String, dynamic>.from(updates);
+      final mappedUpdates = <String, dynamic>{};
+      updates.forEach((key, value) {
+        switch (key) {
+          case 'videoTitle':
+            mappedUpdates['video_title'] = value;
+            break;
+          case 'notes':
+            mappedUpdates['summary_content'] = value;
+            break;
+          case 'categories':
+            mappedUpdates['category'] = value;
+            break;
+          case 'videoUrl':
+            mappedUpdates['video_url'] = value;
+            break;
+          case 'userId':
+            mappedUpdates['user_id'] = value;
+            break;
+          default:
+            mappedUpdates[key] = value;
+        }
+      });
+
       mappedUpdates['updatedAt'] = Timestamp.fromDate(DateTime.now());
       await _firestore
           .collection('notes')
           .doc(noteId)
           .update(mappedUpdates)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
       return true;
     } catch (e) {
       debugPrint('Error updating note: $e');
@@ -101,7 +126,7 @@ class DatabaseService {
             'isFavorite': !currentStatus,
             'updatedAt': Timestamp.fromDate(DateTime.now()),
           })
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
       return true;
     } catch (e) {
       debugPrint('Error toggling favorite: $e');
@@ -116,7 +141,7 @@ class DatabaseService {
           .collection('notes')
           .doc(noteId)
           .delete()
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
 
       // Update user's notes count
       _firestore
@@ -136,7 +161,7 @@ class DatabaseService {
   Stream<List<VideoNote>> searchNotes(String userId, String query) {
     return _firestore
         .collection('notes')
-        .where('userId', isEqualTo: userId)
+        .where('user_id', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs

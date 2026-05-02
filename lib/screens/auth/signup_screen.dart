@@ -210,15 +210,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           const SizedBox(width: 12),
                           Container(
-                            width: 28,
-                            height: 28,
+                            width: 48,
+                            height: 48,
                             decoration: BoxDecoration(
                               color: isDark ? AppTheme.darkSurface : AppTheme.lightTextPrimary,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: settings.logo(size: 18, applyTheme: false),
+                              borderRadius: BorderRadius.circular(12),
+                              child: settings.logo(size: 32, applyTheme: false),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -481,32 +481,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       resizeToAvoidBottomInset: false,
-      body: SizedBox.expand(
-        child: Stack(
-        children: [
-          // ─── Background ───────────────────────
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/signup_bg.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightBg).withValues(alpha: isDark ? 0.6 : 0.7),
-            ),
-          ),
-
-          // ─── Main Content ────────────────────────────
-          SafeArea(
-            child: _useBackdropBlur
-                ? BackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: formContent,
-                  )
-                : formContent,
-          ),
-          ],
+      body: settings.buildBackground(
+        context: context,
+        child: SafeArea(
+          child: _useBackdropBlur
+              ? BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: formContent,
+                )
+              : formContent,
         ),
       ),
     );

@@ -532,7 +532,7 @@ class AuthService {
       // Delete all user's notes
       final notesSnapshot = await _firestore
           .collection('notes')
-          .where('userId', isEqualTo: user.uid)
+          .where('user_id', isEqualTo: user.uid)
           .get();
       for (final doc in notesSnapshot.docs) {
         await doc.reference.delete();

@@ -11,6 +11,7 @@ import '../../models/video_note.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../theme/app_theme.dart';
 import 'add_note_screen.dart';
 import '../../widgets/note_card.dart';
 import '../recommendations/recommendations_screen.dart';
@@ -171,9 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isWide = size.width > 900;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0F172A)
-          : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       // On desktop the AppBar is absent     “ controls live in the tab row instead.
       appBar: isWide
           ? null
@@ -185,8 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
               automaticallyImplyLeading: false,
               title: Image.asset(
                 settings.logoAssetPath(context),
-                width: 32,
-                height: 32,
+                height: 52,
               ),
               actions: [
                 //    Theme Toggle
@@ -251,9 +249,8 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedIndex: _selectedTab,
               onDestinationSelected: (index) =>
                   setState(() => _selectedTab = index),
-              backgroundColor: isDark
-                  ? const Color(0xFF0F172A)
-                  : const Color(0xFFF8FAFC),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
               indicatorColor: settings.accentColor.withValues(alpha: 0.2),
               destinations: const [
                 NavigationDestination(
@@ -569,7 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDesktopHeader(SettingsProvider settings, bool isDark) {
     return Container(
-      height: 64,
+      height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 28),
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -762,9 +759,9 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isDark,
   ) {
     return Container(
-      width: 72,
+      width: 88,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        color: (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)).withValues(alpha: 0.7),
         border: Border(
           right: BorderSide(
             color: (isDark ? Colors.white : Colors.black).withValues(
@@ -776,7 +773,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           Container(
-            height: 64,
+            height: 80,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border(
@@ -791,8 +788,7 @@ class _HomeScreenState extends State<HomeScreen> {
               offset: const Offset(0, -4),
               child: Image.asset(
                 settings.logoAssetPath(context),
-                width: 36,
-                height: 36,
+                height: 48,
               ),
             ),
           ),
