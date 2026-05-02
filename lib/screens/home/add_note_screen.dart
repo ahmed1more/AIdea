@@ -240,44 +240,12 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   }
 
   Future<void> _saveAndViewNote() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
-    final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
-    final String? userId = authProvider.user?.id ?? firebaseUser?.uid;
 
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('You must be logged in to save notes'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-      return;
-    }
+    // Wait briefly for the Firestore stream to sync the backend's write locally
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    final note = VideoNote(
-      id: '',
-      userId: userId,
-      videoUrl: _videoUrlController.text.trim(),
-      videoTitle: _videoTitleController.text.trim(),
-      thumbnail: _getThumbnail(_videoUrlController.text),
-      notes: _generatedNotes,
-      categories: _selectedCategories.isEmpty
-          ? ['Uncategorized']
-          : _selectedCategories,
-      keyPoints: _generatedKeyPoints,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
-    bool success = await notesProvider.createNote(note);
-
-    if (success && mounted) {
-      // Navigate to note detail, replacing the add screen
+    if (mounted) {
       final savedNotes = notesProvider.notes;
       if (savedNotes.isNotEmpty) {
         Navigator.of(context).pushReplacement(
@@ -288,17 +256,6 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       } else {
         Navigator.of(context).pop();
       }
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Failed to save note. Please try again.'),
-          backgroundColor: Colors.red.shade800,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
     }
   }
 
