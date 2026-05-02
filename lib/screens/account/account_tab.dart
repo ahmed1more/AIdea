@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,7 +12,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../auth/login_screen.dart';
 
-/// Account tab — profile, settings, AI config, and sign-out.
+/// Account tab ΓÇö profile, settings, AI config, and sign-out.
 class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
 
@@ -26,7 +27,6 @@ class _AccountTabState extends State<AccountTab>
   final _profileKey = GlobalKey();
   final _securityKey = GlobalKey();
   final ImagePicker _picker = ImagePicker();
-  bool _isUploadingPhoto = false;
 
   @override
   void dispose() {
@@ -78,7 +78,7 @@ class _AccountTabState extends State<AccountTab>
     return _buildMobileLayout(context, isDark, primaryColor, settings, auth);
   }
 
-  // ─── MOBILE LAYOUT ────────────────────────────────────────────────
+  // ΓöÇΓöÇΓöÇ MOBILE LAYOUT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   Widget _buildMobileLayout(
     BuildContext context,
     bool isDark,
@@ -96,7 +96,7 @@ class _AccountTabState extends State<AccountTab>
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
             children: [
-              // ─── Header ─────────────────────────────
+              // ΓöÇΓöÇΓöÇ Header ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -134,18 +134,18 @@ class _AccountTabState extends State<AccountTab>
 
               const SizedBox(height: 32),
 
-              // ─── Profile Card ────────────────────────
+              // ΓöÇΓöÇΓöÇ Profile Card ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
               _buildProfileCard(context, auth, isDark, primaryColor, notes),
 
               const SizedBox(height: 24),
 
-              // ─── Stats Row ────────────────────────────
+              // ΓöÇΓöÇΓöÇ Stats Row ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
               _buildStatsRow(context, auth, isDark, primaryColor, notes),
 
               const SizedBox(height: 32),
 
 
-              // ─── Section: Security ─────────────────────
+              // ΓöÇΓöÇΓöÇ Section: Security ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
               _buildSectionHeader(
                 'Security',
                 Icons.shield_outlined,
@@ -160,7 +160,7 @@ class _AccountTabState extends State<AccountTab>
 
               const SizedBox(height: 32),
 
-              // ─── Logout ───────────────────────────────
+              // ΓöÇΓöÇΓöÇ Logout ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
               _buildLogoutButton(context, isDark, primaryColor),
             ],
           ),
@@ -169,7 +169,7 @@ class _AccountTabState extends State<AccountTab>
     );
   }
 
-  // ─── DESKTOP LAYOUT ───────────────────────────────────────────────
+  // ΓöÇΓöÇΓöÇ DESKTOP LAYOUT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   Widget _buildDesktopLayout(
     BuildContext context,
     bool isDark,
@@ -307,7 +307,7 @@ class _AccountTabState extends State<AccountTab>
     );
   }
 
-  // ─── REUSABLE WIDGETS ─────────────────────────────────────────────
+  // ΓöÇΓöÇΓöÇ REUSABLE WIDGETS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   Widget _buildProfileCard(
     BuildContext context,
@@ -484,7 +484,7 @@ class _AccountTabState extends State<AccountTab>
                       Icons.calendar_today_outlined,
                       auth.user != null
                           ? DateFormat('MMM yyyy').format(auth.user!.createdAt)
-                          : '—',
+                          : 'ΓÇö',
                       'Joined',
                       isDark,
                       AppTheme.teal,
@@ -578,7 +578,7 @@ class _AccountTabState extends State<AccountTab>
             'Member Since',
             auth.user != null
                 ? DateFormat('MMM yy').format(auth.user!.createdAt)
-                : '—',
+                : 'ΓÇö',
             Icons.calendar_today_outlined,
             AppTheme.teal,
             isDark,
@@ -706,7 +706,7 @@ class _AccountTabState extends State<AccountTab>
             backgroundImage: auth.user?.photoUrl != null
                 ? CachedNetworkImageProvider(auth.user!.photoUrl!)
                 : null,
-            child: _isUploadingPhoto
+            child: auth.isUploadingPhoto
                 ? SizedBox(
                     width: radius,
                     height: radius,
@@ -886,7 +886,7 @@ class _AccountTabState extends State<AccountTab>
     );
   }
 
-  // ─── DIALOGS ──────────────────────────────────────────────────────
+  // ΓöÇΓöÇΓöÇ DIALOGS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
   void _showPhotoOptions(BuildContext context, AuthProvider auth) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -998,9 +998,7 @@ class _AccountTabState extends State<AccountTab>
                 ),
                 onTap: () async {
                   Navigator.pop(context);
-                  setState(() => _isUploadingPhoto = true);
                   final success = await auth.removeProfilePhoto();
-                  setState(() => _isUploadingPhoto = false);
                   if (mounted) {
                     _showToast(
                       success ? 'Photo removed' : 'Failed to remove photo',
@@ -1030,9 +1028,15 @@ class _AccountTabState extends State<AccountTab>
       );
       if (image == null) return;
 
-      setState(() => _isUploadingPhoto = true);
-      final success = await auth.updateProfilePhoto(File(image.path));
-      setState(() => _isUploadingPhoto = false);
+      bool success;
+      if (kIsWeb) {
+        // Web: dart:io File is unavailable — use bytes instead
+        final bytes = await image.readAsBytes();
+        success = await auth.updateProfilePhotoBytes(bytes);
+      } else {
+        // Mobile / desktop
+        success = await auth.updateProfilePhoto(File(image.path));
+      }
 
       if (mounted) {
         _showToast(
@@ -1041,10 +1045,7 @@ class _AccountTabState extends State<AccountTab>
         );
       }
     } catch (e) {
-      setState(() => _isUploadingPhoto = false);
-      if (mounted) {
-        _showToast('Error: $e', isError: true);
-      }
+      if (mounted) _showToast('Error: $e', isError: true);
     }
   }
 
@@ -1075,133 +1076,291 @@ class _AccountTabState extends State<AccountTab>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
+    // Pre-fill existing values
+    String? selectedGender = auth.user?.gender;
+    DateTime? selectedBirthDate;
+    if (auth.user?.birthDate != null && auth.user!.birthDate!.isNotEmpty) {
+      try {
+        selectedBirthDate = DateTime.parse(auth.user!.birthDate!);
+      } catch (_) {}
+    }
+
+    const genders = ['Male', 'Female'];
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.all(28),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Avatar at top
-            _buildAvatarWidget(
-              dialogContext,
-              auth,
-              isDark,
-              primaryColor,
-              radius: 44,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Edit Profile',
-              style: AppTheme.headline3(
-                color: isDark
-                    ? AppTheme.darkTextPrimary
-                    : AppTheme.lightTextPrimary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: nameController,
-              style: AppTheme.bodyLarge(
-                color: isDark
-                    ? AppTheme.darkTextPrimary
-                    : AppTheme.lightTextPrimary,
-              ),
-              decoration: InputDecoration(
-                labelText: 'DISPLAY NAME',
-                prefixIcon: Icon(
-                  Icons.person_outline,
-                  color: primaryColor,
-                  size: 20,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          contentPadding: const EdgeInsets.all(28),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Avatar at top
+                Center(
+                  child: _buildAvatarWidget(
+                    dialogContext,
+                    auth,
+                    isDark,
+                    primaryColor,
+                    radius: 44,
+                  ),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: BorderSide(
-                    color: (isDark ? Colors.white : Colors.black).withValues(
-                      alpha: 0.1,
+                const SizedBox(height: 24),
+                Center(
+                  child: Text(
+                    'Edit Profile',
+                    style: AppTheme.headline3(
+                      color: isDark
+                          ? AppTheme.darkTextPrimary
+                          : AppTheme.lightTextPrimary,
                     ),
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: BorderSide(color: primaryColor, width: 2),
+                const SizedBox(height: 24),
+
+                // ── Display Name ──────────────────────────
+                TextField(
+                  controller: nameController,
+                  style: AppTheme.bodyLarge(
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'DISPLAY NAME',
+                    prefixIcon: Icon(
+                      Icons.person_outline,
+                      color: primaryColor,
+                      size: 20,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      borderSide: BorderSide(
+                        color:
+                            (isDark ? Colors.white : Colors.black).withValues(
+                          alpha: 0.1,
+                        ),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      borderSide: BorderSide(color: primaryColor, width: 2),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black).withValues(
-                  alpha: 0.03,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.email_outlined,
-                    size: 16,
+
+                const SizedBox(height: 20),
+
+                // ── Gender ────────────────────────────────
+                Text(
+                  'GENDER',
+                  style: AppTheme.labelSmall(
                     color: isDark
                         ? AppTheme.darkTextSecondary
                         : AppTheme.lightTextSecondary,
+                  ).copyWith(letterSpacing: 2),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: genders.map((g) {
+                    final isSelected = selectedGender == g;
+                    return GestureDetector(
+                      onTap: () =>
+                          setDialogState(() => selectedGender = g),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primaryColor
+                              : (isDark
+                                    ? Colors.white.withValues(alpha: 0.06)
+                                    : Colors.black.withValues(alpha: 0.04)),
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: isSelected
+                                ? primaryColor
+                                : (isDark
+                                      ? Colors.white.withValues(alpha: 0.12)
+                                      : Colors.black.withValues(alpha: 0.1)),
+                          ),
+                        ),
+                        child: Text(
+                          g,
+                          style: AppTheme.bodySmall(
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary),
+                          ).copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Birth Date ────────────────────────────
+                GestureDetector(
+                  onTap: () async {
+                    final now = DateTime.now();
+                    final picked = await showDatePicker(
+                      context: dialogContext,
+                      initialDate:
+                          selectedBirthDate ?? DateTime(now.year - 20),
+                      firstDate: DateTime(1920),
+                      lastDate: DateTime(now.year - 5),
+                      helpText: 'SELECT BIRTH DATE',
+                    );
+                    if (picked != null) {
+                      setDialogState(() => selectedBirthDate = picked);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'DATE OF BIRTH',
+                      prefixIcon: Icon(
+                        Icons.cake_outlined,
+                        color: primaryColor,
+                        size: 20,
+                      ),
+                      suffixIcon: Icon(
+                        Icons.chevron_right,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: BorderSide(
+                          color: (isDark ? Colors.white : Colors.black)
+                              .withValues(alpha: 0.1),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      selectedBirthDate != null
+                          ? '${selectedBirthDate!.day}/${selectedBirthDate!.month}/${selectedBirthDate!.year}'
+                          : 'Select birth date',
+                      style: AppTheme.bodyLarge(
+                        color: selectedBirthDate != null
+                            ? (isDark
+                                ? AppTheme.darkTextPrimary
+                                : AppTheme.lightTextPrimary)
+                            : (isDark
+                                ? AppTheme.darkTextSecondary
+                                : AppTheme.lightTextSecondary),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Email (read-only) ─────────────────────
+                InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'EMAIL ADDRESS',
+                    prefixIcon: Icon(
+                      Icons.email_outlined,
+                      color: primaryColor,
+                      size: 20,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      borderSide: BorderSide(
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withValues(alpha: 0.1),
+                      ),
+                    ),
+                    fillColor: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.03),
+                    filled: true,
+                  ),
+                  child: Text(
                     auth.user?.email ?? 'N/A',
-                    style: AppTheme.bodySmall(
+                    style: AppTheme.bodyLarge(
                       color: isDark
                           ? AppTheme.darkTextSecondary
                           : AppTheme.lightTextSecondary,
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ),
               ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newName = nameController.text.trim();
+                if (newName.isNotEmpty &&
+                    newName != auth.user?.displayName) {
+                  await auth.updateDisplayName(newName);
+                }
+                // Save gender / birthDate via the completion method
+                final birthDateStr = selectedBirthDate != null
+                    ? '${selectedBirthDate!.year.toString().padLeft(4, '0')}-'
+                        '${selectedBirthDate!.month.toString().padLeft(2, '0')}-'
+                        '${selectedBirthDate!.day.toString().padLeft(2, '0')}'
+                    : null;
+                await auth.updateProfileCompletion(
+                  gender: selectedGender,
+                  birthDate: birthDateStr,
+                );
+                if (context.mounted) {
+                  _showToast('Profile updated!');
+                }
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 12),
+              ),
+              child: const Text('Save Changes'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: isDark
-                    ? AppTheme.darkTextSecondary
-                    : AppTheme.lightTextSecondary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newName = nameController.text.trim();
-              if (newName.isNotEmpty && newName != auth.user?.displayName) {
-                final success = await auth.updateDisplayName(newName);
-                if (context.mounted) {
-                  _showToast(
-                    success ? 'Profile updated!' : 'Failed to update',
-                    isError: !success,
-                  );
-                }
-              }
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Save Changes'),
-          ),
-        ],
       ),
     );
   }
@@ -1445,7 +1604,7 @@ class _AccountTabState extends State<AccountTab>
   }
 }
 
-// ─── SETTING TILE ─────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ SETTING TILE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 class _SettingTile extends StatefulWidget {
   final IconData icon;
   final Color iconColor;

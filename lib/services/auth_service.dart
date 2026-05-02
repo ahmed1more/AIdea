@@ -350,7 +350,7 @@ class AuthService {
     }
   }
 
-  // Upload profile photo to Firebase Storage and update user document
+  // Upload profile photo to Firebase Storage and update user document (mobile)
   Future<AppUser?> updateProfilePhoto(File imageFile) async {
     try {
       final user = _auth.currentUser;
@@ -380,6 +380,66 @@ class AuthService {
       return updatedUser;
     } catch (e) {
       debugPrint('Error updating profile photo: $e');
+      rethrow;
+    }
+  }
+
+  // Upload profile photo from bytes — web-safe (no dart:io File)
+  Future<AppUser?> updateProfilePhotoBytes(
+    Uint8List imageBytes, {
+    String mimeType = 'image/jpeg',
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+      final metadata = SettableMetadata(contentType: mimeType);
+      final snapshot = await ref.putData(imageBytes, metadata);
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      await user.updatePhotoURL(downloadUrl);
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update({'photoUrl': downloadUrl})
+          .timeout(const Duration(seconds: 10));
+
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) await cacheUser(updatedUser);
+      return updatedUser;
+    } catch (e) {
+      debugPrint('Error updating profile photo (bytes): $e');
+      rethrow;
+    }
+  }
+
+  // Update gender and birth date (used after Google sign-in completion)
+  Future<AppUser?> updateProfileCompletion({
+    String? gender,
+    String? birthDate,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      final updates = <String, dynamic>{};
+      if (gender != null) updates['gender'] = gender;
+      if (birthDate != null) updates['birthDate'] = birthDate;
+
+      if (updates.isEmpty) return await getUserData(user.uid);
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .update(updates)
+          .timeout(const Duration(seconds: 10));
+
+      final updatedUser = await getUserData(user.uid);
+      if (updatedUser != null) await cacheUser(updatedUser);
+      return updatedUser;
+    } catch (e) {
+      debugPrint('Error updating profile completion: $e');
       rethrow;
     }
   }

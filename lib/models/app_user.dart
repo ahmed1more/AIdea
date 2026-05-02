@@ -25,6 +25,7 @@ class AppUser {
   // Convert to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'email': email,
       'displayName': displayName,
       'photoUrl': photoUrl,

@@ -31,8 +31,8 @@ class DatabaseService {
   Stream<List<VideoNote>> getUserNotes(String userId) {
     return _firestore
         .collection('notes')
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
+        .where('user_id', isEqualTo: userId)
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
@@ -45,9 +45,9 @@ class DatabaseService {
   Stream<List<VideoNote>> getFavoriteNotes(String userId) {
     return _firestore
         .collection('notes')
-        .where('userId', isEqualTo: userId)
-        .where('isFavorite', isEqualTo: true)
-        .orderBy('createdAt', descending: true)
+        .where('user_id', isEqualTo: userId)
+        .where('is_favorite', isEqualTo: true)
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
@@ -77,11 +77,27 @@ class DatabaseService {
   // Update a note
   Future<bool> updateNote(String noteId, Map<String, dynamic> updates) async {
     try {
-      updates['updatedAt'] = Timestamp.fromDate(DateTime.now());
+      // Map camelCase to snake_case for updates if needed
+      final mappedUpdates = <String, dynamic>{};
+      updates.forEach((key, value) {
+        if (key == 'videoTitle') {
+          mappedUpdates['video_title'] = value;
+        } else if (key == 'notes') {
+          mappedUpdates['summary_content'] = value;
+        } else if (key == 'keyPoints') {
+          mappedUpdates['key_points'] = value;
+        } else if (key == 'categories') {
+          mappedUpdates['video_categories'] = value;
+        } else {
+          mappedUpdates[key] = value;
+        }
+      });
+
+      mappedUpdates['updated_at'] = Timestamp.fromDate(DateTime.now());
       await _firestore
           .collection('notes')
           .doc(noteId)
-          .update(updates)
+          .update(mappedUpdates)
           .timeout(const Duration(seconds: 10));
       return true;
     } catch (e) {
@@ -97,8 +113,8 @@ class DatabaseService {
           .collection('notes')
           .doc(noteId)
           .update({
-            'isFavorite': !currentStatus,
-            'updatedAt': Timestamp.fromDate(DateTime.now()),
+            'is_favorite': !currentStatus,
+            'updated_at': Timestamp.fromDate(DateTime.now()),
           })
           .timeout(const Duration(seconds: 10));
       return true;
@@ -135,7 +151,7 @@ class DatabaseService {
   Stream<List<VideoNote>> searchNotes(String userId, String query) {
     return _firestore
         .collection('notes')
-        .where('userId', isEqualTo: userId)
+        .where('user_id', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs

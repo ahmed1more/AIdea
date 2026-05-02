@@ -18,7 +18,9 @@ class NotesProvider extends ChangeNotifier {
   List<VideoNote> get notes {
     List<VideoNote> filtered = _notes;
     if (_categoryFilter != 'All') {
-      filtered = filtered.where((note) => note.category == _categoryFilter).toList();
+      filtered = filtered
+          .where((note) => note.categories.contains(_categoryFilter))
+          .toList();
     }
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where(
@@ -33,7 +35,9 @@ class NotesProvider extends ChangeNotifier {
   List<VideoNote> get favoriteNotes {
     List<VideoNote> filtered = _favoriteNotes;
     if (_categoryFilter != 'All') {
-      filtered = filtered.where((note) => note.category == _categoryFilter).toList();
+      filtered = filtered
+          .where((note) => note.categories.contains(_categoryFilter))
+          .toList();
     }
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where(
@@ -49,6 +53,16 @@ class NotesProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
   String get categoryFilter => _categoryFilter;
+
+  /// Distinct categories present in the user's notes, always starting with 'All'.
+  List<String> get availableCategories {
+    final cats = <String>{};
+    for (final note in _notes) {
+      cats.addAll(note.categories);
+    }
+    final sorted = cats.toList()..sort();
+    return ['All', ...sorted];
+  }
 
   // Load user notes
   void loadUserNotes(String userId) {
@@ -128,6 +142,9 @@ class NotesProvider extends ChangeNotifier {
             keyPoints: updates['keyPoints'] != null
                 ? List<String>.from(updates['keyPoints'])
                 : oldNote.keyPoints,
+            categories: updates['categories'] != null
+                ? List<String>.from(updates['categories'])
+                : oldNote.categories,
             updatedAt: DateTime.now(),
           );
         }
@@ -141,6 +158,9 @@ class NotesProvider extends ChangeNotifier {
             keyPoints: updates['keyPoints'] != null
                 ? List<String>.from(updates['keyPoints'])
                 : oldNote.keyPoints,
+            categories: updates['categories'] != null
+                ? List<String>.from(updates['categories'])
+                : oldNote.categories,
             updatedAt: DateTime.now(),
           );
         }
@@ -215,6 +235,7 @@ class NotesProvider extends ChangeNotifier {
         videoTitle: '',
         thumbnail: '',
         notes: '',
+        categories: [],
         keyPoints: [],
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

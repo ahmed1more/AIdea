@@ -15,6 +15,7 @@ import '../../widgets/note_card.dart';
 import '../recommendations/recommendations_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../account/account_tab.dart';
+import '../auth/profile_completion_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,24 +29,31 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchController = TextEditingController();
   int _selectedTab = 0; // 0 = All Notes, 1 = Favorites
 
-  final List<String> _categories = [
-    'All',
-    'Technology & AI',
-    'Business & Finance',
-    'Education & Science',
-    'Productivity & Self-Growth',
-    'News & Politics',
-    'Entertainment & Lifestyle',
-    'Health & Sports',
-  ];
-
   bool _isValidatingUrl = false;
   bool _urlIsValid = false;
+  bool _isAccountAvatarHovered = false;
 
   @override
   void initState() {
     super.initState();
     _loadNotes();
+    // Show profile completion prompt once after login for social users
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showProfileCompletionIfNeeded();
+    });
+  }
+
+  void _showProfileCompletionIfNeeded() {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.needsProfileCompletion) {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => ProfileCompletionScreen(
+          onComplete: () => Navigator.of(context, rootNavigator: true).pop(),
+        ),
+      );
+    }
   }
 
   @override
@@ -58,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _loadNotes() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    notesProvider.setCategoryFilter('All');
     if (authProvider.user != null) {
       notesProvider.loadUserNotes(authProvider.user!.id);
       notesProvider.loadFavoriteNotes(authProvider.user!.id);
@@ -131,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 900;
@@ -139,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: isDark
           ? const Color(0xFF0F172A)
           : const Color(0xFFF8FAFC),
-      // On desktop the AppBar is absent – controls live in the tab row instead.
+      // On desktop the AppBar is absent     “ controls live in the tab row instead.
       appBar: isWide
           ? null
           : AppBar(
@@ -154,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 32,
               ),
               actions: [
-                // ── Theme Toggle ────────────────────────────────────────
+                //    Theme Toggle
                 Consumer<SettingsProvider>(
                   builder: (context, settingsP, _) {
                     final IconData themeIcon;
@@ -183,8 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         final next = settingsP.themeMode == ThemeMode.system
                             ? ThemeMode.light
                             : settingsP.themeMode == ThemeMode.light
-                                ? ThemeMode.dark
-                                : ThemeMode.system;
+                            ? ThemeMode.dark
+                            : ThemeMode.system;
                         settingsP.setThemeMode(next);
                       },
                     );
@@ -247,30 +257,35 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isWide)
-            RepaintBoundary(child: _buildDesktopSidebar(settings, isDark)),
+            RepaintBoundary(
+              child: _buildDesktopSidebar(settings, auth, isDark),
+            ),
           Expanded(
             child: Column(
               children: [
-                if (isWide) RepaintBoundary(child: _buildDesktopHeader(settings, isDark)),
+                if (isWide)
+                  RepaintBoundary(
+                    child: _buildDesktopHeader(settings, isDark),
+                  ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // ── URL Input Section (Desktop) ──
+                      //    URL Input Section (Desktop)
                       if (isWide && _selectedTab == 0)
                         _buildUrlInputSection(settings, isDark),
 
-                      // ── Mobile Search Bar (Only shown on mobile) ──
+                      //    Mobile Search Bar (Only shown on mobile)
                       if (!isWide && (_selectedTab == 0 || _selectedTab == 1))
                         _buildMobileSearchBar(settings, isDark),
 
-                      // ── Category Filter Row ───────────────
+                      //    Category Filter Row
                       if (_selectedTab == 0 || _selectedTab == 1)
                         _buildCategoryFilterRow(settings, isDark),
 
                       const SizedBox(height: 8),
 
-                      // ── Content ───────────────────────────
+                      //    Content
                       Expanded(child: _buildSelectedTabContent(isWide)),
                     ],
                   ),
@@ -300,14 +315,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ── URL Input + Summarize button (Desktop) ─────────────────────────────────────
   Widget _buildUrlInputSection(SettingsProvider settings, bool isDark) {
-    // URL bar should still span normally on desktop.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(80, 12, 80, 20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
       child: Row(
         children: [
-          // Text Field
           Expanded(
             child: Container(
               height: 52,
@@ -332,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 keyboardType: TextInputType.url,
                 decoration: InputDecoration(
-                  hintText: 'Paste YouTube or article URL…',
+                  hintText: 'Paste YouTube or article URL',
                   hintStyle: GoogleFonts.inter(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.38)
@@ -384,10 +396,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(width: 12),
 
-          // Summarize button
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             height: 52,
+            width: 152,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
@@ -455,13 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.15);
   }
 
-// Removed unused _buildMobileAddNoteButton as navigation is now handled by FAB.
-
-
-
-// Removed unused _buildMobileTabRow as navigation is now handled by the bottom NavigationBar.
-
-  // ── Mobile Search Bar ──────────────────────────────────────────────────
+  //    Mobile Search Bar
   Widget _buildMobileSearchBar(SettingsProvider settings, bool isDark) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -474,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isDark ? Colors.white : Colors.black87,
           ),
           decoration: InputDecoration(
-            hintText: 'Search…',
+            hintText: 'Search    ¦',
             hintStyle: GoogleFonts.inter(
               fontSize: 14,
               color: isDark
@@ -528,7 +534,9 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.transparent,
         border: Border(
           bottom: BorderSide(
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.05,
+            ),
           ),
         ),
       ),
@@ -536,7 +544,6 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           if (_selectedTab == 0 || _selectedTab == 1) ...[
-            // ── Desktop Search Bar ──
             SizedBox(
               width: 240,
               height: 38,
@@ -583,14 +590,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 onChanged: (val) {
-                  Provider.of<NotesProvider>(context, listen: false)
-                      .setSearchQuery(val);
+                  Provider.of<NotesProvider>(
+                    context,
+                    listen: false,
+                  ).setSearchQuery(val);
                 },
               ),
             ),
             const SizedBox(width: 16),
           ],
-          // ── Theme Toggle ──
           Consumer<SettingsProvider>(
             builder: (context, settingsP, _) {
               final IconData themeIcon;
@@ -614,39 +622,105 @@ class _HomeScreenState extends State<HomeScreen> {
                   final next = settingsP.themeMode == ThemeMode.system
                       ? ThemeMode.light
                       : settingsP.themeMode == ThemeMode.light
-                          ? ThemeMode.dark
-                          : ThemeMode.system;
+                      ? ThemeMode.dark
+                      : ThemeMode.system;
                   settingsP.setThemeMode(next);
                 },
               );
             },
-          ),
-          const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: settings.accentColor.withValues(alpha: 0.1),
-            child: Text(
-              'A',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: settings.accentColor,
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDesktopSidebar(SettingsProvider settings, bool isDark) {
+  Widget _buildSidebarAccountButton(
+    SettingsProvider settings,
+    AuthProvider auth,
+    bool isDark,
+  ) {
+    final displayName = auth.user?.displayName.trim() ?? '';
+    final photoUrl = auth.user?.photoUrl?.trim() ?? '';
+    final hasPhoto = photoUrl.isNotEmpty;
+    final avatarLabel = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : 'A';
+    final isSelected = _selectedTab == 4;
+
+    return Tooltip(
+      message: 'Open account',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isAccountAvatarHovered = true),
+        onExit: (_) => setState(() => _isAccountAvatarHovered = false),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _selectedTab = 4),
+            borderRadius: BorderRadius.circular(14),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected || _isAccountAvatarHovered
+                    ? settings.accentColor.withValues(alpha: 0.12)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isSelected || _isAccountAvatarHovered
+                      ? settings.accentColor.withValues(alpha: 0.35)
+                      : (isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.05)),
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: settings.accentColor.withValues(alpha: 0.12),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: settings.accentColor.withValues(alpha: 0.1),
+                backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
+                child: hasPhoto
+                    ? null
+                    : Text(
+                        avatarLabel,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: settings.accentColor,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSidebar(
+    SettingsProvider settings,
+    AuthProvider auth,
+    bool isDark,
+  ) {
     return Container(
       width: 72,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         border: Border(
           right: BorderSide(
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.05,
+            ),
           ),
         ),
       ),
@@ -666,21 +740,22 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Transform.translate(
               offset: const Offset(0, -4),
-            child: Image.asset(
-              settings.logoAssetPath(context),
-              width: 36,
-              height: 36,
-            ),
+              child: Image.asset(
+                settings.logoAssetPath(context),
+                width: 36,
+                height: 36,
+              ),
             ),
           ),
-          // ── App Logo in Sidebar ──
-          
+
           const SizedBox(height: 18),
           _desktopSidebarItem(0, 'Home', FontAwesomeIcons.house),
           _desktopSidebarItem(1, 'Favorites', FontAwesomeIcons.solidHeart),
           _desktopSidebarItem(2, 'Insights', FontAwesomeIcons.lightbulb),
           _desktopSidebarItem(3, 'Dashboard', FontAwesomeIcons.chartLine),
-          _desktopSidebarItem(4, 'Account', FontAwesomeIcons.user),
+          const Spacer(),
+          _buildSidebarAccountButton(settings, auth, isDark),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -701,13 +776,27 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(12),
           child: AnimatedContainer(
             duration: 200.ms,
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: selected
-                  ? accentColor.withValues(alpha: 0.1)
+                  ? accentColor.withValues(alpha: 0.12)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected
+                    ? accentColor.withValues(alpha: 0.35)
+                    : Colors.transparent,
+              ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.12),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : const [],
             ),
             child: Center(
               child: FaIcon(
@@ -724,25 +813,24 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: -0.2, end: 0);
   }
 
-  // ── Category Filter Row ─────────────────────────────────────────────
+  // -- Category Filter Row ------------------------------------------------
   Widget _buildCategoryFilterRow(SettingsProvider settings, bool isDark) {
     final notesProvider = Provider.of<NotesProvider>(context);
     final currentFilter = notesProvider.categoryFilter;
-
-
+    final categories = notesProvider.availableCategories.length > 1
+        ? notesProvider.availableCategories
+        : ['All', ...VideoNote.predefinedCategories];
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 12),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _categories.map((category) {
+          children: categories.map((category) {
             final isSelected = currentFilter == category;
             return Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: GestureDetector(
-                onTap: () {
-                  notesProvider.setCategoryFilter(category);
-                },
+                onTap: () => notesProvider.setCategoryFilter(category),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -785,7 +873,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.1, end: 0);
   }
 
-  // ── Notes Grid ───────────────────────────────────────────────────────
+  //    Notes Grid
   Widget _buildNotesGrid(bool isWide) {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100),
@@ -846,7 +934,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Empty State ──────────────────────────────────────────────────────
+  //    Empty State
   Widget _buildEmptyState(String title, String subtitle) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     return Center(

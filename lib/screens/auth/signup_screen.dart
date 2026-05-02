@@ -319,7 +319,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       _buildDropdown(
                         isDark,
                         'Select your gender',
-                        ['Female', 'Male', 'Custom', 'Prefer not to say'],
+                        ['Female', 'Male'],
                         _selectedGender,
                         (v) => setState(() => _selectedGender = v),
                       ).animate().fadeIn(delay: 450.ms),
@@ -427,8 +427,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                       const SizedBox(height: 24),
 
-                      // ─── Legal Text ──────────────────────────
-
                       // ─── Buttons ─────────────────────────────
                       Consumer<AuthProvider>(
                         builder: (context, auth, _) {
@@ -482,7 +480,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      body: Stack(
+      resizeToAvoidBottomInset: false,
+      body: SizedBox.expand(
+        child: Stack(
         children: [
           // ─── Background ───────────────────────
           Positioned.fill(
@@ -506,10 +506,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   )
                 : formContent,
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-
-

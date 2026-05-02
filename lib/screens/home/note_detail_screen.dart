@@ -27,6 +27,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   bool _isEditing = false;
   late TextEditingController _notesController;
   late List<TextEditingController> _keyPointsControllers;
+  late List<String> _selectedCategories;
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
 
@@ -43,6 +44,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     _keyPointsControllers = _note.keyPoints
         .map((kp) => TextEditingController(text: kp))
         .toList();
+    _selectedCategories = List<String>.from(_note.categories);
     _scrollController.addListener(_updateScrollProgress);
 
     // Check if video exists logic removed
@@ -137,11 +139,16 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     bool success = await notesProvider.updateNote(_note.id, {
       'notes': newNotes,
       'keyPoints': newKeyPoints,
+      'categories': _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
     });
 
     if (success && mounted) {
       setState(() {
-        _note = _note.copyWith(notes: newNotes, keyPoints: newKeyPoints);
+        _note = _note.copyWith(
+          notes: newNotes,
+          keyPoints: newKeyPoints,
+          categories: _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
+        );
         _isEditing = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -181,6 +188,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       for (int i = 0; i < _keyPointsControllers.length; i++) {
         _keyPointsControllers[i].text = _note.keyPoints[i];
       }
+      _selectedCategories = List<String>.from(_note.categories);
     });
   }
 
@@ -224,6 +232,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         children: [
                           // ─── Meta Stats Bar ──────────────────
                           _buildMetaBar(isDark, primaryColor),
+
+                          const SizedBox(height: 24),
+
+                          // ─── Categories Section ──────────────
+                          _buildCategoriesSection(isDark, primaryColor),
 
                           const SizedBox(height: 32),
 
@@ -548,6 +561,130 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
       ],
     );
+  }
+
+  // ─── CATEGORIES SECTION ───────────────────────────────────────────
+  Widget _buildCategoriesSection(bool isDark, Color primaryColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          icon: Icons.label_outline,
+          label: 'CATEGORIES',
+          isDark: isDark,
+          color: primaryColor,
+        ),
+        const SizedBox(height: 12),
+        if (_isEditing)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(
+                color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
+              ),
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: VideoNote.predefinedCategories.map((cat) {
+                final isSelected = _selectedCategories.contains(cat);
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedCategories.remove(cat);
+                        if (_selectedCategories.isEmpty) {
+                          _selectedCategories.add('Uncategorized');
+                        }
+                      } else {
+                        _selectedCategories.remove('Uncategorized');
+                        _selectedCategories.add(cat);
+                      }
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? primaryColor
+                          : (isDark
+                                ? Colors.white.withValues(alpha: 0.06)
+                                : Colors.black.withValues(alpha: 0.04)),
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: isSelected
+                            ? primaryColor
+                            : (isDark
+                                  ? Colors.white.withValues(alpha: 0.12)
+                                  : Colors.black.withValues(alpha: 0.1)),
+                      ),
+                    ),
+                    child: Text(
+                      cat,
+                      style: AppTheme.bodySmall(
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary),
+                      ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _note.categories.map((cat) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(
+                    color: primaryColor.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.tag,
+                      size: 12,
+                      color: primaryColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      cat,
+                      style: AppTheme.bodySmall(
+                        color: isDark
+                            ? AppTheme.darkTextPrimary
+                            : AppTheme.lightTextPrimary,
+                      ).copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+      ],
+    ).animate().fadeIn(delay: 150.ms, duration: 400.ms);
   }
 
   // ─── KEY POINTS SECTION ───────────────────────────────────────────

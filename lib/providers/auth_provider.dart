@@ -9,12 +9,20 @@ class AuthProvider extends ChangeNotifier {
 
   AppUser? _user;
   bool _isLoading = false;
+  bool _isUploadingPhoto = false;
   String? _errorMessage;
 
   AppUser? get user => _user;
   bool get isLoading => _isLoading;
+  bool get isUploadingPhoto => _isUploadingPhoto;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
+
+  /// True when a social-login user hasn't filled in gender/birthDate yet.
+  bool get needsProfileCompletion =>
+      _user != null &&
+      (_user!.gender == null || _user!.gender!.isEmpty) &&
+      (_user!.birthDate == null || _user!.birthDate!.isEmpty);
 
   AuthProvider() {
     _initAuth();
@@ -163,9 +171,9 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Update profile photo
+  // Update profile photo (mobile — uses dart:io File)
   Future<bool> updateProfilePhoto(File imageFile) async {
-    _isLoading = true;
+    _isUploadingPhoto = true;
     _errorMessage = null;
     notifyListeners();
 
@@ -173,16 +181,64 @@ class AuthProvider extends ChangeNotifier {
       final updatedUser = await _authService.updateProfilePhoto(imageFile);
       if (updatedUser != null) {
         _user = updatedUser;
-        _isLoading = false;
+        _isUploadingPhoto = false;
         notifyListeners();
         return true;
       }
-      _isLoading = false;
+      _isUploadingPhoto = false;
       notifyListeners();
       return false;
     } catch (e) {
-      _isLoading = false;
+      _isUploadingPhoto = false;
       _errorMessage = 'Failed to update photo: ${_getErrorMessage(e)}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Update profile photo (web — uses Uint8List bytes)
+  Future<bool> updateProfilePhotoBytes(Uint8List imageBytes) async {
+    _isUploadingPhoto = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await _authService.updateProfilePhotoBytes(imageBytes);
+      if (updatedUser != null) {
+        _user = updatedUser;
+        _isUploadingPhoto = false;
+        notifyListeners();
+        return true;
+      }
+      _isUploadingPhoto = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isUploadingPhoto = false;
+      _errorMessage = 'Failed to update photo: ${_getErrorMessage(e)}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Complete profile after social sign-in (gender + birthDate)
+  Future<bool> updateProfileCompletion({
+    String? gender,
+    String? birthDate,
+  }) async {
+    try {
+      final updatedUser = await _authService.updateProfileCompletion(
+        gender: gender,
+        birthDate: birthDate,
+      );
+      if (updatedUser != null) {
+        _user = updatedUser;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = 'Failed to update profile: ${_getErrorMessage(e)}';
       notifyListeners();
       return false;
     }
@@ -190,23 +246,25 @@ class AuthProvider extends ChangeNotifier {
 
   // Remove profile photo
   Future<bool> removeProfilePhoto() async {
-    _isLoading = true;
+    _isUploadingPhoto = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final updatedUser = await _authService.removeProfilePhoto();
-      if (updatedUser != null) {
-        _user = updatedUser;
-        _isLoading = false;
+      final success = await _authService.removeProfilePhoto();
+      if (success != null) {
+        if (_user != null) {
+          _user = _user!.copyWith(photoUrl: '');
+        }
+        _isUploadingPhoto = false;
         notifyListeners();
         return true;
       }
-      _isLoading = false;
+      _isUploadingPhoto = false;
       notifyListeners();
       return false;
     } catch (e) {
-      _isLoading = false;
+      _isUploadingPhoto = false;
       _errorMessage = 'Failed to remove photo: ${_getErrorMessage(e)}';
       notifyListeners();
       return false;

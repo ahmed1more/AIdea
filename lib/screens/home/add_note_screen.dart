@@ -37,7 +37,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   // Result state
   String _generatedNotes = '';
-  String _generatedCategory = 'Uncategorized';
+  List<String> _selectedCategories = ['Uncategorized'];
   List<String> _generatedKeyPoints = [];
   bool _isComplete = false;
 
@@ -208,7 +208,17 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       setState(() {
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
-        _generatedCategory = result['category'] as String? ?? 'Uncategorized';
+        
+        // AI may suggest multiple categories or a single string
+        final aiCat = result['category'] ?? result['categories'];
+        if (aiCat is List) {
+          _selectedCategories = List<String>.from(aiCat);
+        } else if (aiCat is String && aiCat.isNotEmpty) {
+          _selectedCategories = [aiCat];
+        } else {
+          _selectedCategories = ['Uncategorized'];
+        }
+        
         _isComplete = true;
       });
     } catch (e) {
@@ -256,7 +266,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       videoTitle: _videoTitleController.text.trim(),
       thumbnail: _getThumbnail(_videoUrlController.text),
       notes: _generatedNotes,
-      category: _generatedCategory,
+      categories: _selectedCategories.isEmpty
+          ? ['Uncategorized']
+          : _selectedCategories,
       keyPoints: _generatedKeyPoints,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -297,7 +309,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
-      _generatedCategory = 'Uncategorized';
+      _selectedCategories = ['Uncategorized'];
       _generatedKeyPoints = [];
     });
   }
@@ -983,6 +995,80 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                       .slideX(begin: 0.05);
                 }),
               ],
+
+              const SizedBox(height: 24),
+
+              // ─── Category Picker ───────────────────────────
+              _SectionLabel(
+                icon: Icons.label_outline,
+                label: 'CATEGORIES',
+                count: _selectedCategories.length,
+                color: primaryColor,
+                isDark: isDark,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: VideoNote.predefinedCategories.map((cat) {
+                    final isSelected = _selectedCategories.contains(cat);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedCategories.remove(cat);
+                            if (_selectedCategories.isEmpty) {
+                              _selectedCategories.add('Uncategorized');
+                            }
+                          } else {
+                            _selectedCategories.remove('Uncategorized');
+                            _selectedCategories.add(cat);
+                          }
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primaryColor
+                              : (isDark
+                                    ? Colors.white.withValues(alpha: 0.06)
+                                    : Colors.black.withValues(alpha: 0.04)),
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: isSelected
+                                ? primaryColor
+                                : (isDark
+                                      ? Colors.white.withValues(alpha: 0.12)
+                                      : Colors.black.withValues(alpha: 0.1)),
+                          ),
+                        ),
+                        child: Text(
+                          cat,
+                          style: AppTheme.bodySmall(
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary),
+                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ).animate().fadeIn(delay: 550.ms),
 
               const SizedBox(height: 32),
 

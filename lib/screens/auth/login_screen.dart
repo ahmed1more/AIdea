@@ -63,8 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -403,7 +401,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: secondaryTextColor,
                       ),
                     ),
-                    GestureDetector(
+                    _SignUpLink(
+                      isDark: isDark,
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -411,14 +410,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: Text(
-                        'Sign Up',
-                        style: AppTheme.labelLarge(
-                          color: isDark
-                              ? AppTheme.darkTextPrimary
-                              : AppTheme.lightTextPrimary,
-                        ).copyWith(decoration: TextDecoration.underline),
-                      ),
                     ),
                   ],
                 ).animate().fadeIn(delay: 750.ms),
@@ -431,32 +422,79 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      body: Stack(
-        children: [
-          // ─── Background ───────────────────────
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/signup_bg.png',
-              fit: BoxFit.cover,
+      resizeToAvoidBottomInset: false,
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            // ─── Background ───────────────────────
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/signup_bg.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          Positioned.fill(
-            child: Container(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightBg)
-                  .withValues(alpha: isDark ? 0.6 : 0.7),
+            Positioned.fill(
+              child: Container(
+                color: (isDark ? AppTheme.darkBg : AppTheme.lightBg)
+                    .withValues(alpha: isDark ? 0.6 : 0.7),
+              ),
             ),
-          ),
 
-          // ─── Main Content ────────────────────────────
-          SafeArea(
-            child: _useBackdropBlur
-                ? BackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: formContent,
-                  )
-                : formContent,
+            // ─── Main Content ────────────────────────────
+            SafeArea(
+              child: _useBackdropBlur
+                  ? BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: formContent,
+                    )
+                  : formContent,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SignUpLink extends StatefulWidget {
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _SignUpLink({
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  State<_SignUpLink> createState() => _SignUpLinkState();
+}
+
+class _SignUpLinkState extends State<_SignUpLink> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final linkColor = widget.isDark
+        ? AppTheme.darkTextPrimary
+        : AppTheme.lightTextPrimary;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 150),
+          style: AppTheme.labelLarge(
+            color: linkColor,
+          ).copyWith(
+            decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+            decorationColor: linkColor,
+            fontWeight: FontWeight.w700,
           ),
-        ],
+          child: const Text('Sign Up'),
+        ),
       ),
     );
   }
