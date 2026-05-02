@@ -34,7 +34,7 @@ class DatabaseService {
   Stream<List<VideoNote>> getUserNotes(String userId) {
     return _firestore
         .collection('notes')
-        .where('user_id', isEqualTo: userId)
+        .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -48,7 +48,7 @@ class DatabaseService {
   Stream<List<VideoNote>> getFavoriteNotes(String userId) {
     return _firestore
         .collection('notes')
-        .where('user_id', isEqualTo: userId)
+        .where('userId', isEqualTo: userId)
         .where('isFavorite', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -97,6 +97,7 @@ class DatabaseService {
             break;
           case 'userId':
             mappedUpdates['user_id'] = value;
+            mappedUpdates['userId'] = value;
             break;
           default:
             mappedUpdates[key] = value;
@@ -161,7 +162,7 @@ class DatabaseService {
   Stream<List<VideoNote>> searchNotes(String userId, String query) {
     return _firestore
         .collection('notes')
-        .where('user_id', isEqualTo: userId)
+        .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs

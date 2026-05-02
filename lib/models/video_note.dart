@@ -89,7 +89,8 @@ class VideoNote {
       } else {
         categoriesList = ['Uncategorized'];
       }
-    } else if (data.containsKey('video_categories') && data['video_categories'] is List) {
+    } else if (data.containsKey('video_categories') &&
+        data['video_categories'] is List) {
       categoriesList = List<String>.from(data['video_categories'] as List);
     } else if (data.containsKey('categories') && data['categories'] is List) {
       categoriesList = List<String>.from(data['categories'] as List);
