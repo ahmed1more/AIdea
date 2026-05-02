@@ -48,6 +48,6 @@ app.*.map.json
 /firebase.json
 .firebaserc
 /aidea_UI_v2.0/
-.env
+aidea.env
 *.env
-!.env.example
+!aidea.env.example
