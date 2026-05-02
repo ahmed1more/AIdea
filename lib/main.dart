@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -57,6 +58,7 @@ class AIdea extends StatelessWidget {
           return MaterialApp(
             title: 'AIdea',
             debugShowCheckedModeBanner: false,
+            scrollBehavior: MyCustomScrollBehavior(),
             themeMode: settings.themeMode,
             theme: settings.getLightTheme(),
             darkTheme: settings.getDarkTheme(),
@@ -66,4 +68,12 @@ class AIdea extends StatelessWidget {
       ),
     );
   }
+}
+
+class MyCustomScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      };
 }

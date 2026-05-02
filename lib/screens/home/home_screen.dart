@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -27,20 +28,29 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _urlController = TextEditingController();
   final _searchController = TextEditingController();
+  final _urlFocusNode = FocusNode();
+  final _categoryScrollController = ScrollController();
   int _selectedTab = 0; // 0 = All Notes, 1 = Favorites
 
   bool _isValidatingUrl = false;
   bool _urlIsValid = false;
+  bool _isUrlFieldFocused = false;
   bool _isAccountAvatarHovered = false;
 
   @override
   void initState() {
     super.initState();
+    _urlFocusNode.addListener(_handleUrlFocusChange);
     _loadNotes();
     // Show profile completion prompt once after login for social users
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showProfileCompletionIfNeeded();
     });
+  }
+
+  void _handleUrlFocusChange() {
+    if (!mounted) return;
+    setState(() => _isUrlFieldFocused = _urlFocusNode.hasFocus);
   }
 
   void _showProfileCompletionIfNeeded() {
@@ -60,6 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _urlController.dispose();
     _searchController.dispose();
+    _urlFocusNode
+      ..removeListener(_handleUrlFocusChange)
+      ..dispose();
+    _categoryScrollController.dispose();
     super.dispose();
   }
 
@@ -84,6 +98,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!isYoutube) return false;
     if (uri.host == 'youtu.be') return uri.pathSegments.isNotEmpty;
     return uri.queryParameters.containsKey('v');
+  }
+
+  void _focusSummarizeInput() {
+    if (_selectedTab != 0) {
+      setState(() => _selectedTab = 0);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FocusScope.of(context).requestFocus(_urlFocusNode);
+    });
   }
 
   Future<void> _onSummarize() async {
@@ -316,12 +341,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildUrlInputSection(SettingsProvider settings, bool isDark) {
+    final shouldHighlight = _isUrlFieldFocused || _urlIsValid;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
       child: Row(
         children: [
           Expanded(
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
               height: 52,
               decoration: BoxDecoration(
                 color: isDark
@@ -329,15 +357,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     : Colors.black.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: _urlIsValid
-                      ? settings.accentColor.withValues(alpha: 0.6)
+                  color: shouldHighlight
+                      ? settings.accentColor.withValues(alpha: 0.75)
                       : (isDark
                             ? Colors.white.withValues(alpha: 0.1)
                             : Colors.black.withValues(alpha: 0.08)),
+                  width: shouldHighlight ? 1.5 : 1,
                 ),
+                boxShadow: shouldHighlight
+                    ? [
+                        BoxShadow(
+                          color: settings.accentColor.withValues(alpha: 0.22),
+                          blurRadius: 18,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : const [],
               ),
               child: TextField(
                 controller: _urlController,
+                focusNode: _urlFocusNode,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: isDark ? Colors.white : Colors.black87,
@@ -356,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: FaIcon(
                       FontAwesomeIcons.link,
                       size: 14,
-                      color: _urlIsValid
+                      color: shouldHighlight
                           ? settings.accentColor
                           : (isDark
                                 ? Colors.white.withValues(alpha: 0.38)
@@ -383,6 +422,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : null,
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
                   filled: false,
                   contentPadding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -637,7 +680,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSidebarAccountButton(
     SettingsProvider settings,
     AuthProvider auth,
-    bool isDark,
   ) {
     final displayName = auth.user?.displayName.trim() ?? '';
     final photoUrl = auth.user?.photoUrl?.trim() ?? '';
@@ -657,23 +699,21 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () => setState(() => _selectedTab = 4),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected || _isAccountAvatarHovered
                     ? settings.accentColor.withValues(alpha: 0.12)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected || _isAccountAvatarHovered
                       ? settings.accentColor.withValues(alpha: 0.35)
-                      : (isDark
-                            ? Colors.white.withValues(alpha: 0.06)
-                            : Colors.black.withValues(alpha: 0.05)),
+                      : Colors.transparent,
                 ),
                 boxShadow: isSelected
                     ? [
@@ -685,18 +725,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       ]
                     : const [],
               ),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: settings.accentColor.withValues(alpha: 0.1),
-                backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: settings.accentColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                  image: hasPhoto
+                      ? DecorationImage(
+                          image: NetworkImage(photoUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
                 child: hasPhoto
                     ? null
-                    : Text(
-                        avatarLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: settings.accentColor,
+                    : Center(
+                        child: Text(
+                          avatarLabel,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: settings.accentColor,
+                          ),
                         ),
                       ),
               ),
@@ -754,7 +805,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _desktopSidebarItem(2, 'Insights', FontAwesomeIcons.lightbulb),
           _desktopSidebarItem(3, 'Dashboard', FontAwesomeIcons.chartLine),
           const Spacer(),
-          _buildSidebarAccountButton(settings, auth, isDark),
+          _buildSidebarAccountButton(settings, auth),
           const SizedBox(height: 24),
         ],
       ),
@@ -773,7 +824,7 @@ class _HomeScreenState extends State<HomeScreen> {
         preferBelow: false,
         child: InkWell(
           onTap: () => setState(() => _selectedTab = index),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           child: AnimatedContainer(
             duration: 200.ms,
             width: 48,
@@ -822,52 +873,65 @@ class _HomeScreenState extends State<HomeScreen> {
         : ['All', ...VideoNote.predefinedCategories];
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: categories.map((category) {
-            final isSelected = currentFilter == category;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: GestureDetector(
-                onTap: () => notesProvider.setCategoryFilter(category),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? settings.accentColor
-                        : (isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.black.withValues(alpha: 0.04)),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
+      child: Listener(
+        onPointerSignal: (pointerSignal) {
+          if (pointerSignal is PointerScrollEvent) {
+            final newOffset = _categoryScrollController.offset + pointerSignal.scrollDelta.dy;
+            if (_categoryScrollController.hasClients) {
+              _categoryScrollController.jumpTo(
+                newOffset.clamp(0, _categoryScrollController.position.maxScrollExtent),
+              );
+            }
+          }
+        },
+        child: SingleChildScrollView(
+          controller: _categoryScrollController,
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: categories.map((category) {
+              final isSelected = currentFilter == category;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: GestureDetector(
+                  onTap: () => notesProvider.setCategoryFilter(category),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
                       color: isSelected
                           ? settings.accentColor
                           : (isDark
-                                ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.black.withValues(alpha: 0.08)),
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.04)),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected
+                            ? settings.accentColor
+                            : (isDark
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : Colors.black.withValues(alpha: 0.08)),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    category,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                      color: isSelected
-                          ? Colors.white
-                          : (isDark ? Colors.white70 : Colors.black87),
+                    child: Text(
+                      category,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black87),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
       ),
     ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.1, end: 0);
@@ -939,7 +1003,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.fromLTRB(40, 140, 40, 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -968,27 +1032,26 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            OutlinedButton.icon(
-              onPressed: () {
-                _urlController.clear();
-                setState(() => _urlIsValid = false);
-              },
-              icon: const FaIcon(FontAwesomeIcons.arrowUp, size: 13),
-              label: Text(
-                'Paste a URL above',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: settings.accentColor,
-                side: BorderSide(
-                  color: settings.accentColor.withValues(alpha: 0.5),
+            Center(
+              child: OutlinedButton.icon(
+                onPressed: _focusSummarizeInput,
+                icon: const FaIcon(FontAwesomeIcons.arrowUp, size: 13),
+                label: Text(
+                  'Paste a URL above',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: settings.accentColor,
+                  side: BorderSide(
+                    color: settings.accentColor.withValues(alpha: 0.5),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
