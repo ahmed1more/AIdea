@@ -777,12 +777,12 @@ class _AccountTabState extends State<AccountTab>
       child: Column(
         children: [
           _SettingTile(
-            icon: Icons.lock_outline,
+            icon: Icons.lock_reset_rounded,
             iconColor: AppTheme.teal,
             title: 'Change Password',
-            subtitle: 'Update your account password',
+            subtitle: 'Send a reset link to your email',
             isDark: isDark,
-            onTap: () => _showChangePasswordDialog(context, auth),
+            onTap: () => _handlePasswordReset(context, auth),
           ),
           Divider(
             height: 1,
@@ -1365,183 +1365,22 @@ class _AccountTabState extends State<AccountTab>
     );
   }
 
-  void _showChangePasswordDialog(BuildContext context, AuthProvider auth) {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    bool obscureCurrent = true;
-    bool obscureNew = true;
+  Future<void> _handlePasswordReset(
+    BuildContext context,
+    AuthProvider auth,
+  ) async {
+    final email = auth.user?.email;
+    if (email == null) return;
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.teal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.lock_outline,
-                  color: AppTheme.teal,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Change Password',
-                style: AppTheme.headline3(
-                  color: isDark
-                      ? AppTheme.darkTextPrimary
-                      : AppTheme.lightTextPrimary,
-                ).copyWith(fontSize: 18),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: currentPasswordController,
-                obscureText: obscureCurrent,
-                decoration: InputDecoration(
-                  labelText: 'Current Password',
-                  prefixIcon: const Icon(Icons.lock, size: 20),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscureCurrent ? Icons.visibility_off : Icons.visibility,
-                      size: 20,
-                    ),
-                    onPressed: () =>
-                        setDialogState(() => obscureCurrent = !obscureCurrent),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(
-                      color: (isDark ? Colors.white : Colors.black).withValues(
-                        alpha: 0.1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: newPasswordController,
-                obscureText: obscureNew,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscureNew ? Icons.visibility_off : Icons.visibility,
-                      size: 20,
-                    ),
-                    onPressed: () =>
-                        setDialogState(() => obscureNew = !obscureNew),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(
-                      color: (isDark ? Colors.white : Colors.black).withValues(
-                        alpha: 0.1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: obscureNew,
-                decoration: InputDecoration(
-                  labelText: 'Confirm New Password',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(
-                      color: (isDark ? Colors.white : Colors.black).withValues(
-                        alpha: 0.1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final current = currentPasswordController.text;
-                final newPass = newPasswordController.text;
-                final confirm = confirmPasswordController.text;
-
-                if (current.isEmpty || newPass.isEmpty) {
-                  _showToast('Please fill in all fields', isError: true);
-                  return;
-                }
-                if (newPass.length < 6) {
-                  _showToast(
-                    'Password must be at least 6 characters',
-                    isError: true,
-                  );
-                  return;
-                }
-                if (newPass != confirm) {
-                  _showToast('Passwords do not match', isError: true);
-                  return;
-                }
-
-                final success = await auth.changePassword(
-                  currentPassword: current,
-                  newPassword: newPass,
-                );
-
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-                if (context.mounted) {
-                  _showToast(
-                    success
-                        ? 'Password changed successfully!'
-                        : auth.errorMessage ?? 'Failed to change password',
-                    isError: !success,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                ),
-              ),
-              child: const Text('Update Password'),
-            ),
-          ],
-        ),
-      ),
-    );
+    final success = await auth.resetPassword(email);
+    if (mounted) {
+      _showToast(
+        success
+            ? 'Password reset email sent to $email'
+            : auth.errorMessage ?? 'Failed to send reset email',
+        isError: !success,
+      );
+    }
   }
 
   void _handleLogout(BuildContext context) {

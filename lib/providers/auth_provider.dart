@@ -11,12 +11,19 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isUploadingPhoto = false;
   String? _errorMessage;
+  DateTime? _lastResetEmailSent;
 
   AppUser? get user => _user;
   bool get isLoading => _isLoading;
   bool get isUploadingPhoto => _isUploadingPhoto;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
+
+  int get resetCooldownRemaining {
+    if (_lastResetEmailSent == null) return 0;
+    final diff = DateTime.now().difference(_lastResetEmailSent!).inMinutes;
+    return (10 - diff).clamp(0, 10);
+  }
 
   /// True when a social-login user hasn't filled in gender/birthDate yet.
   bool get needsProfileCompletion =>
@@ -137,12 +144,21 @@ class AuthProvider extends ChangeNotifier {
 
   // Reset password
   Future<bool> resetPassword(String email) async {
+    final remaining = resetCooldownRemaining;
+    if (remaining > 0) {
+      _errorMessage =
+          'Please wait $remaining minute${remaining > 1 ? 's' : ''} before requesting another reset email.';
+      notifyListeners();
+      return false;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       await _authService.resetPassword(email);
+      _lastResetEmailSent = DateTime.now();
       _isLoading = false;
       notifyListeners();
       return true;
