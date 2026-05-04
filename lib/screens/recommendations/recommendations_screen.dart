@@ -28,6 +28,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   }
 
   Future<void> loadRecommendations() async {
+    if (!mounted) return; // ← guard at the start too
+
     setState(() {
       isLoading = true;
       error = null;
@@ -36,10 +38,16 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     try {
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
 
+      // ← widget might have been disposed while awaiting the token
+      if (!mounted) return;
+
       final response = await http.get(
         Uri.parse('https://atinc1-aidea-server.hf.space/recommendations'),
         headers: {'Authorization': 'Bearer $token'},
       );
+
+      // ← widget might have been disposed while awaiting the HTTP response
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -60,6 +68,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return; // ← guard before setState in catch too
       setState(() {
         error = 'Network error. Please check your connection.';
         isLoading = false;
