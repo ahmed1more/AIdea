@@ -32,6 +32,9 @@ class NotesProvider extends ChangeNotifier {
     return filtered;
   }
 
+  /// Returns the full list of notes without any UI filters applied.
+  List<VideoNote> get allNotes => _notes;
+
   List<VideoNote> get favoriteNotes {
     List<VideoNote> filtered = _favoriteNotes;
     if (_categoryFilter != 'All') {
