@@ -452,7 +452,10 @@ class _AccountTabState extends State<AccountTab>
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     OutlinedButton.icon(
                       onPressed: () => _showEditProfileDialog(context, auth),
@@ -472,7 +475,6 @@ class _AccountTabState extends State<AccountTab>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
                     _buildMiniStat(
                       Icons.article_outlined,
                       '${notes.notes.length}',
@@ -480,7 +482,6 @@ class _AccountTabState extends State<AccountTab>
                       isDark,
                       primaryColor,
                     ),
-                    const SizedBox(width: 12),
                     _buildMiniStat(
                       Icons.calendar_today_outlined,
                       auth.user != null

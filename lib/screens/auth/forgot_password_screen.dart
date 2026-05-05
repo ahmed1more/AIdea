@@ -80,9 +80,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             : AppTheme.darkSurface)
         : AppTheme.lightSurface;
 
-    Widget formContent = Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+    Widget formContent = SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+      child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 400),
           child: Form(

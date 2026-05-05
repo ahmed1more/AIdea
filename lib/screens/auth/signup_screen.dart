@@ -104,12 +104,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final monthNum = (months.indexOf(_selectedMonth!) + 1).toString().padLeft(2, '0');
+      final dayNum = _selectedDay!.padLeft(2, '0');
+
       bool success = await authProvider.signUp(
         email: _contactController.text.trim(),
         password: _passwordController.text,
         displayName: '${_firstNameController.text.trim()} ${_surnameController.text.trim()}',
         gender: _selectedGender,
-        birthDate: '$_selectedYear-$_selectedMonth-$_selectedDay',
+        birthDate: '$_selectedYear-$monthNum-$dayNum',
       );
 
       if (success && mounted) {
