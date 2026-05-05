@@ -7,7 +7,7 @@ class VideoNote {
   final String videoTitle;
   final String thumbnail;
   final String notes;
-  final List<String> categories; // ← multi-category (was single String)
+  final String category; // ← single category (was List<String>)
   final List<String> keyPoints;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -20,12 +20,12 @@ class VideoNote {
     required this.videoTitle,
     required this.thumbnail,
     required this.notes,
-    List<String>? categories,
+    String? category,
     required this.keyPoints,
     required this.createdAt,
     required this.updatedAt,
     this.isFavorite = false,
-  }) : categories = categories ?? const ['Uncategorized'];
+  }) : category = category ?? 'Uncategorized';
 
   // ─── Predefined Categories ────────────────────────────────────────────
   static const List<String> predefinedCategories = [
@@ -69,7 +69,7 @@ class VideoNote {
       'videoTitle': videoTitle,
       'notes': notes,
       'thumbnail': thumbnail,
-      'category': categories,
+      'category': category,
       'keyPoints': keyPoints,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
@@ -81,24 +81,28 @@ class VideoNote {
   factory VideoNote.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-    // Backward-compat for categories
-    List<String> categoriesList;
+    // Backward-compat: old docs may store category as a List, new docs as String
+    String parsedCategory;
     if (data.containsKey('category')) {
       final catData = data['category'];
-      if (catData is List) {
-        categoriesList = List<String>.from(catData);
-      } else if (catData is String) {
-        categoriesList = catData.isNotEmpty ? [catData] : ['Uncategorized'];
+      if (catData is List && catData.isNotEmpty) {
+        // Legacy: pick the first item from the old list format
+        parsedCategory = catData[0].toString();
+      } else if (catData is String && catData.isNotEmpty) {
+        parsedCategory = catData;
       } else {
-        categoriesList = ['Uncategorized'];
+        parsedCategory = 'Uncategorized';
       }
     } else if (data.containsKey('video_categories') &&
-        data['video_categories'] is List) {
-      categoriesList = List<String>.from(data['video_categories'] as List);
-    } else if (data.containsKey('categories') && data['categories'] is List) {
-      categoriesList = List<String>.from(data['categories'] as List);
+        data['video_categories'] is List &&
+        (data['video_categories'] as List).isNotEmpty) {
+      parsedCategory = (data['video_categories'] as List)[0].toString();
+    } else if (data.containsKey('categories') &&
+        data['categories'] is List &&
+        (data['categories'] as List).isNotEmpty) {
+      parsedCategory = (data['categories'] as List)[0].toString();
     } else {
-      categoriesList = ['Uncategorized'];
+      parsedCategory = 'Uncategorized';
     }
 
     // Helper for Timestamp conversion
@@ -135,7 +139,7 @@ class VideoNote {
       videoTitle: data['videoTitle'] ?? data['video_title'] ?? '',
       thumbnail: thumbnail,
       notes: data['notes'] ?? data['summary_content'] ?? '',
-      categories: categoriesList,
+      category: parsedCategory,
       keyPoints: List<String>.from(data['keyPoints'] ?? []),
       createdAt: parseDate('createdAt'),
       updatedAt: parseDate('updatedAt'),
@@ -151,7 +155,7 @@ class VideoNote {
     String? videoTitle,
     String? thumbnail,
     String? notes,
-    List<String>? categories,
+    String? category,
     List<String>? keyPoints,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -164,7 +168,7 @@ class VideoNote {
       videoTitle: videoTitle ?? this.videoTitle,
       thumbnail: thumbnail ?? this.thumbnail,
       notes: notes ?? this.notes,
-      categories: categories ?? this.categories,
+      category: category ?? this.category,
       keyPoints: keyPoints ?? this.keyPoints,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

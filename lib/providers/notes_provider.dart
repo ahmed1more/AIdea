@@ -19,7 +19,7 @@ class NotesProvider extends ChangeNotifier {
     List<VideoNote> filtered = _notes;
     if (_categoryFilter != 'All') {
       filtered = filtered
-          .where((note) => note.categories.contains(_categoryFilter))
+          .where((note) => note.category == _categoryFilter)
           .toList();
     }
     if (_searchQuery.isNotEmpty) {
@@ -36,7 +36,7 @@ class NotesProvider extends ChangeNotifier {
     List<VideoNote> filtered = _favoriteNotes;
     if (_categoryFilter != 'All') {
       filtered = filtered
-          .where((note) => note.categories.contains(_categoryFilter))
+          .where((note) => note.category == _categoryFilter)
           .toList();
     }
     if (_searchQuery.isNotEmpty) {
@@ -58,7 +58,7 @@ class NotesProvider extends ChangeNotifier {
   List<String> get availableCategories {
     final cats = <String>{};
     for (final note in _notes) {
-      cats.addAll(note.categories);
+      cats.add(note.category);
     }
     final sorted = cats.toList()..sort();
     return ['All', ...sorted];
@@ -142,9 +142,7 @@ class NotesProvider extends ChangeNotifier {
             keyPoints: updates['keyPoints'] != null
                 ? List<String>.from(updates['keyPoints'])
                 : oldNote.keyPoints,
-            categories: updates['categories'] != null
-                ? List<String>.from(updates['categories'])
-                : oldNote.categories,
+            category: updates['category'] as String? ?? oldNote.category,
             updatedAt: DateTime.now(),
           );
         }
@@ -158,9 +156,7 @@ class NotesProvider extends ChangeNotifier {
             keyPoints: updates['keyPoints'] != null
                 ? List<String>.from(updates['keyPoints'])
                 : oldNote.keyPoints,
-            categories: updates['categories'] != null
-                ? List<String>.from(updates['categories'])
-                : oldNote.categories,
+            category: updates['category'] as String? ?? oldNote.category,
             updatedAt: DateTime.now(),
           );
         }
@@ -235,7 +231,7 @@ class NotesProvider extends ChangeNotifier {
         videoTitle: '',
         thumbnail: '',
         notes: '',
-        categories: [],
+        category: 'Uncategorized',
         keyPoints: [],
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

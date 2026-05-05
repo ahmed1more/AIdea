@@ -28,7 +28,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController _titleController;
   late TextEditingController _notesController;
   late List<TextEditingController> _keyPointsControllers;
-  late List<String> _selectedCategories;
+  late String _selectedCategory;
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
 
@@ -46,7 +46,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     _keyPointsControllers = _note.keyPoints
         .map((kp) => TextEditingController(text: kp))
         .toList();
-    _selectedCategories = List<String>.from(_note.categories);
+    _selectedCategory = _note.category;
     _scrollController.addListener(_updateScrollProgress);
 
     // Check if video exists logic removed
@@ -144,7 +144,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       'videoTitle': newTitle,
       'notes': newNotes,
       'keyPoints': newKeyPoints,
-      'categories': _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
+      'category': _selectedCategory,
     });
 
     if (success && mounted) {
@@ -153,7 +153,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           videoTitle: newTitle,
           notes: newNotes,
           keyPoints: newKeyPoints,
-          categories: _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
+          category: _selectedCategory,
         );
         _isEditing = false;
       });
@@ -195,7 +195,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       for (int i = 0; i < _keyPointsControllers.length; i++) {
         _keyPointsControllers[i].text = _note.keyPoints[i];
       }
-      _selectedCategories = List<String>.from(_note.categories);
+      _selectedCategory = _note.category;
     });
   }
 
@@ -623,19 +623,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               spacing: 8,
               runSpacing: 8,
               children: VideoNote.predefinedCategories.map((cat) {
-                final isSelected = _selectedCategories.contains(cat);
+                final isSelected = _selectedCategory == cat;
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      if (isSelected) {
-                        _selectedCategories.remove(cat);
-                        if (_selectedCategories.isEmpty) {
-                          _selectedCategories.add('Uncategorized');
-                        }
-                      } else {
-                        _selectedCategories.remove('Uncategorized');
-                        _selectedCategories.add(cat);
-                      }
+                      _selectedCategory = cat;
                     });
                   },
                   child: AnimatedContainer(
@@ -675,46 +667,40 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             ),
           )
         else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _note.categories.map((cat) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: primaryColor.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.tag,
+                  size: 12,
+                  color: primaryColor,
                 ),
-                decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(
-                    color: primaryColor.withValues(alpha: 0.2),
+                const SizedBox(width: 4),
+                Text(
+                  _note.category,
+                  style: AppTheme.bodySmall(
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.lightTextPrimary,
+                  ).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: primaryColor,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.tag,
-                      size: 12,
-                      color: primaryColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      cat,
-                      style: AppTheme.bodySmall(
-                        color: isDark
-                            ? AppTheme.darkTextPrimary
-                            : AppTheme.lightTextPrimary,
-                      ).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+              ],
+            ),
           ),
       ],
     ).animate().fadeIn(delay: 150.ms, duration: 400.ms);

@@ -89,7 +89,7 @@ class DatabaseService {
           case 'notes':
             mappedUpdates['notes'] = value;
             break;
-          case 'categories':
+          case 'category':
             mappedUpdates['category'] = value;
             break;
           case 'videoUrl':

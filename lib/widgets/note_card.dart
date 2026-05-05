@@ -194,16 +194,14 @@ class NoteCard extends StatelessWidget {
                             Row(
                               children: [
                                 FaIcon(
-                                  _getCategoryIcon(note.categories.first),
+                                  _getCategoryIcon(note.category),
                                   size: 10,
                                   color: settings.accentColor.withValues(alpha: 0.7),
                                 ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    note.categories.length > 1 
-                                        ? '${note.categories.first} +${note.categories.length - 1}'
-                                        : note.categories.first,
+                                    note.category,
                                     style: GoogleFonts.inter(
                                       color: isDark ? Colors.white54 : Colors.grey[600],
                                       fontSize: 10,
