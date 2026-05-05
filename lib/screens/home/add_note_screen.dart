@@ -67,7 +67,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     {
       'icon': Icons.fact_check_outlined,
       'label': 'Structuring Notes',
-      'desc': 'Organizing key Recommendations...',
+      'desc': 'Organizing Key Points...',
     },
     {
       'icon': Icons.check_circle,
@@ -208,7 +208,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       setState(() {
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
-        
+
         // AI may suggest multiple categories or a single string
         final aiCat = result['category'] ?? result['categories'];
         if (aiCat is List) {
@@ -218,7 +218,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         } else {
           _selectedCategories = ['Uncategorized'];
         }
-        
+
         _isComplete = true;
       });
     } catch (e) {
@@ -939,7 +939,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                 const SizedBox(height: 32),
                 _SectionLabel(
                   icon: Icons.lightbulb_outline,
-                  label: 'KEY Recommendations',
+                  label: 'Key Points',
                   count: _generatedKeyPoints.length,
                   color: primaryColor,
                   isDark: isDark,

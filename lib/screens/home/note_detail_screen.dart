@@ -144,7 +144,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       'videoTitle': newTitle,
       'notes': newNotes,
       'keyPoints': newKeyPoints,
-      'categories': _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
+      'categories': _selectedCategories.isEmpty
+          ? ['Uncategorized']
+          : _selectedCategories,
     });
 
     if (success && mounted) {
@@ -153,7 +155,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           videoTitle: newTitle,
           notes: newNotes,
           keyPoints: newKeyPoints,
-          categories: _selectedCategories.isEmpty ? ['Uncategorized'] : _selectedCategories,
+          categories: _selectedCategories.isEmpty
+              ? ['Uncategorized']
+              : _selectedCategories,
         );
         _isEditing = false;
       });
@@ -392,22 +396,25 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               child: _isEditing
                   ? TextFormField(
                       controller: _titleController,
-                      style: AppTheme.headline2(
-                        color: hasThumbnail
-                            ? Colors.white
-                            : (isDark
-                                  ? AppTheme.darkTextPrimary
-                                  : AppTheme.lightTextPrimary),
-                      ).copyWith(
-                        shadows: hasThumbnail
-                            ? [
-                                Shadow(
-                                  blurRadius: 12,
-                                  color: Colors.black.withValues(alpha: 0.5),
-                                ),
-                              ]
-                            : null,
-                      ),
+                      style:
+                          AppTheme.headline2(
+                            color: hasThumbnail
+                                ? Colors.white
+                                : (isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary),
+                          ).copyWith(
+                            shadows: hasThumbnail
+                                ? [
+                                    Shadow(
+                                      blurRadius: 12,
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                  ]
+                                : null,
+                          ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         isDense: true,
@@ -429,7 +436,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                                 ? [
                                     Shadow(
                                       blurRadius: 12,
-                                      color: Colors.black.withValues(alpha: 0.5),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
                                     ),
                                   ]
                                 : null,
@@ -694,22 +703,19 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.tag,
-                      size: 12,
-                      color: primaryColor,
-                    ),
+                    Icon(Icons.tag, size: 12, color: primaryColor),
                     const SizedBox(width: 4),
                     Text(
                       cat,
-                      style: AppTheme.bodySmall(
-                        color: isDark
-                            ? AppTheme.darkTextPrimary
-                            : AppTheme.lightTextPrimary,
-                      ).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: primaryColor,
-                      ),
+                      style:
+                          AppTheme.bodySmall(
+                            color: isDark
+                                ? AppTheme.darkTextPrimary
+                                : AppTheme.lightTextPrimary,
+                          ).copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: primaryColor,
+                          ),
                     ),
                   ],
                 ),
@@ -727,7 +733,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       children: [
         _SectionHeader(
           icon: Icons.lightbulb_outline,
-          label: 'KEY Recommendations',
+          label: 'Key Points',
           count: _note.keyPoints.length,
           isDark: isDark,
           color: primaryColor,
@@ -944,12 +950,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         _floatingDivider(isDark),
                         _FloatingAction(
                           icon: _note.isFavorite
-                              ? Icons.bookmark
-                              : Icons.bookmark_outline,
-                          label: _note.isFavorite ? 'Saved' : 'Save',
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          label: _note.isFavorite ? 'Favorited' : 'Favorite',
                           isDark: isDark,
                           isActive: _note.isFavorite,
-                          activeColor: AppTheme.teal,
+                          activeColor: AppTheme.error,
                           onTap: () => _toggleFavorite(context),
                         ),
                         _floatingDivider(isDark),
