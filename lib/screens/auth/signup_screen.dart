@@ -484,7 +484,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
-      resizeToAvoidBottomInset: false,
       body: settings.buildBackground(
         context: context,
         child: SafeArea(

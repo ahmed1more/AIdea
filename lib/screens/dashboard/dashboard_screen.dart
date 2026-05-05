@@ -57,7 +57,8 @@ class DashboardScreen extends StatelessWidget {
 
     // Calculate Stats
     final totalNotes = notes.length;
-    final totalCategories = notesProvider.availableCategories.length - 1; // Subtract 'All'
+    final totalCategories =
+        notesProvider.availableCategories.length - 1; // Subtract 'All'
     final favoriteNotes = notes.where((n) => n.isFavorite).length;
     final totalKeyPoints = notes.fold(0, (sum, n) => sum + n.keyPoints.length);
 
@@ -75,7 +76,7 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Stats Row
             GridView.count(
               shrinkWrap: true,
@@ -104,16 +105,16 @@ class DashboardScreen extends StatelessWidget {
                   color: Theme.of(context).colorScheme.error,
                 ),
                 StatCard(
-                  title: 'Key Insights',
+                  title: 'Key Points',
                   value: totalKeyPoints.toString(),
                   icon: FontAwesomeIcons.lightbulb,
                   color: const Color(0xFFF59E0B),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Charts
             ActivityLineChart(notes: notes),
             const SizedBox(height: 24),
