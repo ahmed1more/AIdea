@@ -37,7 +37,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   // Result state
   String _generatedNotes = '';
-  String _selectedCategory = 'Uncategorized';
+  List<String> _selectedCategories = ['Uncategorized'];
   List<String> _generatedKeyPoints = [];
   bool _isComplete = false;
 
@@ -209,14 +209,14 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
         
-        // AI returns a single category string
+        // AI may suggest multiple categories or a single string
         final aiCat = result['category'] ?? result['categories'];
-        if (aiCat is List && aiCat.isNotEmpty) {
-          _selectedCategory = aiCat[0].toString();
+        if (aiCat is List) {
+          _selectedCategories = List<String>.from(aiCat);
         } else if (aiCat is String && aiCat.isNotEmpty) {
-          _selectedCategory = aiCat;
+          _selectedCategories = [aiCat];
         } else {
-          _selectedCategory = 'Uncategorized';
+          _selectedCategories = ['Uncategorized'];
         }
         
         _isComplete = true;
@@ -266,7 +266,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       videoTitle: _videoTitleController.text.trim(),
       thumbnail: _getThumbnail(_videoUrlController.text),
       notes: _generatedNotes,
-      category: _selectedCategory,
+      categories: _selectedCategories.isEmpty
+          ? ['Uncategorized']
+          : _selectedCategories,
       keyPoints: _generatedKeyPoints,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -306,7 +308,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
-      _selectedCategory = 'Uncategorized';
+      _selectedCategories = ['Uncategorized'];
       _generatedKeyPoints = [];
     });
   }
@@ -1004,7 +1006,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
               // ─── Category Picker ───────────────────────────
               _SectionLabel(
                 icon: Icons.label_outline,
-                label: 'CATEGORY',
+                label: 'CATEGORIES',
+                count: _selectedCategories.length,
                 color: primaryColor,
                 isDark: isDark,
               ),
@@ -1020,11 +1023,19 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                   spacing: 8,
                   runSpacing: 8,
                   children: VideoNote.predefinedCategories.map((cat) {
-                    final isSelected = _selectedCategory == cat;
+                    final isSelected = _selectedCategories.contains(cat);
                     return GestureDetector(
                       onTap: () {
                         setState(() {
-                          _selectedCategory = cat;
+                          if (isSelected) {
+                            _selectedCategories.remove(cat);
+                            if (_selectedCategories.isEmpty) {
+                              _selectedCategories.add('Uncategorized');
+                            }
+                          } else {
+                            _selectedCategories.remove('Uncategorized');
+                            _selectedCategories.add(cat);
+                          }
                         });
                       },
                       child: AnimatedContainer(
