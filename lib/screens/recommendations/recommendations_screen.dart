@@ -229,7 +229,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               width: double.infinity,
               height: 180,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 height: 180,
                 color: Colors.grey.withValues(alpha: 0.2),
                 child: const Center(
