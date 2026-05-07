@@ -27,13 +27,10 @@ void main() async {
     persistenceEnabled: true,
   );
 
-
   // Initialize Google Sign-In (required by google_sign_in v7+)
   try {
     await GoogleSignIn.instance.initialize(
-      clientId: kIsWeb
-          ? dotenv.get('GOOGLE_CLIENT_ID_WEB')
-          : null,
+      clientId: kIsWeb ? dotenv.get('GOOGLE_CLIENT_ID_WEB') : null,
     );
   } catch (e) {
     debugPrint('Google Sign-In initialization failed: $e');
@@ -73,7 +70,7 @@ class AIdea extends StatelessWidget {
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+  };
 }
