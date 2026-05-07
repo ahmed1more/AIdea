@@ -1,42 +1,35 @@
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'login_screen.dart';
-import '../main_shell.dart';
+import 'signup_controller.dart';
+import 'widgets/signup/signup_top_bar.dart';
+import 'widgets/signup/signup_headline.dart';
+import 'widgets/signup/signup_name_fields.dart';
+import 'widgets/signup/signup_date_of_birth.dart';
+import 'widgets/signup/signup_gender_dropdown.dart';
+import 'widgets/signup/signup_contact_field.dart';
+import 'widgets/signup/signup_password_field.dart';
+import 'widgets/signup/signup_action_buttons.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => SignUpController(),
+      child: const _SignUpBody(),
+    );
+  }
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _surnameController = TextEditingController();
-  final _contactController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-  double _passwordStrength = 0;
-  String _passwordStrengthLabel = '';
+class _SignUpBody extends StatelessWidget {
+  const _SignUpBody();
 
-  String? _selectedDay;
-  String? _selectedMonth;
-  String? _selectedYear;
-  String? _selectedGender;
-
-  bool get _useBackdropBlur =>
-      !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
-
-  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
-
-  void _handleBackNavigation() {
+  void _handleBackNavigation(BuildContext context) {
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       navigator.pop();
@@ -49,146 +42,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _passwordController.addListener(_updatePasswordStrength);
-  }
-
-  void _updatePasswordStrength() {
-    final password = _passwordController.text;
-    double strength = 0;
-    if (password.length >= 8) strength += 0.25;
-    if (RegExp(r'[A-Z]').hasMatch(password)) strength += 0.25;
-    if (RegExp(r'[0-9]').hasMatch(password)) strength += 0.25;
-    if (RegExp(r'[!@#\$%\^&\*(),.?":{}|<>]').hasMatch(password)) strength += 0.25;
-
-    String label;
-    if (strength <= 0.25) {
-      label = 'Weak';
-    } else if (strength <= 0.5) {
-      label = 'Fair';
-    } else if (strength <= 0.75) {
-      label = 'Good';
-    } else {
-      label = 'Strong';
-    }
-
-    setState(() {
-      _passwordStrength = password.isEmpty ? 0 : strength;
-      _passwordStrengthLabel = password.isEmpty ? '' : label;
-    });
-  }
-
-  @override
-  void dispose() {
-    _passwordController.removeListener(_updatePasswordStrength);
-    _firstNameController.dispose();
-    _surnameController.dispose();
-    _contactController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleSignUp() async {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedDay == null || _selectedMonth == null || _selectedYear == null || _selectedGender == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please fill in all fields'),
-            backgroundColor: AppTheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-        return;
-      }
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      final monthNum = (months.indexOf(_selectedMonth!) + 1).toString().padLeft(2, '0');
-      final dayNum = _selectedDay!.padLeft(2, '0');
-
-      bool success = await authProvider.signUp(
-        email: _contactController.text.trim(),
-        password: _passwordController.text,
-        displayName: '${_firstNameController.text.trim()} ${_surnameController.text.trim()}',
-        gender: _selectedGender,
-        birthDate: '$_selectedYear-$monthNum-$dayNum',
-      );
-
-      if (success && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const MainShell()),
-          (route) => false,
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? 'Sign up failed'),
-            backgroundColor: AppTheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-    }
-  }
-
-  InputDecoration _inputDecoration(bool isDark, String hint) {
-    final fillColor = isDark
-        ? (_isAndroid
-            ? AppTheme.darkSurfaceHigh.withValues(alpha: 0.88)
-            : AppTheme.darkSurface.withValues(alpha: 0.5))
-        : AppTheme.lightSurface;
-    final secondaryTextColor = isDark
-        ? (_isAndroid
-            ? AppTheme.darkTextPrimary.withValues(alpha: 0.82)
-            : AppTheme.darkTextSecondary)
-        : AppTheme.lightTextSecondary;
-
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: fillColor,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        borderSide: BorderSide(color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        borderSide: BorderSide(color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      hintStyle: AppTheme.bodyMedium(color: secondaryTextColor),
-    );
-  }
-
-  Widget _buildDropdown(bool isDark, String hint, List<String> items, String? selectedValue, ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      initialValue: selectedValue,
-      hint: Text(hint, style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary), overflow: TextOverflow.ellipsis),
-      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary)),)).toList(),
-      onChanged: onChanged,
-      dropdownColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-      icon: Icon(Icons.keyboard_arrow_down, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
-      decoration: _inputDecoration(isDark, hint),
-      isExpanded: true,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
-    final secondaryTextColor = isDark
-        ? (_isAndroid
-            ? AppTheme.darkTextPrimary.withValues(alpha: 0.82)
-            : AppTheme.darkTextSecondary)
-        : AppTheme.lightTextSecondary;
+    final controller = context.watch<SignUpController>();
 
     Widget formContent = LayoutBuilder(
       builder: (context, constraints) {
@@ -198,296 +55,59 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Form(
-                key: _formKey,
+                key: controller.formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                      // ─── Top Bar ────────────────────────────────
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.arrow_back, color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                            onPressed: _handleBackNavigation,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: isDark ? AppTheme.darkSurface : AppTheme.lightTextPrimary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: settings.logo(size: 32, applyTheme: false),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'AIdea',
-                            style: AppTheme.headline3(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                          ),
-                        ],
-                      ).animate().fadeIn(duration: 500.ms),
-                      const SizedBox(height: 24),
+                    // ─── Top Bar ────────────────────────────────
+                    SignUpTopBar(
+                        onBack: () => _handleBackNavigation(context)),
+                    const SizedBox(height: 24),
 
-                      // ─── Headline ────────────────────────────
-                      Text(
-                        'Get started on AIdea',
-                        style: AppTheme.headline2(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                      ).animate().fadeIn(delay: 100.ms),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Create an account to access your editorial intelligence and connect with your team.',
-                        style: AppTheme.bodyMedium(color: secondaryTextColor),
-                      ).animate().fadeIn(delay: 150.ms),
-                      const SizedBox(height: 24),
+                    // ─── Headline ────────────────────────────
+                    const SignUpHeadline(),
+                    const SizedBox(height: 24),
 
-                      // ─── Name ────────────────────────────────
-                      Text(
-                        'Name',
-                        style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                      ).animate().fadeIn(delay: 200.ms),
-                      const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _firstNameController,
-                              style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                              decoration: _inputDecoration(isDark, 'First name'),
-                              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-                            ).animate().fadeIn(delay: 250.ms),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _surnameController,
-                              style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                              decoration: _inputDecoration(isDark, 'Surname'),
-                              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-                            ).animate().fadeIn(delay: 250.ms),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                    // ─── Name ────────────────────────────────
+                    const SignUpNameFields(),
+                    const SizedBox(height: 20),
 
-                      // ─── Date of birth ────────────────────────
-                      Text(
-                        'Date of birth',
-                        style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                      ).animate().fadeIn(delay: 300.ms),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDropdown(
-                              isDark, 'Day',
-                              List.generate(31, (i) => (i + 1).toString()),
-                              _selectedDay,
-                              (v) => setState(() => _selectedDay = v),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildDropdown(
-                              isDark, 'Month',
-                              ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                              _selectedMonth,
-                              (v) => setState(() => _selectedMonth = v),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildDropdown(
-                              isDark, 'Year',
-                              List.generate(100, (i) => (DateTime.now().year - i).toString()),
-                              _selectedYear,
-                              (v) => setState(() => _selectedYear = v),
-                            ),
-                          ),
-                        ],
-                      ).animate().fadeIn(delay: 350.ms),
-                      const SizedBox(height: 20),
+                    // ─── Date of birth ────────────────────────
+                    const SignUpDateOfBirth(),
+                    const SizedBox(height: 20),
 
-                      // ─── Gender ──────────────────────────────
-                      Text(
-                        'Gender',
-                        style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                      ).animate().fadeIn(delay: 400.ms),
-                      const SizedBox(height: 6),
-                      _buildDropdown(
-                        isDark,
-                        'Select your gender',
-                        ['Female', 'Male'],
-                        _selectedGender,
-                        (v) => setState(() => _selectedGender = v),
-                      ).animate().fadeIn(delay: 450.ms),
-                      const SizedBox(height: 20),
+                    // ─── Gender ──────────────────────────────
+                    const SignUpGenderDropdown(),
+                    const SizedBox(height: 20),
 
-                      // ─── Mobile or Email ─────────────────────
-                      Text(
-                        'Mobile number or email address',
-                        style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                      ).animate().fadeIn(delay: 500.ms),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _contactController,
-                        style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                        decoration: _inputDecoration(isDark, 'Mobile number or email address'),
-                        validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-                      ).animate().fadeIn(delay: 550.ms),
-                      const SizedBox(height: 4),
-                      Text(
-                        'You may receive notifications from us.',
-                        style: AppTheme.bodySmall(color: secondaryTextColor),
-                      ).animate().fadeIn(delay: 600.ms),
-                      const SizedBox(height: 20),
+                    // ─── Mobile or Email ─────────────────────
+                    const SignUpContactField(),
+                    const SizedBox(height: 20),
 
-                      // ─── Password ────────────────────────────
-                      Text(
-                        'Password',
-                        style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                      ).animate().fadeIn(delay: 650.ms),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: AppTheme.bodyMedium(color: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-                        decoration: _inputDecoration(isDark, 'Password').copyWith(
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
-                            ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Password is required';
-                          if (value.length < 8) return 'At least 8 characters';
-                          if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Include at least one uppercase letter';
-                          if (!RegExp(r'[a-z]').hasMatch(value)) return 'Include at least one lowercase letter';
-                          if (!RegExp(r'[0-9]').hasMatch(value)) return 'Include at least one number';
-                          if (!RegExp(r'[!@#\$%\^&\*(),.?":{}|<>]').hasMatch(value)) return 'Include at least one special character';
-                          return null;
-                        },
-                      ).animate().fadeIn(delay: 700.ms),
+                    // ─── Password ────────────────────────────
+                    const SignUpPasswordField(),
+                    const SizedBox(height: 24),
 
-                      // ─── Password Strength Indicator ──────────
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                height: 4,
-                                child: LinearProgressIndicator(
-                                  value: _passwordStrength,
-                                  backgroundColor: (isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    _passwordStrength <= 0.25
-                                        ? Colors.red
-                                        : _passwordStrength <= 0.5
-                                            ? Colors.orange
-                                            : _passwordStrength <= 0.75
-                                                ? Colors.amber
-                                                : Colors.green,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_passwordStrengthLabel.isNotEmpty) ...[
-                            const SizedBox(width: 10),
-                            Text(
-                              _passwordStrengthLabel,
-                              style: AppTheme.labelSmall(
-                                color: _passwordStrength <= 0.25
-                                    ? Colors.red
-                                    : _passwordStrength <= 0.5
-                                        ? Colors.orange
-                                        : _passwordStrength <= 0.75
-                                            ? Colors.amber
-                                            : Colors.green,
-                              ).copyWith(fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Use 8+ characters with uppercase, lowercase, numbers & symbols',
-                        style: AppTheme.bodySmall(
-                          color: secondaryTextColor,
-                        ).copyWith(fontSize: 11),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // ─── Buttons ─────────────────────────────
-                      Consumer<AuthProvider>(
-                        builder: (context, auth, _) {
-                          return SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: auth.isLoading ? null : _handleSignUp,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXl)),
-                                elevation: 0,
-                              ),
-                              child: auth.isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : Text('Submit', style: AppTheme.button().copyWith(fontSize: 16)),
-                            ),
-                          );
-                        },
-                      ).animate().fadeIn(delay: 750.ms),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: _handleBackNavigation,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXl)),
-                            side: BorderSide(color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider),
-                          ),
-                          child: Text('I already have an account', style: AppTheme.button().copyWith(fontSize: 16)),
-                        ),
-                      ).animate().fadeIn(delay: 800.ms),
+                    // ─── Buttons ─────────────────────────────
+                    SignUpActionButtons(
+                        onBackToLogin: () =>
+                            _handleBackNavigation(context)),
                   ],
                 ),
               ),
             ),
           ),
         );
-    },
-  );
+      },
+    );
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
       body: settings.buildBackground(
         context: context,
         child: SafeArea(
-          child: _useBackdropBlur
+          child: controller.useBackdropBlur
               ? BackdropFilter(
                   filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: formContent,
