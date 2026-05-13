@@ -25,11 +25,10 @@ class VideoNote {
     required this.createdAt,
     required this.updatedAt,
     this.isFavorite = false,
-  }) : categories = categories ?? const ['Uncategorized'];
+  }) : categories = categories ?? const [];
 
   // ─── Predefined Categories ────────────────────────────────────────────
   static const List<String> predefinedCategories = [
-    'Uncategorized',
     'Education',
     'Technology & AI',
     'Science',
@@ -88,9 +87,9 @@ class VideoNote {
       if (catData is List) {
         categoriesList = List<String>.from(catData);
       } else if (catData is String) {
-        categoriesList = catData.isNotEmpty ? [catData] : ['Uncategorized'];
+        categoriesList = catData.isNotEmpty ? [catData] : [];
       } else {
-        categoriesList = ['Uncategorized'];
+        categoriesList = [];
       }
     } else if (data.containsKey('video_categories') &&
         data['video_categories'] is List) {
@@ -98,7 +97,7 @@ class VideoNote {
     } else if (data.containsKey('categories') && data['categories'] is List) {
       categoriesList = List<String>.from(data['categories'] as List);
     } else {
-      categoriesList = ['Uncategorized'];
+      categoriesList = [];
     }
 
     // Helper for Timestamp conversion

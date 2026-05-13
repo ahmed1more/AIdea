@@ -40,7 +40,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   // Result state
   String _generatedNotes = '';
-  List<String> _selectedCategories = ['Uncategorized'];
+  List<String> _selectedCategories = [];
   List<String> _generatedKeyPoints = [];
   String _suggestedCategory = '';
 
@@ -244,7 +244,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
           } else if (aiCat is String && aiCat.isNotEmpty) {
             _selectedCategories = [aiCat];
           } else {
-            _selectedCategories = ['Uncategorized'];
+            _selectedCategories = [];
           }
         }
 
@@ -282,6 +282,20 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   }
 
   Future<void> _saveAndViewNote() async {
+    if (_selectedCategories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select or add at least one category.'),
+          backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
@@ -308,9 +322,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       videoTitle: _videoTitleController.text.trim(),
       thumbnail: _getThumbnail(_videoUrlController.text),
       notes: _generatedNotes,
-      categories: _selectedCategories.isEmpty
-          ? ['Uncategorized']
-          : _selectedCategories,
+      categories: _selectedCategories,
       keyPoints: _generatedKeyPoints,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -351,7 +363,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
-      _selectedCategories = ['Uncategorized'];
+      _selectedCategories = [];
       _generatedKeyPoints = [];
       _suggestedCategory = '';
       _customCategoryController.clear();
@@ -1193,9 +1205,6 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                           setState(() {
                             if (_selectedCategories.contains(_suggestedCategory)) {
                               _selectedCategories.remove(_suggestedCategory);
-                              if (_selectedCategories.isEmpty) {
-                                _selectedCategories.add('Uncategorized');
-                              }
                             } else {
                               _selectedCategories
                                 ..clear()

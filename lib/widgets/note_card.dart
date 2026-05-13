@@ -37,7 +37,6 @@ class NoteCard extends StatelessWidget {
         return FontAwesomeIcons.mugHot;
       case 'Health & Sports':
         return FontAwesomeIcons.heartPulse;
-      case 'Uncategorized':
       default:
         return FontAwesomeIcons.folderOpen;
     }
@@ -190,31 +189,32 @@ class NoteCard extends StatelessWidget {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                FaIcon(
-                                  _getCategoryIcon(note.categories.first),
-                                  size: 10,
-                                  color: settings.accentColor.withValues(alpha: 0.7),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    note.categories.length > 1 
-                                        ? '${note.categories.first} +${note.categories.length - 1}'
-                                        : note.categories.first,
-                                    style: GoogleFonts.inter(
-                                      color: isDark ? Colors.white54 : Colors.grey[600],
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                            if (note.categories.isNotEmpty) ...[
+                              Row(
+                                children: [
+                                  FaIcon(
+                                    _getCategoryIcon(note.categories.first),
+                                    size: 10,
+                                    color: settings.accentColor.withValues(alpha: 0.7),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      note.categories.length > 1 
+                                          ? '${note.categories.first} +${note.categories.length - 1}'
+                                          : note.categories.first,
+                                      style: GoogleFonts.inter(
+                                        color: isDark ? Colors.white54 : Colors.grey[600],
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                            ],
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

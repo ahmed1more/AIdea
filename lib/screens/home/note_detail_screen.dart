@@ -29,6 +29,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController _notesController;
   late List<TextEditingController> _keyPointsControllers;
   late List<String> _selectedCategories;
+  late TextEditingController _customCategoryController;
   final ScrollController _scrollController = ScrollController();
   double _scrollProgress = 0.0;
 
@@ -47,6 +48,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         .map((kp) => TextEditingController(text: kp))
         .toList();
     _selectedCategories = List<String>.from(_note.categories);
+    _customCategoryController = TextEditingController();
     _scrollController.addListener(_updateScrollProgress);
 
     // Check if video exists logic removed
@@ -59,6 +61,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     for (var controller in _keyPointsControllers) {
       controller.dispose();
     }
+    _customCategoryController.dispose();
     _scrollController.removeListener(_updateScrollProgress);
     _scrollController.dispose();
     super.dispose();
@@ -134,6 +137,20 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   Future<void> _saveChanges() async {
+    if (_selectedCategories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select or add at least one category.'),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
 
     final newTitle = _titleController.text;
@@ -144,9 +161,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       'videoTitle': newTitle,
       'notes': newNotes,
       'keyPoints': newKeyPoints,
-      'categories': _selectedCategories.isEmpty
-          ? ['Uncategorized']
-          : _selectedCategories,
+      'categories': _selectedCategories,
     });
 
     if (success && mounted) {
@@ -155,11 +170,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           videoTitle: newTitle,
           notes: newNotes,
           keyPoints: newKeyPoints,
-          categories: _selectedCategories.isEmpty
-              ? ['Uncategorized']
-              : _selectedCategories,
+          categories: _selectedCategories,
         );
         _isEditing = false;
+        _customCategoryController.clear();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -628,59 +642,136 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
               ),
             ),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: VideoNote.predefinedCategories.map((cat) {
-                final isSelected = _selectedCategories.contains(cat);
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        _selectedCategories.remove(cat);
-                        if (_selectedCategories.isEmpty) {
-                          _selectedCategories.add('Uncategorized');
-                        }
-                      } else {
-                        _selectedCategories.remove('Uncategorized');
-                        _selectedCategories.add(cat);
-                      }
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? primaryColor
-                          : (isDark
-                                ? Colors.white.withValues(alpha: 0.06)
-                                : Colors.black.withValues(alpha: 0.04)),
-                      borderRadius: BorderRadius.circular(50),
-                      border: Border.all(
-                        color: isSelected
-                            ? primaryColor
-                            : (isDark
-                                  ? Colors.white.withValues(alpha: 0.12)
-                                  : Colors.black.withValues(alpha: 0.1)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: VideoNote.predefinedCategories.map((cat) {
+                    final isSelected = _selectedCategories.contains(cat);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategories
+                            ..clear()
+                            ..add(cat);
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primaryColor
+                              : (isDark
+                                    ? Colors.white.withValues(alpha: 0.06)
+                                    : Colors.black.withValues(alpha: 0.04)),
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: isSelected
+                                ? primaryColor
+                                : (isDark
+                                      ? Colors.white.withValues(alpha: 0.12)
+                                      : Colors.black.withValues(alpha: 0.1)),
+                          ),
+                        ),
+                        child: Text(
+                          cat,
+                          style: AppTheme.bodySmall(
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary),
+                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _customCategoryController,
+                        style: AppTheme.bodySmall(
+                          color: isDark
+                              ? AppTheme.darkTextPrimary
+                              : AppTheme.lightTextPrimary,
+                        ).copyWith(fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'Type a custom category...',
+                          hintStyle: AppTheme.bodySmall(
+                            color: isDark
+                                ? AppTheme.darkTextSecondary.withValues(alpha: 0.5)
+                                : AppTheme.lightTextSecondary.withValues(alpha: 0.5),
+                          ).copyWith(fontSize: 13),
+                          prefixIcon: Icon(
+                            Icons.add_circle_outline,
+                            size: 18,
+                            color: primaryColor.withValues(alpha: 0.6),
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : Colors.black.withValues(alpha: 0.03),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                        onFieldSubmitted: (value) {
+                          final trimmed = value.trim();
+                          if (trimmed.isNotEmpty) {
+                            setState(() {
+                              _selectedCategories
+                                ..clear()
+                                ..add(trimmed);
+                              _customCategoryController.clear();
+                            });
+                          }
+                        },
                       ),
                     ),
-                    child: Text(
-                      cat,
-                      style: AppTheme.bodySmall(
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark
-                                  ? AppTheme.darkTextPrimary
-                                  : AppTheme.lightTextPrimary),
-                      ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        final trimmed = _customCategoryController.text.trim();
+                        if (trimmed.isNotEmpty) {
+                          setState(() {
+                            _selectedCategories
+                              ..clear()
+                              ..add(trimmed);
+                            _customCategoryController.clear();
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check,
+                          size: 18,
+                          color: primaryColor,
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  ],
+                ),
+              ],
             ),
           )
         else
