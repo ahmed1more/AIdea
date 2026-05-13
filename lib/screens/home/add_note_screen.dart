@@ -156,7 +156,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   }
 
   Future<void> _startGeneration({bool deepScan = false}) async {
-    if (!_formKey.currentState!.validate()) return;
+    // When deepScan is true, the Form widget is not mounted (the Deep Scan
+    // prompt replaces the input view), so _formKey.currentState is null.
+    // Skip validation — the URL was already validated on the first attempt.
+    if (!deepScan && !_formKey.currentState!.validate()) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
