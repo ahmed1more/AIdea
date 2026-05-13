@@ -2,17 +2,37 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+/// Thrown when the backend signals that the video has no subtitles
+/// and a Deep Scan is required to extract content from the audio.
+class NoTranscriptException implements Exception {
+  final String message;
+  const NoTranscriptException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class AiService {
   /// Generate notes from a video URL/title using the configured AI model.
   /// Returns a map with 'notes' (String) and 'keyPoints' (`List<String>`).
+  ///
+  /// Set [deepScan] to `true` to bypass subtitle extraction and use
+  /// AI audio-to-text instead (slower, but works for videos without subtitles).
   static Future<Map<String, dynamic>> generateNotes({
     required String videoUrl,
     required String videoTitle,
     String? aideaUrl,
     String? idToken,
     String language = 'en',
+    bool deepScan = false,
   }) async {
-    return await _callAideaModel(videoUrl, aideaUrl!, idToken!, language);
+    return await _callAideaModel(
+      videoUrl,
+      aideaUrl!,
+      idToken!,
+      language,
+      deepScan,
+    );
   }
 
   static Future<Map<String, dynamic>> _callAideaModel(
@@ -20,6 +40,7 @@ class AiService {
     String baseUrl,
     String idToken,
     String language,
+    bool deepScan,
   ) async {
     // Ensure URL ends with /generate
     final urlString = baseUrl.endsWith('/')
@@ -33,7 +54,11 @@ class AiService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $idToken',
       },
-      body: jsonEncode({'youtube_url': videoUrl, 'language': language}),
+      body: jsonEncode({
+        'youtube_url': videoUrl,
+        'language': language,
+        'deep_scan': deepScan,
+      }),
     );
 
     if (response.statusCode != 200) {
@@ -78,6 +103,15 @@ class AiService {
           'category': data['category'] ?? 'Uncategorized',
         };
       } else if (status == 'failed') {
+        final errorCode = data['error_code'] as String?;
+
+        // Specific error: video has no subtitles
+        if (errorCode == 'NO_TRANSCRIPT') {
+          throw NoTranscriptException(
+            data['message'] ?? 'No subtitles found. Deep scan required.',
+          );
+        }
+
         throw Exception(
           'Generation failed: ${data['message'] ?? 'Unknown error'}',
         );

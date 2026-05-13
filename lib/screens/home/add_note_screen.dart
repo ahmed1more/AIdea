@@ -10,6 +10,8 @@ import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../models/video_note.dart';
 import '../../services/ai_service.dart';
+// Import the exception class from ai_service.dart
+// (NoTranscriptException is re-exported via ai_service.dart)
 import '../../theme/app_theme.dart';
 import 'note_detail_screen.dart';
 
@@ -34,6 +36,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   int _currentStep = 0;
   String _statusMessage = '';
   String? _errorMessage;
+  bool _noTranscript = false;
 
   // Result state
   String _generatedNotes = '';
@@ -152,7 +155,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     return 'https://via.placeholder.com/320x180';
   }
 
-  Future<void> _startGeneration() async {
+  Future<void> _startGeneration({bool deepScan = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -170,7 +173,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _isProcessing = true;
       _currentStep = 0;
       _errorMessage = null;
-      _statusMessage = 'Starting...';
+      _noTranscript = false;
+      _statusMessage = deepScan ? 'Starting Deep Scan...' : 'Starting...';
     });
 
     try {
@@ -179,7 +183,12 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       await Future.delayed(const Duration(milliseconds: 800));
 
       // Step 1: Extracting content
-      _updateStep(1, 'Connecting to video source...');
+      _updateStep(
+        1,
+        deepScan
+            ? 'Deep Scan: extracting audio...'
+            : 'Connecting to video source...',
+      );
 
       String? idToken = await firebase_auth.FirebaseAuth.instance.currentUser
           ?.getIdToken();
@@ -189,13 +198,19 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       await Future.delayed(const Duration(milliseconds: 500));
 
       // Step 2: AI Processing (actual API call)
-      _updateStep(2, 'AI is analyzing your video...');
+      _updateStep(
+        2,
+        deepScan
+            ? 'AI is transcribing audio (this may take a few minutes)...'
+            : 'AI is analyzing your video...',
+      );
 
       final result = await AiService.generateNotes(
         videoUrl: _videoUrlController.text.trim(),
         videoTitle: _videoTitleController.text.trim(),
         aideaUrl: settings.aideaUrl,
         idToken: idToken,
+        deepScan: deepScan,
       );
 
       // Step 3: Structuring
@@ -221,13 +236,26 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
         _isComplete = true;
       });
+    } on NoTranscriptException catch (e) {
+      // Video has no subtitles — show Deep Scan prompt
+      debugPrint('No transcript available: $e');
+      setState(() {
+        _isProcessing = false;
+        _noTranscript = true;
+        _errorMessage = null;
+      });
     } catch (e) {
       debugPrint('AI Generation Error: $e');
       setState(() {
         _isProcessing = false;
+        _noTranscript = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
     }
+  }
+
+  void _startDeepScan() {
+    _startGeneration(deepScan: true);
   }
 
   void _updateStep(int step, String message) {
@@ -305,6 +333,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     setState(() {
       _isProcessing = false;
       _isComplete = false;
+      _noTranscript = false;
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
@@ -323,7 +352,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          _isProcessing || _isComplete ? '' : 'New Summary',
+          _isProcessing || _isComplete || _noTranscript ? '' : 'New Summary',
           style: AppTheme.headline3(
             color: isDark
                 ? AppTheme.darkTextPrimary
@@ -350,9 +379,119 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeOutCubic,
-        child: _isProcessing
-            ? _buildProcessingView(context, isDark)
-            : _buildInputView(context, isDark),
+        child: _noTranscript
+            ? _buildDeepScanPrompt(context, isDark)
+            : _isProcessing
+                ? _buildProcessingView(context, isDark)
+                : _buildInputView(context, isDark),
+      ),
+    );
+  }
+
+  // ─── DEEP SCAN PROMPT ───────────────────────────────────────────────
+  Widget _buildDeepScanPrompt(BuildContext context, bool isDark) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    const warningColor = Color(0xFFF59E0B); // Amber-500
+
+    return Center(
+      key: const ValueKey('deep_scan'),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // ─── Icon ─────────────────────────────────────
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: warningColor.withValues(alpha: 0.12),
+                ),
+                child: const Icon(
+                  Icons.subtitles_off_rounded,
+                  color: warningColor,
+                  size: 48,
+                ),
+              ).animate().scale(
+                duration: 500.ms,
+                curve: Curves.elasticOut,
+              ),
+
+              const SizedBox(height: 32),
+
+              // ─── Title ────────────────────────────────────
+              Text(
+                'No Subtitles Found',
+                style: AppTheme.headline2(
+                  color: isDark
+                      ? AppTheme.darkTextPrimary
+                      : AppTheme.lightTextPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ).animate().fadeIn(delay: 100.ms),
+
+              const SizedBox(height: 16),
+
+              // ─── Description ──────────────────────────────
+              Text(
+                'This video does not have subtitles.\n'
+                'Would you like to use AI to extract the text '
+                'from the audio? (This may take a few minutes)',
+                style: AppTheme.bodyMedium(
+                  color: isDark
+                      ? AppTheme.darkTextSecondary
+                      : AppTheme.lightTextSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ).animate().fadeIn(delay: 200.ms),
+
+              const SizedBox(height: 40),
+
+              // ─── Deep Scan Button ─────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: ElevatedButton.icon(
+                  onPressed: _startDeepScan,
+                  icon: const Icon(Icons.hearing, size: 22),
+                  label: Text(
+                    'START DEEP SCAN',
+                    style: AppTheme.button(
+                      color: Colors.white,
+                    ).copyWith(letterSpacing: 1.5),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                    elevation: 8,
+                    shadowColor: primaryColor.withValues(alpha: 0.4),
+                  ),
+                ),
+              ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+
+              const SizedBox(height: 16),
+
+              // ─── Go Back Button ───────────────────────────
+              TextButton(
+                onPressed: _resetToInput,
+                child: Text(
+                  'Go back',
+                  style: AppTheme.bodyMedium(
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.lightTextSecondary,
+                  ),
+                ),
+              ).animate().fadeIn(delay: 500.ms),
+            ],
+          ),
+        ),
       ),
     );
   }
