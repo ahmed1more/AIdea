@@ -101,6 +101,7 @@ class AiService {
           'notes': data['notes'] ?? 'Notes generation completed.',
           'keyPoints': List<String>.from(data['keyPoints'] ?? []),
           'category': data['category'] ?? 'Uncategorized',
+          'suggestedCategory': data['suggestedCategory'] ?? '',
         };
       } else if (status == 'failed') {
         final errorCode = data['error_code'] as String?;

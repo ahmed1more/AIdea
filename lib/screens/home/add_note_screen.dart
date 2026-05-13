@@ -42,6 +42,10 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   String _generatedNotes = '';
   List<String> _selectedCategories = ['Uncategorized'];
   List<String> _generatedKeyPoints = [];
+  String _suggestedCategory = '';
+
+  // Custom category input
+  final _customCategoryController = TextEditingController();
   bool _isComplete = false;
 
   // Metadata state
@@ -133,6 +137,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     _videoUrlController.removeListener(_onUrlChanged);
     _videoUrlController.dispose();
     _videoTitleController.dispose();
+    _customCategoryController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -226,15 +231,21 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       setState(() {
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
+        _suggestedCategory = ((result['suggestedCategory'] as String?) ?? '').trim();
 
-        // AI may suggest multiple categories or a single string
-        final aiCat = result['category'] ?? result['categories'];
-        if (aiCat is List) {
-          _selectedCategories = List<String>.from(aiCat);
-        } else if (aiCat is String && aiCat.isNotEmpty) {
-          _selectedCategories = [aiCat];
+        // Use the LLM-suggested category as the pre-selected value
+        if (_suggestedCategory.isNotEmpty) {
+          _selectedCategories = [_suggestedCategory];
         } else {
-          _selectedCategories = ['Uncategorized'];
+          // Fallback to the keyword-mapped category from topic_classifier
+          final aiCat = result['category'] ?? result['categories'];
+          if (aiCat is List && aiCat.isNotEmpty) {
+            _selectedCategories = List<String>.from(aiCat);
+          } else if (aiCat is String && aiCat.isNotEmpty) {
+            _selectedCategories = [aiCat];
+          } else {
+            _selectedCategories = ['Uncategorized'];
+          }
         }
 
         _isComplete = true;
@@ -342,6 +353,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _generatedNotes = '';
       _selectedCategories = ['Uncategorized'];
       _generatedKeyPoints = [];
+      _suggestedCategory = '';
+      _customCategoryController.clear();
     });
   }
 
@@ -1148,7 +1161,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
               // ─── Category Picker ───────────────────────────
               _SectionLabel(
                 icon: Icons.label_outline,
-                label: 'CATEGORIES',
+                label: 'CATEGORY',
                 count: _selectedCategories.length,
                 color: primaryColor,
                 isDark: isDark,
@@ -1161,59 +1174,252 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                   color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: VideoNote.predefinedCategories.map((cat) {
-                    final isSelected = _selectedCategories.contains(cat);
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedCategories.remove(cat);
-                            if (_selectedCategories.isEmpty) {
-                              _selectedCategories.add('Uncategorized');
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── AI-Suggested Category (if available) ──────────
+                    if (_suggestedCategory.isNotEmpty) ...[
+                      Text(
+                        'AI Suggested',
+                        style: AppTheme.labelSmall(
+                          color: isDark
+                              ? AppTheme.darkTextSecondary
+                              : AppTheme.lightTextSecondary,
+                        ).copyWith(letterSpacing: 1.5, fontSize: 10),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (_selectedCategories.contains(_suggestedCategory)) {
+                              _selectedCategories.remove(_suggestedCategory);
+                              if (_selectedCategories.isEmpty) {
+                                _selectedCategories.add('Uncategorized');
+                              }
+                            } else {
+                              _selectedCategories
+                                ..clear()
+                                ..add(_suggestedCategory);
                             }
-                          } else {
-                            _selectedCategories.remove('Uncategorized');
-                            _selectedCategories.add(cat);
-                          }
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? primaryColor
-                              : (isDark
-                                    ? Colors.white.withValues(alpha: 0.06)
-                                    : Colors.black.withValues(alpha: 0.04)),
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(
-                            color: isSelected
-                                ? primaryColor
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: _selectedCategories.contains(_suggestedCategory)
+                                ? LinearGradient(
+                                    colors: [
+                                      primaryColor,
+                                      primaryColor.withValues(alpha: 0.8),
+                                    ],
+                                  )
+                                : null,
+                            color: _selectedCategories.contains(_suggestedCategory)
+                                ? null
                                 : (isDark
-                                      ? Colors.white.withValues(alpha: 0.12)
-                                      : Colors.black.withValues(alpha: 0.1)),
+                                      ? Colors.white.withValues(alpha: 0.06)
+                                      : Colors.black.withValues(alpha: 0.04)),
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                              color: _selectedCategories.contains(_suggestedCategory)
+                                  ? primaryColor
+                                  : (isDark
+                                        ? Colors.white.withValues(alpha: 0.12)
+                                        : Colors.black.withValues(alpha: 0.1)),
+                              width: _selectedCategories.contains(_suggestedCategory)
+                                  ? 1.5
+                                  : 1.0,
+                            ),
+                            boxShadow: _selectedCategories.contains(_suggestedCategory)
+                                ? [
+                                    BoxShadow(
+                                      color: primaryColor.withValues(alpha: 0.25),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 14,
+                                color: _selectedCategories.contains(_suggestedCategory)
+                                    ? Colors.white
+                                    : primaryColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _suggestedCategory,
+                                style: AppTheme.bodySmall(
+                                  color: _selectedCategories.contains(_suggestedCategory)
+                                      ? Colors.white
+                                      : (isDark
+                                            ? AppTheme.darkTextPrimary
+                                            : AppTheme.lightTextPrimary),
+                                ).copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Text(
-                          cat,
-                          style: AppTheme.bodySmall(
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark
-                                      ? AppTheme.darkTextPrimary
-                                      : AppTheme.lightTextPrimary),
-                          ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
-                        ),
                       ),
-                    );
-                  }).toList(),
+                      const SizedBox(height: 16),
+                      Divider(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.06),
+                        height: 1,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Or choose manually',
+                        style: AppTheme.labelSmall(
+                          color: isDark
+                              ? AppTheme.darkTextSecondary
+                              : AppTheme.lightTextSecondary,
+                        ).copyWith(letterSpacing: 1.5, fontSize: 10),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    // ── Predefined Category Chips ─────────────────────
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: VideoNote.predefinedCategories.map((cat) {
+                        final isSelected = _selectedCategories.contains(cat);
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              // Single-select: clear and set
+                              _selectedCategories
+                                ..clear()
+                                ..add(cat);
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? primaryColor
+                                  : (isDark
+                                        ? Colors.white.withValues(alpha: 0.06)
+                                        : Colors.black.withValues(alpha: 0.04)),
+                              borderRadius: BorderRadius.circular(50),
+                              border: Border.all(
+                                color: isSelected
+                                    ? primaryColor
+                                    : (isDark
+                                          ? Colors.white.withValues(alpha: 0.12)
+                                          : Colors.black.withValues(alpha: 0.1)),
+                              ),
+                            ),
+                            child: Text(
+                              cat,
+                              style: AppTheme.bodySmall(
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? AppTheme.darkTextPrimary
+                                          : AppTheme.lightTextPrimary),
+                              ).copyWith(fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    // ── Custom Category Input ─────────────────────────
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _customCategoryController,
+                            style: AppTheme.bodySmall(
+                              color: isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary,
+                            ).copyWith(fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'Type a custom category...',
+                              hintStyle: AppTheme.bodySmall(
+                                color: isDark
+                                    ? AppTheme.darkTextSecondary.withValues(alpha: 0.5)
+                                    : AppTheme.lightTextSecondary.withValues(alpha: 0.5),
+                              ).copyWith(fontSize: 13),
+                              prefixIcon: Icon(
+                                Icons.add_circle_outline,
+                                size: 18,
+                                color: primaryColor.withValues(alpha: 0.6),
+                              ),
+                              filled: true,
+                              fillColor: isDark
+                                  ? Colors.white.withValues(alpha: 0.04)
+                                  : Colors.black.withValues(alpha: 0.03),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(50),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            onFieldSubmitted: (value) {
+                              final trimmed = value.trim();
+                              if (trimmed.isNotEmpty) {
+                                setState(() {
+                                  _selectedCategories
+                                    ..clear()
+                                    ..add(trimmed);
+                                  _customCategoryController.clear();
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            final trimmed = _customCategoryController.text.trim();
+                            if (trimmed.isNotEmpty) {
+                              setState(() {
+                                _selectedCategories
+                                  ..clear()
+                                  ..add(trimmed);
+                                _customCategoryController.clear();
+                              });
+                            }
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.check,
+                              size: 18,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ).animate().fadeIn(delay: 550.ms),
 
