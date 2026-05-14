@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../../theme/app_theme.dart';
+import '../../widgets/shared_video_card.dart';
+import '../home/add_note_screen.dart';
 
 class RecommendationsScreen extends StatefulWidget {
   const RecommendationsScreen({super.key});
@@ -76,16 +78,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     }
   }
 
-  Future<void> _openVideo(String videoId) async {
-    final appUrl = Uri.parse('youtube://www.youtube.com/watch?v=$videoId');
-    final webUrl = Uri.parse('https://www.youtube.com/watch?v=$videoId');
-
-    if (await canLaunchUrl(appUrl)) {
-      await launchUrl(appUrl);
-    } else {
-      await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-    }
-  }
+  // Video launching removed in favor of navigating to AddNoteScreen
 
   Widget _buildColdStartBanner(bool isDark) {
     final progress = (interactionsCount / interactionsNeeded).clamp(0.0, 1.0);
@@ -213,115 +206,38 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 
-  Widget _buildVideoCard(dynamic video, bool isDark) {
+  Widget _buildVideoCard(dynamic video, BuildContext context) {
     final videoId = video['videoId'] as String?;
+    final title = video['title'] ?? 'Untitled';
+    final category = video['channelTitle'] ?? 'Recommendation';
+    final thumbnail = video['thumbnail'] ?? '';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: videoId != null ? () => _openVideo(videoId) : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.network(
-              video['thumbnail'] ?? '',
-              width: double.infinity,
-              height: 180,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                height: 180,
-                color: Colors.grey.withValues(alpha: 0.2),
-                child: const Center(
-                  child: FaIcon(
-                    FontAwesomeIcons.youtube,
-                    size: 40,
-                    color: Colors.red,
-                  ),
-                ),
+    return SharedVideoCard(
+      title: title,
+      thumbnail: thumbnail,
+      categories: [category],
+      dateString: 'Recently recommended',
+      showActions: false,
+      onTap: () {
+        if (videoId != null) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AddNoteScreen(
+                initialUrl: 'https://youtube.com/watch?v=$videoId',
+                initialTitle: title,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    video['title'] ?? 'Untitled',
-                    style: AppTheme.headline3(
-                      color: isDark
-                          ? AppTheme.darkTextPrimary
-                          : AppTheme.lightTextPrimary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const FaIcon(
-                        FontAwesomeIcons.youtube,
-                        size: 12,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          video['channelTitle'] ?? 'Unknown Channel',
-                          style: AppTheme.bodyMedium(
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : AppTheme.lightTextSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      // personalized badge
-                      if (isPersonalized)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.green.withValues(alpha: 0.4),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const FaIcon(
-                                FontAwesomeIcons.wandMagicSparkles,
-                                size: 10,
-                                color: Colors.green,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'For you',
-                                style: AppTheme.bodyMedium(
-                                  color: Colors.green,
-                                ).copyWith(fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          );
+        }
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
+    final isWide = size.width > 900;
 
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -337,17 +253,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
     return RefreshIndicator(
       onRefresh: loadRecommendations,
-      child: ListView.builder(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        itemCount: recommendations.length + (isPersonalized ? 0 : 1),
-        itemBuilder: (context, index) {
-          if (!isPersonalized && index == 0) {
-            return _buildColdStartBanner(isDark);
-          }
-
-          final video = recommendations[isPersonalized ? index : index - 1];
-          return _buildVideoCard(video, isDark);
-        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!isPersonalized) _buildColdStartBanner(isDark),
+            MasonryGridView.count(
+              crossAxisCount: isWide ? 4 : 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              itemCount: recommendations.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                final video = recommendations[index];
+                return _buildVideoCard(video, context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
