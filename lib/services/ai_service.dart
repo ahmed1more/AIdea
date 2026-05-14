@@ -11,8 +11,15 @@ class AiService {
     String? aideaUrl,
     String? idToken,
     String language = 'en',
+    ValueChanged<Map<String, dynamic>>? onStatus,
   }) async {
-    return await _callAideaModel(videoUrl, aideaUrl!, idToken!, language);
+    return await _callAideaModel(
+      videoUrl,
+      aideaUrl!,
+      idToken!,
+      language,
+      onStatus,
+    );
   }
 
   static Future<Map<String, dynamic>> _callAideaModel(
@@ -20,6 +27,7 @@ class AiService {
     String baseUrl,
     String idToken,
     String language,
+    ValueChanged<Map<String, dynamic>>? onStatus,
   ) async {
     // Ensure URL ends with /generate
     final urlString = baseUrl.endsWith('/')
@@ -46,13 +54,14 @@ class AiService {
     final taskId = data['task_id'];
 
     // Poll for status
-    return await _pollAideaTaskStatus(taskId, baseUrl, idToken);
+    return await _pollAideaTaskStatus(taskId, baseUrl, idToken, onStatus);
   }
 
   static Future<Map<String, dynamic>> _pollAideaTaskStatus(
     String taskId,
     String baseUrl,
     String idToken,
+    ValueChanged<Map<String, dynamic>>? onStatus,
   ) async {
     final statusUrlString = baseUrl.endsWith('/')
         ? '${baseUrl}status/$taskId'
@@ -70,8 +79,11 @@ class AiService {
 
       final data = jsonDecode(response.body);
       final status = data['status'];
+      if (data is Map<String, dynamic>) {
+        onStatus?.call(data);
+      }
 
-      if (status == 'completed') {
+      if (status == 'complete' || status == 'completed') {
         return {
           'notes': data['notes'] ?? 'Notes generation completed.',
           'keyPoints': List<String>.from(data['keyPoints'] ?? []),

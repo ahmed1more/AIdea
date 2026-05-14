@@ -31,6 +31,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   // Processing state
   bool _isProcessing = false;
+  bool _showDeepScanSteps = false;
   int _currentStep = 0;
   String _statusMessage = '';
   String? _errorMessage;
@@ -48,33 +49,66 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   late AnimationController _pulseController;
 
-  static const _processingSteps = [
+  static const _baseProcessingSteps = [
     {
       'icon': Icons.link,
       'label': 'Validating URL',
       'desc': 'Checking video link...',
+      'statuses': ['pending', 'validating_url'],
     },
     {
       'icon': Icons.cloud_download_outlined,
       'label': 'Extracting Content',
       'desc': 'Fetching video transcript...',
+      'statuses': ['extracting_content', 'transcribing'],
     },
     {
       'icon': Icons.auto_awesome,
       'label': 'AI Processing',
       'desc': 'Generating intelligent summary...',
+      'statuses': ['transcript_ready', 'ai_processing', 'generating_notes'],
     },
     {
       'icon': Icons.fact_check_outlined,
       'label': 'Structuring Notes',
       'desc': 'Organizing Key Points...',
+      'statuses': ['structuring_notes'],
     },
     {
       'icon': Icons.check_circle,
       'label': 'Complete',
       'desc': 'Your notes are ready!',
+      'statuses': ['complete', 'completed'],
     },
   ];
+
+  static const _deepScanProcessingSteps = [
+    {
+      'icon': Icons.graphic_eq,
+      'label': 'Extracting Audio',
+      'desc': 'Preparing audio for deep scan...',
+      'statuses': ['extracting_audio'],
+    },
+    {
+      'icon': Icons.record_voice_over_outlined,
+      'label': 'Transcribing Audio',
+      'desc': 'Converting speech to text...',
+      'statuses': ['transcribing_audio'],
+    },
+  ];
+
+  List<Map<String, Object>> get _visibleProcessingSteps {
+    if (!_showDeepScanSteps) return _baseProcessingSteps;
+
+    return [
+      _baseProcessingSteps[0],
+      _baseProcessingSteps[1],
+      ..._deepScanProcessingSteps,
+      _baseProcessingSteps[2],
+      _baseProcessingSteps[3],
+      _baseProcessingSteps[4],
+    ];
+  }
 
   @override
   void initState() {
@@ -168,6 +202,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
     setState(() {
       _isProcessing = true;
+      _showDeepScanSteps = false;
       _currentStep = 0;
       _errorMessage = null;
       _statusMessage = 'Starting...';
@@ -188,22 +223,26 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       }
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Step 2: AI Processing (actual API call)
-      _updateStep(2, 'AI is analyzing your video...');
+      // The server reports the remaining stages as it works.
+      _updateStep(1, 'Checking for available subtitles...');
 
       final result = await AiService.generateNotes(
         videoUrl: _videoUrlController.text.trim(),
         videoTitle: _videoTitleController.text.trim(),
         aideaUrl: settings.aideaUrl,
         idToken: idToken,
+        onStatus: _handleGenerationStatus,
       );
 
       // Step 3: Structuring
-      _updateStep(3, 'Organizing Recommendations...');
+      _updateStep(
+        _indexForStatus('structuring_notes'),
+        'Organizing Recommendations...',
+      );
       await Future.delayed(const Duration(milliseconds: 600));
 
       // Step 4: Complete
-      _updateStep(4, 'Your notes are ready!');
+      _updateStep(_indexForStatus('complete'), 'Your notes are ready!');
 
       setState(() {
         _generatedNotes = result['notes'] as String;
@@ -236,6 +275,65 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         _currentStep = step;
         _statusMessage = message;
       });
+    }
+  }
+
+  void _handleGenerationStatus(Map<String, dynamic> data) {
+    final status = data['status'] as String? ?? '';
+    if (status.isEmpty || !mounted) return;
+
+    setState(() {
+      if (_isDeepScanStatus(status) || data['usedDeepScan'] == true) {
+        _showDeepScanSteps = true;
+      }
+
+      final stepIndex = _indexForStatus(status);
+      if (stepIndex >= 0) {
+        _currentStep = stepIndex;
+      }
+
+      _statusMessage =
+          data['message'] as String? ?? _defaultStatusMessage(status);
+    });
+  }
+
+  bool _isDeepScanStatus(String status) {
+    return status == 'extracting_audio' || status == 'transcribing_audio';
+  }
+
+  int _indexForStatus(String status) {
+    final steps = _visibleProcessingSteps;
+    for (var i = 0; i < steps.length; i++) {
+      final statuses = steps[i]['statuses'];
+      if (statuses is List && statuses.contains(status)) {
+        return i;
+      }
+    }
+    return _currentStep;
+  }
+
+  String _defaultStatusMessage(String status) {
+    switch (status) {
+      case 'validating_url':
+        return 'Validating video URL...';
+      case 'extracting_content':
+      case 'transcribing':
+        return 'Checking for available subtitles...';
+      case 'extracting_audio':
+        return 'No subtitles found. Extracting audio for deep scan...';
+      case 'transcribing_audio':
+        return 'Transcribing audio with deep scan...';
+      case 'transcript_ready':
+      case 'ai_processing':
+      case 'generating_notes':
+        return 'AI is analyzing your video...';
+      case 'structuring_notes':
+        return 'Organizing Recommendations...';
+      case 'complete':
+      case 'completed':
+        return 'Your notes are ready!';
+      default:
+        return _statusMessage.isNotEmpty ? _statusMessage : 'Working...';
     }
   }
 
@@ -305,6 +403,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     setState(() {
       _isProcessing = false;
       _isComplete = false;
+      _showDeepScanSteps = false;
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
@@ -681,8 +780,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
               const SizedBox(height: 48),
 
               // ─── Step indicators ──────────────────────────
-              ...List.generate(_processingSteps.length, (index) {
-                final step = _processingSteps[index];
+              ...List.generate(_visibleProcessingSteps.length, (index) {
+                final step = _visibleProcessingSteps[index];
                 final isActive = index == _currentStep;
                 final isCompleted = index < _currentStep;
                 final isPending = index > _currentStep;
