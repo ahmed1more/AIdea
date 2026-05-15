@@ -10,8 +10,6 @@ import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../models/video_note.dart';
 import '../../services/ai_service.dart';
-// Import the exception class from ai_service.dart
-// (NoTranscriptException is re-exported via ai_service.dart)
 import '../../theme/app_theme.dart';
 import 'note_detail_screen.dart';
 
@@ -36,7 +34,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   int _currentStep = 0;
   String _statusMessage = '';
   String? _errorMessage;
-  bool _noTranscript = false;
+  bool _hasSubtitlesError = false;
 
   // Result state
   String _generatedNotes = '';
@@ -160,11 +158,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     return 'https://via.placeholder.com/320x180';
   }
 
-  Future<void> _startGeneration({bool deepScan = false}) async {
-    // When deepScan is true, the Form widget is not mounted (the Deep Scan
-    // prompt replaces the input view), so _formKey.currentState is null.
-    // Skip validation — the URL was already validated on the first attempt.
-    if (!deepScan && !_formKey.currentState!.validate()) return;
+  Future<void> _startGeneration() async {
+    if (!_formKey.currentState!.validate()) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
@@ -181,8 +176,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _isProcessing = true;
       _currentStep = 0;
       _errorMessage = null;
-      _noTranscript = false;
-      _statusMessage = deepScan ? 'Starting Deep Scan...' : 'Starting...';
+      _hasSubtitlesError = false;
+      _statusMessage = 'Starting...';
     });
 
     try {
@@ -193,9 +188,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       // Step 1: Extracting content
       _updateStep(
         1,
-        deepScan
-            ? 'Deep Scan: extracting audio...'
-            : 'Connecting to video source...',
+        'Connecting to video source...',
       );
 
       String? idToken = await firebase_auth.FirebaseAuth.instance.currentUser
@@ -208,9 +201,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       // Step 2: AI Processing (actual API call)
       _updateStep(
         2,
-        deepScan
-            ? 'AI is transcribing audio (this may take a few minutes)...'
-            : 'AI is analyzing your video...',
+        'AI is analyzing your video...',
       );
 
       final result = await AiService.generateNotes(
@@ -218,7 +209,6 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         videoTitle: _videoTitleController.text.trim(),
         aideaUrl: settings.aideaUrl,
         idToken: idToken,
-        deepScan: deepScan,
       );
 
       // Step 3: Structuring
@@ -250,27 +240,23 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
         _isComplete = true;
       });
-    } on NoTranscriptException catch (e) {
-      // Video has no subtitles — show Deep Scan prompt
-      debugPrint('No transcript available: $e');
-      setState(() {
-        _isProcessing = false;
-        _noTranscript = true;
-        _errorMessage = null;
-      });
     } catch (e) {
       debugPrint('AI Generation Error: $e');
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
       setState(() {
         _isProcessing = false;
-        _noTranscript = false;
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        if (errorMsg.contains('does not have subtitles')) {
+          _hasSubtitlesError = true;
+          _errorMessage = null;
+        } else {
+          _hasSubtitlesError = false;
+          _errorMessage = errorMsg;
+        }
       });
     }
   }
 
-  void _startDeepScan() {
-    _startGeneration(deepScan: true);
-  }
+
 
   void _updateStep(int step, String message) {
     if (mounted) {
@@ -359,7 +345,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     setState(() {
       _isProcessing = false;
       _isComplete = false;
-      _noTranscript = false;
+      _hasSubtitlesError = false;
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
@@ -380,7 +366,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          _isProcessing || _isComplete || _noTranscript ? '' : 'New Summary',
+          _isProcessing || _isComplete || _hasSubtitlesError ? '' : 'New Summary',
           style: AppTheme.headline3(
             color: isDark
                 ? AppTheme.darkTextPrimary
@@ -407,8 +393,8 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeOutCubic,
-        child: _noTranscript
-            ? _buildDeepScanPrompt(context, isDark)
+        child: _hasSubtitlesError
+            ? _buildSubtitlesErrorPrompt(context, isDark)
             : _isProcessing
                 ? _buildProcessingView(context, isDark)
                 : _buildInputView(context, isDark),
@@ -416,13 +402,12 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     );
   }
 
-  // ─── DEEP SCAN PROMPT ───────────────────────────────────────────────
-  Widget _buildDeepScanPrompt(BuildContext context, bool isDark) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+  // ─── ERROR PROMPT ───────────────────────────────────────────────
+  Widget _buildSubtitlesErrorPrompt(BuildContext context, bool isDark) {
     const warningColor = Color(0xFFF59E0B); // Amber-500
 
     return Center(
-      key: const ValueKey('deep_scan'),
+      key: const ValueKey('subtitles_error'),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: Padding(
@@ -466,8 +451,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
               // ─── Description ──────────────────────────────
               Text(
                 'This video does not have subtitles.\n'
-                'Would you like to use AI to extract the text '
-                'from the audio? (This may take a few minutes)',
+                'Please try another video.',
                 style: AppTheme.bodyMedium(
                   color: isDark
                       ? AppTheme.darkTextSecondary
@@ -478,30 +462,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
               const SizedBox(height: 40),
 
-              // ─── Deep Scan Button ─────────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: ElevatedButton.icon(
-                  onPressed: _startDeepScan,
-                  icon: const Icon(Icons.hearing, size: 22),
-                  label: Text(
-                    'START DEEP SCAN',
-                    style: AppTheme.button(
-                      color: Colors.white,
-                    ).copyWith(letterSpacing: 1.5),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    ),
-                    elevation: 8,
-                    shadowColor: primaryColor.withValues(alpha: 0.4),
-                  ),
-                ),
-              ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+
 
               const SizedBox(height: 16),
 
