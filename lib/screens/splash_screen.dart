@@ -23,19 +23,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // If not web, show splash for a few seconds. If web, skip delay.
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     if (!kIsWeb) {
-      await Future.delayed(const Duration(milliseconds: 2500));
+      // Run splash animation and auth init in parallel; wait for both
+      await Future.wait([
+        Future.delayed(const Duration(milliseconds: 2500)),
+        authProvider.initialized,
+      ]);
     } else {
-      // Small delay on web to allow Firebase to initialize and resolve auth state.
-      await Future.delayed(const Duration(milliseconds: 100));
+      // On web, just wait for auth to resolve (no splash animation)
+      await authProvider.initialized;
     }
 
     if (!mounted) return;
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // Auth state is already resolved via AuthProvider._initAuth() in the constructor.
-    // We just needed to wait for the splash animation.
 
     if (authProvider.isAuthenticated) {
       Navigator.of(context).pushReplacement(

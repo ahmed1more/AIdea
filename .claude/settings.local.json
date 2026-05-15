@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Graduation\\\\aidea\" -Recurse -Filter \"*.dart\")",
+      "Bash(Select-Object -First 30)"
+    ]
+  }
+}

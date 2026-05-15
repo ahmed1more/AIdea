@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,12 +13,16 @@ class AuthProvider extends ChangeNotifier {
   bool _isUploadingPhoto = false;
   String? _errorMessage;
   DateTime? _lastResetEmailSent;
+  final Completer<void> _initCompleter = Completer<void>();
 
   AppUser? get user => _user;
   bool get isLoading => _isLoading;
   bool get isUploadingPhoto => _isUploadingPhoto;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
+
+  /// Completes when the initial auth state has been resolved.
+  Future<void> get initialized => _initCompleter.future;
 
   int get resetCooldownRemaining {
     if (_lastResetEmailSent == null) return 0;
@@ -36,13 +41,24 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _initAuth() async {
-    // 1. Try to load cached user first
+    // 1. Try to load cached user first (fast, from SharedPreferences)
     _user = await _authService.getCachedUser();
     if (_user != null) {
       notifyListeners();
     }
 
-    // 2. Listen to Firebase auth state changes
+    // 2. Wait for the first Firebase auth state event to resolve the real session
+    final firebaseUser = await _authService.authStateChanges.first;
+    if (firebaseUser != null) {
+      _user = await _authService.getUserData(firebaseUser.uid);
+    } else {
+      _user = null;
+      await _authService.clearCachedUser();
+    }
+    notifyListeners();
+    _initCompleter.complete();
+
+    // 3. Continue listening for future auth state changes (sign-in/sign-out)
     _authService.authStateChanges.listen((User? firebaseUser) async {
       if (firebaseUser != null) {
         _user = await _authService.getUserData(firebaseUser.uid);
