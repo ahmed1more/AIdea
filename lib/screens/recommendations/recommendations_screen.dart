@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../theme/app_theme.dart';
 import '../../widgets/shared_video_card.dart';
-import '../home/add_note_screen.dart';
 
 class RecommendationsScreen extends StatefulWidget {
   const RecommendationsScreen({super.key});
@@ -220,13 +220,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       showActions: false,
       onTap: () {
         if (videoId != null) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => AddNoteScreen(
-                initialUrl: 'https://youtube.com/watch?v=$videoId',
-                initialTitle: title,
-              ),
-            ),
+          launchUrl(
+            Uri.parse('https://www.youtube.com/watch?v=$videoId'),
+            mode: LaunchMode.externalApplication,
           );
         }
       },
