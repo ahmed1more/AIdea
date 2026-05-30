@@ -125,4 +125,51 @@ class AiService {
       return {};
     }
   }
+  /// Chat with a specific note — document-grounded Q&A.
+  /// Returns the AI-generated answer string.
+  static Future<String> chatWithNote({
+    required String noteContent,
+    required String question,
+    List<Map<String, String>>? history,
+    required String aideaUrl,
+    required String idToken,
+  }) async {
+    try {
+      final urlString = aideaUrl.endsWith('/')
+          ? '${aideaUrl}chat/note'
+          : '$aideaUrl/chat/note';
+      final url = Uri.parse(urlString);
+
+      final body = <String, dynamic>{
+        'note_content': noteContent,
+        'question': question,
+      };
+      if (history != null && history.isNotEmpty) {
+        body['history'] = history;
+      }
+
+      debugPrint('📡 Sending chat/note request to $url');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('❌ HTTP Error (${response.statusCode}): ${response.body}');
+        throw Exception(
+          'Chat error (${response.statusCode}): ${response.body}',
+        );
+      }
+
+      final data = jsonDecode(response.body);
+      return data['answer'] as String? ?? 'No response received.';
+    } catch (e) {
+      debugPrint('❌ Exception in chatWithNote: $e');
+      rethrow;
+    }
+  }
 }

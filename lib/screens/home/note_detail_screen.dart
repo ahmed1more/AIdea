@@ -10,7 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
-// Removed: import '../../widgets/custom_youtube_player.dart';
+import '../../widgets/note_chat_sheet.dart';
 // Removed: import 'package:youtube_player_flutter/youtube_player_flutter.dart' show YoutubePlayer;
 
 class NoteDetailScreen extends StatefulWidget {
@@ -201,6 +201,19 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       }
       _selectedCategories = List<String>.from(_note.categories);
     });
+  }
+
+  void _openChat() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => NoteChatSheet(
+        noteContent: _note.notes,
+        keyPoints: _note.keyPoints,
+        noteTitle: _note.videoTitle,
+      ),
+    );
   }
 
   String _readTime() {
@@ -946,6 +959,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           label: 'Edit',
                           isDark: isDark,
                           onTap: () => setState(() => _isEditing = true),
+                        ),
+                        _floatingDivider(isDark),
+                        _FloatingAction(
+                          icon: Icons.auto_awesome,
+                          label: 'Chat',
+                          isDark: isDark,
+                          onTap: _openChat,
                         ),
                         _floatingDivider(isDark),
                         _FloatingAction(
