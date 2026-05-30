@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _urlIsValid = false;
   bool _isUrlFieldFocused = false;
   bool _isAccountAvatarHovered = false;
+  bool _isInitialLoading = true;
 
   @override
   void initState() {
@@ -78,13 +80,30 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _loadNotes() {
+  Future<void> _loadNotes() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final notesProvider = Provider.of<NotesProvider>(context, listen: false);
     notesProvider.setCategoryFilter('All');
-    if (authProvider.user != null) {
-      notesProvider.loadUserNotes(authProvider.user!.id);
-      notesProvider.loadFavoriteNotes(authProvider.user!.id);
+
+    // The AuthProvider may still be resolving the AppUser from Firestore
+    // (the Firebase auth stream fires before getUserData completes).
+    // Wait for the AuthProvider to finish its initial resolution.
+    String? userId = authProvider.user?.id;
+    if (userId == null) {
+      await authProvider.initialized;
+      userId = authProvider.user?.id;
+    }
+
+    // Final fallback: use the Firebase Auth UID directly
+    userId ??= FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId != null && mounted) {
+      notesProvider.loadUserNotes(userId);
+      notesProvider.loadFavoriteNotes(userId);
+    }
+
+    if (mounted) {
+      setState(() => _isInitialLoading = false);
     }
   }
 
@@ -941,8 +960,11 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.only(bottom: 100),
       child: Consumer<NotesProvider>(
         builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+          if (_isInitialLoading || provider.isLoading) {
+            return const Padding(
+              padding: EdgeInsets.only(top: 140),
+              child: Center(child: CircularProgressIndicator()),
+            );
           }
           final notes = provider.notes;
           if (notes.isEmpty) {
@@ -965,8 +987,11 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.only(bottom: 100),
       child: Consumer<NotesProvider>(
         builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+          if (_isInitialLoading || provider.isLoading) {
+            return const Padding(
+              padding: EdgeInsets.only(top: 140),
+              child: Center(child: CircularProgressIndicator()),
+            );
           }
           final notes = provider.favoriteNotes;
           if (notes.isEmpty) {
