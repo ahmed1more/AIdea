@@ -55,4 +55,8 @@ aidea.env
 implementation_plan.md
 note 
 *.html
-
+.claude*
+node_modules
+serviceAccountKey.json
+*note*
+gen*
