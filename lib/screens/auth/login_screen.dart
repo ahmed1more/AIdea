@@ -163,17 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       curve: Curves.easeOut,
                     ),
 
-                const SizedBox(height: 8),
-
-                Text(
-                  'Access your editorial intelligence',
-                  style: AppTheme.bodyMedium(
-                    color: secondaryTextColor,
-                  ),
-                  textAlign: TextAlign.center,
-                ).animate().fadeIn(delay: 250.ms),
-
-                const SizedBox(height: 36),
+                const SizedBox(height: 20),
 
                 // ─── Continue with Google ─────────────────
                 Consumer<AuthProvider>(
