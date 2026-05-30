@@ -255,7 +255,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!isPersonalized) _buildColdStartBanner(isDark),
-            MasonryGridView.count(
+            AlignedGridView.count(
               crossAxisCount: isWide ? 4 : 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,

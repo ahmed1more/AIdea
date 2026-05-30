@@ -985,7 +985,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _notesGridView(List<VideoNote> notes, bool isWide) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: MasonryGridView.count(
+      child: AlignedGridView.count(
         crossAxisCount: isWide ? 4 : 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
