@@ -375,14 +375,20 @@ class _AddNoteScreenState extends State<AddNoteScreen>
     bool success = await notesProvider.createNote(note);
 
     if (success && mounted) {
-      final savedNotes = notesProvider.notes;
-      if (savedNotes.isNotEmpty) {
+      // The optimistic insert in createNote guarantees the new note is
+      // already at the top of the provider's list with a valid Firestore ID.
+      final savedNotes = notesProvider.allNotes;
+      final savedNote = savedNotes.isNotEmpty ? savedNotes.first : null;
+
+      if (savedNote != null && savedNote.id.isNotEmpty) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => NoteDetailScreen(note: savedNotes.first),
+            builder: (context) => NoteDetailScreen(note: savedNote),
           ),
         );
       } else {
+        // Fallback: just go back — the home screen will pick up the note
+        // from the Firestore snapshot stream.
         Navigator.of(context).pop();
       }
     } else if (mounted) {

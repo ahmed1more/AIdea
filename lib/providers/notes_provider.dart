@@ -108,14 +108,19 @@ class NotesProvider extends ChangeNotifier {
     try {
       String? noteId = await _databaseService.createNote(note);
       _isLoading = false;
-      notifyListeners();
       if (noteId != null) {
-        // We no longer optimistically add the note here.
-        // The Firestore snapshots() listener in DatabaseService will
-        // automatically detect the new document and update the stream,
-        // which will trigger loadUserNotes() and update the list.
+        // Optimistically add the note with its Firestore-assigned ID so
+        // the UI updates immediately. The Firestore snapshots() listener
+        // will eventually replace this with the server-confirmed version.
+        final savedNote = note.copyWith(id: noteId);
+        _notes.insert(0, savedNote);
+        if (savedNote.isFavorite) {
+          _favoriteNotes.insert(0, savedNote);
+        }
+        notifyListeners();
         return true;
       }
+      notifyListeners();
       return false;
     } catch (e) {
       _isLoading = false;
