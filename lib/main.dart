@@ -11,7 +11,10 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/notes_provider.dart';
 import 'providers/settings_provider.dart';
-import 'screens/splash_screen.dart';
+
+import 'screens/main_shell.dart';
+import 'screens/auth/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +62,20 @@ class AIdea extends StatelessWidget {
             themeMode: settings.themeMode,
             theme: settings.getLightTheme(),
             darkTheme: settings.getDarkTheme(),
-            home: const SplashScreen(),
+            home: StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (snapshot.hasData && snapshot.data != null) {
+                  return const MainShell();
+                }
+                return const LoginScreen();
+              },
+            ),
           );
         },
       ),
