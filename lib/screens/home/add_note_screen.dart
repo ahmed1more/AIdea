@@ -372,25 +372,21 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       updatedAt: DateTime.now(),
     );
 
-    bool success = await notesProvider.createNote(note);
+    final String? createdId = await notesProvider.createNote(note);
 
-    if (success && mounted) {
-      // The optimistic insert in createNote guarantees the new note is
-      // already at the top of the provider's list with a valid Firestore ID.
-      final savedNotes = notesProvider.allNotes;
-      final savedNote = savedNotes.isNotEmpty ? savedNotes.first : null;
+    if (createdId != null && mounted) {
+      // Find the saved note in the provider's list by its ID. If it's not there yet
+      // (due to stream latency or lag), fall back to a local copy with the ID.
+      final savedNote = notesProvider.allNotes.firstWhere(
+        (n) => n.id == createdId,
+        orElse: () => note.copyWith(id: createdId),
+      );
 
-      if (savedNote != null && savedNote.id.isNotEmpty) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => NoteDetailScreen(note: savedNote),
-          ),
-        );
-      } else {
-        // Fallback: just go back — the home screen will pick up the note
-        // from the Firestore snapshot stream.
-        Navigator.of(context).pop();
-      }
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => NoteDetailScreen(note: savedNote),
+        ),
+      );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1187,9 +1183,9 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _resetToInput,
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Regenerate'),
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 18),
+                      label: const Text('Cancel'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(

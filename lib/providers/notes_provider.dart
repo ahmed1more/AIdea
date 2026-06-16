@@ -100,7 +100,7 @@ class NotesProvider extends ChangeNotifier {
   }
 
   // Create a new note
-  Future<bool> createNote(VideoNote note) async {
+  Future<String?> createNote(VideoNote note) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -113,20 +113,22 @@ class NotesProvider extends ChangeNotifier {
         // the UI updates immediately. The Firestore snapshots() listener
         // will eventually replace this with the server-confirmed version.
         final savedNote = note.copyWith(id: noteId);
-        _notes.insert(0, savedNote);
-        if (savedNote.isFavorite) {
+        if (!_notes.any((n) => n.id == noteId)) {
+          _notes.insert(0, savedNote);
+        }
+        if (savedNote.isFavorite && !_favoriteNotes.any((n) => n.id == noteId)) {
           _favoriteNotes.insert(0, savedNote);
         }
         notifyListeners();
-        return true;
+        return noteId;
       }
       notifyListeners();
-      return false;
+      return null;
     } catch (e) {
       _isLoading = false;
       _errorMessage = 'Failed to create note: $e';
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
