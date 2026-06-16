@@ -63,6 +63,7 @@ class NotesProvider extends ChangeNotifier {
     for (final note in _notes) {
       cats.addAll(note.categories);
     }
+    cats.remove('Uncategorized');
     final sorted = cats.toList()..sort();
     return ['All', ...sorted];
   }

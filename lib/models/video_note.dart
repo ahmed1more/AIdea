@@ -25,40 +25,21 @@ class VideoNote {
     required this.createdAt,
     required this.updatedAt,
     this.isFavorite = false,
-  }) : categories = categories ?? const ['Uncategorized'];
+  }) : categories = categories ?? const ['Technology & AI'];
 
   // ─── Predefined Categories ────────────────────────────────────────────
   static const List<String> predefinedCategories = [
-    'Uncategorized',
-    'Education',
-    'Technology & AI',
-    'Science',
-    'Business & Finance',
-    'Self-Development',
-    'Entertainment',
-    'Gaming',
-    'Sports & Fitness',
-    'Music',
-    'Art & Design',
-    'Cooking & Food',
-    'Travel',
-    'Health & Wellness',
-    'News & Politics',
-    'History',
-    'Philosophy',
-    'Mathematics',
-    'Programming',
-    'Psychology',
-    'Language Learning',
-    'Film & Cinema',
-    'Lifestyle',
-    'Nature & Environment',
-    'DIY & Crafts',
-    'Spirituality',
-    'Relationships',
-    'Law & Society',
-    'Economics',
-    'Architecture & Design',
+    "Technology & AI",
+    "Business & Finance",
+    "Education",
+    "Science",
+    "Productivity & Self-Growth",
+    "Health & Wellness",
+    "Sports & Fitness",
+    "Entertainment",
+    "History",
+    "Philosophy",
+    "Arts & Culture"
   ];
 
   // Convert to Map for Firestore — field names must match note.txt schema exactly
@@ -88,9 +69,9 @@ class VideoNote {
       if (catData is List) {
         categoriesList = List<String>.from(catData);
       } else if (catData is String) {
-        categoriesList = catData.isNotEmpty ? [catData] : ['Uncategorized'];
+        categoriesList = catData.isNotEmpty ? [catData] : ['Technology & AI'];
       } else {
-        categoriesList = ['Uncategorized'];
+        categoriesList = ['Technology & AI'];
       }
     } else if (data.containsKey('video_categories') &&
         data['video_categories'] is List) {
@@ -98,7 +79,13 @@ class VideoNote {
     } else if (data.containsKey('categories') && data['categories'] is List) {
       categoriesList = List<String>.from(data['categories'] as List);
     } else {
-      categoriesList = ['Uncategorized'];
+      categoriesList = ['Technology & AI'];
+    }
+
+    // Completely remove 'Uncategorized' and ensure there's a valid default
+    categoriesList.remove('Uncategorized');
+    if (categoriesList.isEmpty) {
+      categoriesList.add('Technology & AI');
     }
 
     // Helper for Timestamp conversion

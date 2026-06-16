@@ -87,7 +87,8 @@ class AiService {
         return {
           'notes': data['notes'] ?? 'Notes generation completed.',
           'keyPoints': List<String>.from(data['keyPoints'] ?? []),
-          'category': data['category'] ?? 'Uncategorized',
+          'category': data['category'] ?? 'Technology & AI',
+          'suggested_category': data['suggested_category'],
         };
       } else if (status == 'failed') {
         throw Exception(

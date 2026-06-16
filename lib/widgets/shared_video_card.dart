@@ -36,17 +36,24 @@ class SharedVideoCard extends StatelessWidget {
         return FontAwesomeIcons.microchip;
       case 'Business & Finance':
         return FontAwesomeIcons.chartLine;
-      case 'Education & Science':
+      case 'Education':
+        return FontAwesomeIcons.graduationCap;
+      case 'Science':
         return FontAwesomeIcons.flask;
       case 'Productivity & Self-Growth':
         return FontAwesomeIcons.rocket;
-      case 'News & Politics':
-        return FontAwesomeIcons.newspaper;
-      case 'Entertainment & Lifestyle':
-        return FontAwesomeIcons.mugHot;
-      case 'Health & Sports':
+      case 'Health & Wellness':
         return FontAwesomeIcons.heartPulse;
-      case 'Uncategorized':
+      case 'Sports & Fitness':
+        return FontAwesomeIcons.dumbbell;
+      case 'Entertainment':
+        return FontAwesomeIcons.film;
+      case 'History':
+        return FontAwesomeIcons.landmark;
+      case 'Philosophy':
+        return FontAwesomeIcons.brain;
+      case 'Arts & Culture':
+        return FontAwesomeIcons.palette;
       default:
         return FontAwesomeIcons.folderOpen;
     }
@@ -164,7 +171,7 @@ class SharedVideoCard extends StatelessWidget {
                             Row(
                               children: [
                                 FaIcon(
-                                  _getCategoryIcon(categories.isNotEmpty ? categories.first : 'Uncategorized'),
+                                  _getCategoryIcon(categories.isNotEmpty ? categories.first : 'Technology & AI'),
                                   size: 10,
                                   color: settings.accentColor.withValues(alpha: 0.7),
                                 ),
@@ -173,7 +180,7 @@ class SharedVideoCard extends StatelessWidget {
                                   child: Text(
                                     categories.length > 1 
                                         ? '${categories.first} +${categories.length - 1}'
-                                        : (categories.isNotEmpty ? categories.first : 'Uncategorized'),
+                                        : (categories.isNotEmpty ? categories.first : 'Technology & AI'),
                                     style: GoogleFonts.inter(
                                       color: isDark ? Colors.white54 : Colors.grey[600],
                                       fontSize: 10,

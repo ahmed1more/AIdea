@@ -38,7 +38,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
 
   // Result state
   String _generatedNotes = '';
-  List<String> _selectedCategories = ['Uncategorized'];
+  List<String> _selectedCategories = ['Technology & AI'];
   List<String> _generatedKeyPoints = [];
   bool _isComplete = false;
 
@@ -248,14 +248,19 @@ class _AddNoteScreenState extends State<AddNoteScreen>
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
 
-        // AI may suggest multiple categories or a single string
-        final aiCat = result['category'] ?? result['categories'];
-        if (aiCat is List) {
-          _selectedCategories = List<String>.from(aiCat);
-        } else if (aiCat is String && aiCat.isNotEmpty) {
-          _selectedCategories = [aiCat];
+        // Fix the auto-selection state logic
+        String? suggestedCat;
+        final rawSuggested = result['suggested_category'] ?? result['category'] ?? result['categories'];
+        if (rawSuggested is String) {
+          suggestedCat = rawSuggested;
+        } else if (rawSuggested is List && rawSuggested.isNotEmpty) {
+          suggestedCat = rawSuggested.first as String?;
+        }
+
+        if (suggestedCat != null && VideoNote.predefinedCategories.contains(suggestedCat)) {
+          _selectedCategories = [suggestedCat];
         } else {
-          _selectedCategories = ['Uncategorized'];
+          _selectedCategories = [VideoNote.predefinedCategories.first];
         }
 
         _isComplete = true;
@@ -365,7 +370,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       thumbnail: _getThumbnail(_videoUrlController.text),
       notes: _generatedNotes,
       categories: _selectedCategories.isEmpty
-          ? ['Uncategorized']
+          ? [VideoNote.predefinedCategories.first]
           : _selectedCategories,
       keyPoints: _generatedKeyPoints,
       createdAt: DateTime.now(),
@@ -409,7 +414,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _currentStep = 0;
       _errorMessage = null;
       _generatedNotes = '';
-      _selectedCategories = ['Uncategorized'];
+      _selectedCategories = [VideoNote.predefinedCategories.first];
       _generatedKeyPoints = [];
     });
   }
@@ -1131,10 +1136,14 @@ class _AddNoteScreenState extends State<AddNoteScreen>
                           if (isSelected) {
                             _selectedCategories.remove(cat);
                             if (_selectedCategories.isEmpty) {
-                              _selectedCategories.add('Uncategorized');
+                              _selectedCategories.add(VideoNote.predefinedCategories.first);
                             }
                           } else {
-                            _selectedCategories.remove('Uncategorized');
+                            if (_selectedCategories.length == 1 &&
+                                _selectedCategories.first == VideoNote.predefinedCategories.first &&
+                                cat != VideoNote.predefinedCategories.first) {
+                              _selectedCategories.remove(VideoNote.predefinedCategories.first);
+                            }
                             _selectedCategories.add(cat);
                           }
                         });
