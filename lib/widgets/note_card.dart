@@ -38,14 +38,24 @@ class NoteCard extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('CANCEL', style: AppTheme.labelLarge(color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary)),
+          child: Text(
+            'CANCEL',
+            style: AppTheme.labelLarge(
+              color: isDark
+                  ? AppTheme.darkTextSecondary
+                  : AppTheme.lightTextSecondary,
+            ),
+          ),
         ),
         TextButton(
           onPressed: () {
             context.read<NotesProvider>().deleteNote(note.id, note.userId);
             Navigator.pop(context);
           },
-          child: Text('DELETE', style: AppTheme.labelLarge(color: Colors.redAccent)),
+          child: Text(
+            'DELETE',
+            style: AppTheme.labelLarge(color: Colors.redAccent),
+          ),
         ),
       ],
     );
@@ -60,11 +70,10 @@ class NoteCard extends StatelessWidget {
       dateString: DateFormat('MMM dd, yyyy').format(note.createdAt),
       isFavorite: note.isFavorite,
       showActions: true,
+      durationSeconds: note.videoDuration,
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => NoteDetailScreen(note: note),
-          ),
+          MaterialPageRoute(builder: (context) => NoteDetailScreen(note: note)),
         );
       },
       onFavoriteTap: () => _toggleFavorite(context),

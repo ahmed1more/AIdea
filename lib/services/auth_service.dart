@@ -47,7 +47,6 @@ class AuthService {
           email: email,
           displayName: displayName,
           createdAt: DateTime.now(),
-          notesCount: 0,
           gender: gender,
           birthDate: birthDate,
         );
@@ -70,6 +69,12 @@ class AuthService {
             'Failed to setup your database profile. Check Firestore rules or connection. Error: $e',
           );
         }
+
+        // Initialize analytics document for the new user
+        _firestore.collection('analytics').doc(user.uid).set(
+          {'notesCount': 0, 'hoursSaved': 0.0},
+          SetOptions(merge: true),
+        ).catchError((e) => debugPrint('Error initializing analytics: $e'));
 
         // Cache the user locally
         cacheUser(newUser);
@@ -134,7 +139,6 @@ class AuthService {
         email: user.email ?? email,
         displayName: user.displayName ?? email.split('@').first,
         createdAt: DateTime.now(),
-        notesCount: 0,
       );
       await cacheUser(fallbackUser);
       return fallbackUser;
@@ -208,13 +212,19 @@ class AuthService {
           displayName: user.displayName ?? 'AIdea User',
           photoUrl: user.photoURL,
           createdAt: DateTime.now(),
-          notesCount: 0,
         );
 
         await _firestore.collection('users').doc(user.uid).set({
           ...newUser.toMap(),
           'provider': provider,
         });
+
+        // Initialize analytics document for the new user
+        _firestore.collection('analytics').doc(user.uid).set(
+          {'notesCount': 0, 'hoursSaved': 0.0},
+          SetOptions(merge: true),
+        ).catchError((e) => debugPrint('Error initializing analytics: $e'));
+
         await cacheUser(newUser);
         return newUser;
       }
@@ -227,7 +237,6 @@ class AuthService {
         displayName: user.displayName ?? 'AIdea User',
         photoUrl: user.photoURL,
         createdAt: DateTime.now(),
-        notesCount: 0,
       );
       await cacheUser(fallbackUser);
       return fallbackUser;
@@ -302,7 +311,6 @@ class AuthService {
           displayName:
               user.displayName ?? user.email?.split('@').first ?? 'User',
           createdAt: DateTime.now(),
-          notesCount: 0,
         );
         await cacheUser(fallbackUser);
         return fallbackUser;
@@ -528,6 +536,11 @@ class AuthService {
 
       // Delete Firestore user document
       await _firestore.collection('users').doc(user.uid).delete();
+
+      // Delete analytics document
+      try {
+        await _firestore.collection('analytics').doc(user.uid).delete();
+      } catch (_) {}
 
       // Delete all user's notes
       final notesSnapshot = await _firestore

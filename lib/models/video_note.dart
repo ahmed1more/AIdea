@@ -12,6 +12,7 @@ class VideoNote {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isFavorite;
+  final int videoDuration;
 
   VideoNote({
     required this.id,
@@ -25,6 +26,7 @@ class VideoNote {
     required this.createdAt,
     required this.updatedAt,
     this.isFavorite = false,
+    this.videoDuration = 0,
   }) : categories = categories ?? const ['Technology & AI'];
 
   // ─── Predefined Categories ────────────────────────────────────────────
@@ -55,6 +57,7 @@ class VideoNote {
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'isFavorite': isFavorite,
+      'videoDuration': videoDuration,
     };
   }
 
@@ -115,6 +118,18 @@ class VideoNote {
       }
     }
 
+    int videoDuration = data['videoDuration'] ?? data['video_duration'] ?? 0;
+    if (videoDuration == 0) {
+      final notesContent = data['notes'] ?? data['summary_content'] ?? '';
+      final regExp = RegExp(r'(?:المدة|Duration):\s*\**(\d+):(\d+)');
+      final match = regExp.firstMatch(notesContent);
+      if (match != null) {
+        final minutes = int.tryParse(match.group(1) ?? '0') ?? 0;
+        final seconds = int.tryParse(match.group(2) ?? '0') ?? 0;
+        videoDuration = (minutes * 60) + seconds;
+      }
+    }
+
     return VideoNote(
       id: doc.id,
       userId: data['userId'] ?? data['user_id'] ?? '',
@@ -127,6 +142,7 @@ class VideoNote {
       createdAt: parseDate('createdAt'),
       updatedAt: parseDate('updatedAt'),
       isFavorite: data['isFavorite'] ?? false,
+      videoDuration: videoDuration,
     );
   }
 
@@ -143,6 +159,7 @@ class VideoNote {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isFavorite,
+    int? videoDuration,
   }) {
     return VideoNote(
       id: id ?? this.id,
@@ -156,6 +173,7 @@ class VideoNote {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
+      videoDuration: videoDuration ?? this.videoDuration,
     );
   }
 }

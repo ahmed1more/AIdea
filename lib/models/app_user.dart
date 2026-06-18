@@ -7,7 +7,6 @@ class AppUser {
   final String displayName;
   final String? photoUrl;
   final DateTime createdAt;
-  final int notesCount;
   final String? gender;
   final String? birthDate;
 
@@ -17,7 +16,6 @@ class AppUser {
     required this.displayName,
     this.photoUrl,
     required this.createdAt,
-    this.notesCount = 0,
     this.gender,
     this.birthDate,
   });
@@ -30,7 +28,6 @@ class AppUser {
       'displayName': displayName,
       'photoUrl': photoUrl,
       'createdAt': Timestamp.fromDate(createdAt),
-      'notesCount': notesCount,
       'gender': gender,
       'birthDate': birthDate,
     };
@@ -45,7 +42,6 @@ class AppUser {
       displayName: data['displayName'] ?? '',
       photoUrl: data['photoUrl'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      notesCount: data['notesCount'] ?? 0,
       gender: data['gender'],
       birthDate: data['birthDate'],
     );
@@ -58,7 +54,6 @@ class AppUser {
     String? displayName,
     String? photoUrl,
     DateTime? createdAt,
-    int? notesCount,
     String? gender,
     String? birthDate,
   }) {
@@ -68,7 +63,6 @@ class AppUser {
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt ?? this.createdAt,
-      notesCount: notesCount ?? this.notesCount,
       gender: gender ?? this.gender,
       birthDate: birthDate ?? this.birthDate,
     );
@@ -82,7 +76,6 @@ class AppUser {
       'displayName': displayName,
       'photoUrl': photoUrl,
       'createdAt': createdAt.toIso8601String(),
-      'notesCount': notesCount,
       'gender': gender,
       'birthDate': birthDate,
     };
@@ -98,7 +91,6 @@ class AppUser {
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
-      notesCount: map['notesCount'] ?? 0,
       gender: map['gender'],
       birthDate: map['birthDate'],
     );

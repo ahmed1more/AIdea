@@ -13,15 +13,18 @@ class DatabaseService {
           .add(note.toMap())
           .timeout(const Duration(seconds: 30));
 
-      // Update user's notes count
+      // Update analytics: increment notesCount and hoursSaved
       _firestore
-          .collection('users')
+          .collection('analytics')
           .doc(note.userId)
           .set(
-            {'notesCount': FieldValue.increment(1)},
+            {
+              'notesCount': FieldValue.increment(1),
+              'hoursSaved': FieldValue.increment(note.videoDuration / 3600.0),
+            },
             SetOptions(merge: true),
           )
-          .catchError((e) => debugPrint('Error updating notes count: $e'));
+          .catchError((e) => debugPrint('Error updating analytics: $e'));
 
       return docRef.id;
     } catch (e) {
@@ -137,18 +140,49 @@ class DatabaseService {
   // Delete a note
   Future<bool> deleteNote(String noteId, String userId) async {
     try {
+      // Fetch the note first to retrieve its videoDuration for analytics
+      int videoDuration = 0;
+      try {
+        final noteDoc = await _firestore.collection('notes').doc(noteId).get();
+        if (noteDoc.exists) {
+          final data = noteDoc.data();
+          if (data != null) {
+            videoDuration = data['videoDuration'] ?? data['video_duration'] ?? 0;
+            // Fallback: parse duration from markdown content
+            if (videoDuration == 0) {
+              final notesContent = data['notes'] ?? data['summary_content'] ?? '';
+              final regExp = RegExp(r'(?:المدة|Duration):\s*\**(\d+):(\d+)');
+              final match = regExp.firstMatch(notesContent);
+              if (match != null) {
+                final minutes = int.tryParse(match.group(1) ?? '0') ?? 0;
+                final seconds = int.tryParse(match.group(2) ?? '0') ?? 0;
+                videoDuration = (minutes * 60) + seconds;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error fetching note for duration: $e');
+      }
+
       await _firestore
           .collection('notes')
           .doc(noteId)
           .delete()
           .timeout(const Duration(seconds: 30));
 
-      // Update user's notes count
+      // Update analytics: decrement notesCount and hoursSaved
       _firestore
-          .collection('users')
+          .collection('analytics')
           .doc(userId)
-          .update({'notesCount': FieldValue.increment(-1)})
-          .catchError((e) => debugPrint('Error updating notes count: $e'));
+          .set(
+            {
+              'notesCount': FieldValue.increment(-1),
+              'hoursSaved': FieldValue.increment(-videoDuration / 3600.0),
+            },
+            SetOptions(merge: true),
+          )
+          .catchError((e) => debugPrint('Error updating analytics: $e'));
 
       return true;
     } catch (e) {

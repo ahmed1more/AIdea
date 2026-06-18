@@ -16,6 +16,7 @@ class SharedVideoCard extends StatelessWidget {
   final VoidCallback? onFavoriteTap;
   final VoidCallback? onDeleteTap;
   final bool showActions;
+  final int? durationSeconds;
 
   const SharedVideoCard({
     super.key,
@@ -28,6 +29,7 @@ class SharedVideoCard extends StatelessWidget {
     this.onFavoriteTap,
     this.onDeleteTap,
     this.showActions = true,
+    this.durationSeconds,
   });
 
   IconData _getCategoryIcon(String category) {
@@ -59,10 +61,27 @@ class SharedVideoCard extends StatelessWidget {
     }
   }
 
+  String? _formatDuration() {
+    final seconds = durationSeconds;
+    if (seconds == null || seconds <= 0) return null;
+
+    final duration = Duration(seconds: seconds);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final remainingSeconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+    }
+
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = Provider.of<SettingsProvider>(context);
+    final formattedDuration = _formatDuration();
 
     return RepaintBoundary(
       child: Animate(
@@ -79,7 +98,9 @@ class SharedVideoCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: (isDark ? Colors.black : Colors.grey).withValues(alpha: 0.1),
+                color: (isDark ? Colors.black : Colors.grey).withValues(
+                  alpha: 0.1,
+                ),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -111,7 +132,9 @@ class SharedVideoCard extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    color: settings.accentColor.withValues(alpha: 0.1),
+                                    color: settings.accentColor.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     child: Icon(
                                       FontAwesomeIcons.circlePlay,
                                       size: 40,
@@ -150,7 +173,7 @@ class SharedVideoCard extends StatelessWidget {
                             ),
                           ],
                         ),
-  
+
                       Padding(
                         padding: const EdgeInsets.all(10),
                         child: Column(
@@ -171,18 +194,28 @@ class SharedVideoCard extends StatelessWidget {
                             Row(
                               children: [
                                 FaIcon(
-                                  _getCategoryIcon(categories.isNotEmpty ? categories.first : 'Technology & AI'),
+                                  _getCategoryIcon(
+                                    categories.isNotEmpty
+                                        ? categories.first
+                                        : 'Technology & AI',
+                                  ),
                                   size: 10,
-                                  color: settings.accentColor.withValues(alpha: 0.7),
+                                  color: settings.accentColor.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    categories.length > 1 
+                                    categories.length > 1
                                         ? '${categories.first} +${categories.length - 1}'
-                                        : (categories.isNotEmpty ? categories.first : 'Technology & AI'),
+                                        : (categories.isNotEmpty
+                                              ? categories.first
+                                              : 'Technology & AI'),
                                     style: GoogleFonts.inter(
-                                      color: isDark ? Colors.white54 : Colors.grey[600],
+                                      color: isDark
+                                          ? Colors.white54
+                                          : Colors.grey[600],
                                       fontSize: 10,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -195,21 +228,59 @@ class SharedVideoCard extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  dateString,
-                                  style: GoogleFonts.inter(
-                                    color: isDark ? Colors.white30 : Colors.grey[400],
-                                    fontSize: 10,
+                                Expanded(
+                                  child: Text(
+                                    dateString,
+                                    style: GoogleFonts.inter(
+                                      color: isDark
+                                          ? Colors.white30
+                                          : Colors.grey[400],
+                                      fontSize: 10,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                if (formattedDuration != null) ...[
+                                  const SizedBox(width: 8),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      FaIcon(
+                                        FontAwesomeIcons.clock,
+                                        size: 10,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.grey[500],
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        formattedDuration,
+                                        style: GoogleFonts.inter(
+                                          color: isDark
+                                              ? Colors.white38
+                                              : Colors.grey[500],
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                                if (showActions) const SizedBox(width: 10),
                                 if (showActions)
                                   Row(
                                     children: [
                                       GestureDetector(
                                         onTap: onFavoriteTap,
                                         child: Icon(
-                                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                                          color: isFavorite ? Colors.red : (isDark ? Colors.white30 : Colors.grey[400]),
+                                          isFavorite
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: isFavorite
+                                              ? Colors.red
+                                              : (isDark
+                                                    ? Colors.white30
+                                                    : Colors.grey[400]),
                                           size: 16,
                                         ),
                                       ),
@@ -218,7 +289,9 @@ class SharedVideoCard extends StatelessWidget {
                                         onTap: onDeleteTap,
                                         child: Icon(
                                           Icons.delete_outline,
-                                          color: Colors.red.withValues(alpha: 0.3),
+                                          color: Colors.red.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           size: 16,
                                         ),
                                       ),

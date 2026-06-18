@@ -40,6 +40,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
   String _generatedNotes = '';
   List<String> _selectedCategories = ['Technology & AI'];
   List<String> _generatedKeyPoints = [];
+  int _videoDuration = 0;
   bool _isComplete = false;
 
   // Metadata state
@@ -247,6 +248,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       setState(() {
         _generatedNotes = result['notes'] as String;
         _generatedKeyPoints = List<String>.from(result['keyPoints']);
+        _videoDuration = result['videoDuration'] as int? ?? 0;
 
         // Fix the auto-selection state logic
         String? suggestedCat;
@@ -375,6 +377,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       keyPoints: _generatedKeyPoints,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      videoDuration: _videoDuration,
     );
 
     final String? createdId = await notesProvider.createNote(note);
@@ -416,6 +419,7 @@ class _AddNoteScreenState extends State<AddNoteScreen>
       _generatedNotes = '';
       _selectedCategories = [VideoNote.predefinedCategories.first];
       _generatedKeyPoints = [];
+      _videoDuration = 0;
     });
   }
 

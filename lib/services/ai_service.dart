@@ -89,6 +89,7 @@ class AiService {
           'keyPoints': List<String>.from(data['keyPoints'] ?? []),
           'category': data['category'] ?? 'Technology & AI',
           'suggested_category': data['suggested_category'],
+          'videoDuration': data['videoDuration'] ?? 0,
         };
       } else if (status == 'failed') {
         throw Exception(
