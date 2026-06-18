@@ -345,10 +345,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       );
       final audioUrl = result['audioUrl'] as String;
 
-      await _speechPlayer.setUrl(
-        audioUrl,
-        headers: {'Authorization': 'Bearer $idToken'},
-      );
+      await _speechPlayer.setUrl(audioUrl);
 
       if (!mounted) return;
       setState(() => _speechAudioUrl = audioUrl);
