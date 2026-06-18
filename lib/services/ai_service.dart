@@ -102,6 +102,45 @@ class AiService {
     }
   }
 
+  static Future<Map<String, dynamic>> generateSpeech({
+    required String text,
+    required String title,
+    required String aideaUrl,
+    required String idToken,
+    String rate = '-10%',
+  }) async {
+    final urlString = aideaUrl.endsWith('/')
+        ? '${aideaUrl}tts/generate'
+        : '$aideaUrl/tts/generate';
+    final url = Uri.parse(urlString);
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      },
+      body: jsonEncode({'text': text, 'title': title, 'rate': rate}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Text to speech error (${response.statusCode}): ${response.body}',
+      );
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final audioUrl = data['audioUrl'] as String? ?? '';
+    final baseUri = Uri.parse(aideaUrl.endsWith('/') ? aideaUrl : '$aideaUrl/');
+
+    return {
+      ...data,
+      'audioUrl': audioUrl.startsWith('http')
+          ? audioUrl
+          : baseUri.resolve(audioUrl).toString(),
+    };
+  }
+
   /// Fetches video metadata (title, thumbnail) using YouTube oEmbed API.
   static Future<Map<String, String>> fetchVideoMetadata(String url) async {
     try {
@@ -127,6 +166,7 @@ class AiService {
       return {};
     }
   }
+
   /// Chat with a specific note — document-grounded Q&A.
   /// Returns the AI-generated answer string.
   static Future<String> chatWithNote({

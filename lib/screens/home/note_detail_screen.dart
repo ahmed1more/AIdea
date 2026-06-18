@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +13,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/video_note.dart';
 import '../../providers/notes_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/note_chat_sheet.dart';
 // Removed: import 'package:youtube_player_flutter/youtube_player_flutter.dart' show YoutubePlayer;
@@ -30,7 +36,17 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late List<TextEditingController> _keyPointsControllers;
   late List<String> _selectedCategories;
   final ScrollController _scrollController = ScrollController();
+  final AudioPlayer _speechPlayer = AudioPlayer();
+  StreamSubscription<PlayerState>? _speechStateSubscription;
+  StreamSubscription<Duration>? _speechPositionSubscription;
+  StreamSubscription<Duration?>? _speechDurationSubscription;
   double _scrollProgress = 0.0;
+  bool _isGeneratingSpeech = false;
+  bool _isSpeechPlaying = false;
+  bool _showSpeechPlayer = false;
+  Duration _speechPosition = Duration.zero;
+  Duration _speechDuration = Duration.zero;
+  String? _speechAudioUrl;
 
   // Video player state
   // Video player state removed
@@ -48,6 +64,26 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         .toList();
     _selectedCategories = List<String>.from(_note.categories);
     _scrollController.addListener(_updateScrollProgress);
+    _speechStateSubscription = _speechPlayer.playerStateStream.listen((state) {
+      if (!mounted) return;
+      setState(() => _isSpeechPlaying = state.playing);
+      if (state.processingState == ProcessingState.completed) {
+        _speechPlayer.seek(Duration.zero);
+        _speechPlayer.pause();
+      }
+    });
+    _speechPositionSubscription = _speechPlayer.positionStream.listen((
+      position,
+    ) {
+      if (!mounted) return;
+      setState(() => _speechPosition = position);
+    });
+    _speechDurationSubscription = _speechPlayer.durationStream.listen((
+      duration,
+    ) {
+      if (!mounted) return;
+      setState(() => _speechDuration = duration ?? Duration.zero);
+    });
 
     // Check if video exists logic removed
   }
@@ -61,6 +97,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
     _scrollController.removeListener(_updateScrollProgress);
     _scrollController.dispose();
+    _speechStateSubscription?.cancel();
+    _speechPositionSubscription?.cancel();
+    _speechDurationSubscription?.cancel();
+    _speechPlayer.dispose();
     super.dispose();
   }
 
@@ -149,7 +189,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           : _selectedCategories,
     });
 
-    if (success && mounted) {
+    if (success) {
+      await _speechPlayer.stop();
+      if (!mounted) return;
       setState(() {
         _note = _note.copyWith(
           videoTitle: newTitle,
@@ -160,6 +202,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               : _selectedCategories,
         );
         _isEditing = false;
+        _speechAudioUrl = null;
+        _showSpeechPlayer = false;
+        _speechPosition = Duration.zero;
+        _speechDuration = Duration.zero;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -214,6 +260,125 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         noteTitle: _note.videoTitle,
       ),
     );
+  }
+
+  String get _speechText {
+    final buffer = StringBuffer();
+    buffer.writeln(_note.videoTitle);
+    buffer.writeln();
+    buffer.writeln(_note.notes);
+
+    if (_note.keyPoints.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('Key points');
+      for (int i = 0; i < _note.keyPoints.length; i++) {
+        buffer.writeln('${i + 1}. ${_note.keyPoints[i]}');
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  String _formatAudioTime(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _toggleSpeech() async {
+    if (_isGeneratingSpeech) return;
+
+    if (_speechAudioUrl == null) {
+      await _generateSpeechAudio(playAfterLoad: true);
+      return;
+    }
+
+    setState(() => _showSpeechPlayer = true);
+    if (_isSpeechPlaying) {
+      await _speechPlayer.pause();
+    } else {
+      await _speechPlayer.play();
+    }
+  }
+
+  Future<void> _generateSpeechAudio({required bool playAfterLoad}) async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (settings.aideaUrl.isEmpty) {
+      _showMessage('AIdea server URL is not configured.');
+      return;
+    }
+
+    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken() ?? '';
+    if (idToken.isEmpty) {
+      _showMessage('Please sign in again to use text to speech.');
+      return;
+    }
+
+    setState(() {
+      _isGeneratingSpeech = true;
+      _showSpeechPlayer = true;
+    });
+
+    try {
+      final result = await AiService.generateSpeech(
+        text: _speechText,
+        title: _note.videoTitle,
+        aideaUrl: settings.aideaUrl,
+        idToken: idToken,
+      );
+      final audioUrl = result['audioUrl'] as String;
+
+      await _speechPlayer.setUrl(
+        audioUrl,
+        headers: {'Authorization': 'Bearer $idToken'},
+      );
+
+      if (!mounted) return;
+      setState(() => _speechAudioUrl = audioUrl);
+
+      if (playAfterLoad) {
+        await _speechPlayer.play();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (_speechAudioUrl == null) {
+          _showSpeechPlayer = false;
+        }
+      });
+      _showMessage('Could not generate speech: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingSpeech = false);
+      }
+    }
+  }
+
+  Future<void> _closeSpeechPlayer() async {
+    await _speechPlayer.stop();
+    if (!mounted) return;
+    setState(() {
+      _showSpeechPlayer = false;
+      _isSpeechPlaying = false;
+      _speechPosition = Duration.zero;
+    });
   }
 
   String _readTime() {
@@ -311,6 +476,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ),
 
           // ─── Floating Action Bar ───────────────────────────
+          if (_showSpeechPlayer) _buildSpeechPlayerBar(isDark, primaryColor),
           if (!_isEditing) _buildFloatingActionBar(isDark, primaryColor),
         ],
       ),
@@ -919,6 +1085,173 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   // ─── FLOATING ACTION BAR ──────────────────────────────────────────
+  Widget _buildSpeechPlayerBar(bool isDark, Color primaryColor) {
+    final totalMs = _speechDuration.inMilliseconds;
+    final positionMs = _speechPosition.inMilliseconds.clamp(
+      0,
+      totalMs > 0 ? totalMs : 1,
+    );
+
+    return Positioned(
+      bottom: _isEditing ? 24 : 104,
+      left: 24,
+      right: 24,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 10),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppTheme.darkSurface.withValues(alpha: 0.97)
+                  : Colors.white.withValues(alpha: 0.97),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isDark ? AppTheme.darkDivider : AppTheme.lightDivider,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.14),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: _isGeneratingSpeech
+                          ? null
+                          : () {
+                              _toggleSpeech();
+                            },
+                      borderRadius: BorderRadius.circular(50),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isGeneratingSpeech
+                              ? Icons.hourglass_top
+                              : (_isSpeechPlaying
+                                    ? Icons.pause
+                                    : Icons.play_arrow_rounded),
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isGeneratingSpeech
+                                ? 'Preparing audio...'
+                                : 'Listening to note',
+                            style: GoogleFonts.manrope(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? AppTheme.darkTextPrimary
+                                  : AppTheme.lightTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _note.videoTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : AppTheme.lightTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close player',
+                      icon: Icon(
+                        Icons.close,
+                        size: 18,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ),
+                      onPressed: _closeSpeechPlayer,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      _formatAudioTime(_speechPosition),
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 5,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 12,
+                          ),
+                        ),
+                        child: Slider(
+                          value: positionMs.toDouble(),
+                          min: 0,
+                          max: totalMs > 0 ? totalMs.toDouble() : 1,
+                          activeColor: primaryColor,
+                          inactiveColor: primaryColor.withValues(alpha: 0.18),
+                          onChanged: totalMs == 0
+                              ? null
+                              : (value) {
+                                  _speechPlayer.seek(
+                                    Duration(milliseconds: value.round()),
+                                  );
+                                },
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _speechDuration == Duration.zero
+                          ? '--:--'
+                          : _formatAudioTime(_speechDuration),
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: isDark
+                            ? AppTheme.darkTextSecondary
+                            : AppTheme.lightTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.15),
+    );
+  }
+
   Widget _buildFloatingActionBar(bool isDark, Color primaryColor) {
     return Positioned(
       bottom: 24,
@@ -927,7 +1260,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       child:
           Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                  constraints: const BoxConstraints(maxWidth: 480),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -966,6 +1299,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           label: 'Chat',
                           isDark: isDark,
                           onTap: _openChat,
+                        ),
+                        _floatingDivider(isDark),
+                        _FloatingAction(
+                          icon: _isGeneratingSpeech
+                              ? Icons.hourglass_top
+                              : (_isSpeechPlaying
+                                    ? Icons.pause_circle_outline
+                                    : Icons.volume_up_outlined),
+                          label: _isSpeechPlaying ? 'Pause' : 'Listen',
+                          isDark: isDark,
+                          isActive: _showSpeechPlayer,
+                          activeColor: primaryColor,
+                          onTap: () {
+                            _toggleSpeech();
+                          },
                         ),
                         _floatingDivider(isDark),
                         _FloatingAction(
