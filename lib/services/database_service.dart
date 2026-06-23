@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/video_note.dart';
+import '../models/analytics_model.dart';
 
 class DatabaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,19 +13,6 @@ class DatabaseService {
           .collection('notes')
           .add(note.toMap())
           .timeout(const Duration(seconds: 30));
-
-      // Update analytics: increment notesCount and hoursSaved
-      _firestore
-          .collection('analytics')
-          .doc(note.userId)
-          .set(
-            {
-              'notesCount': FieldValue.increment(1),
-              'hoursSaved': FieldValue.increment(note.videoDuration / 3600.0),
-            },
-            SetOptions(merge: true),
-          )
-          .catchError((e) => debugPrint('Error updating analytics: $e'));
 
       return docRef.id;
     } catch (e) {
@@ -140,8 +128,9 @@ class DatabaseService {
   // Delete a note
   Future<bool> deleteNote(String noteId, String userId) async {
     try {
-      // Fetch the note first to retrieve its videoDuration for analytics
+      // Fetch the note first to retrieve its videoDuration and category for analytics
       int videoDuration = 0;
+      String noteCategory = 'Technology & AI';
       try {
         final noteDoc = await _firestore.collection('notes').doc(noteId).get();
         if (noteDoc.exists) {
@@ -159,6 +148,13 @@ class DatabaseService {
                 videoDuration = (minutes * 60) + seconds;
               }
             }
+            // Parse category from note data
+            final catData = data['category'] ?? data['categories'] ?? data['video_categories'];
+            if (catData is List && catData.isNotEmpty) {
+              noteCategory = catData.first.toString();
+            } else if (catData is String && catData.isNotEmpty) {
+              noteCategory = catData;
+            }
           }
         }
       } catch (e) {
@@ -171,18 +167,8 @@ class DatabaseService {
           .delete()
           .timeout(const Duration(seconds: 30));
 
-      // Update analytics: decrement notesCount and hoursSaved
-      _firestore
-          .collection('analytics')
-          .doc(userId)
-          .set(
-            {
-              'notesCount': FieldValue.increment(-1),
-              'hoursSaved': FieldValue.increment(-videoDuration / 3600.0),
-            },
-            SetOptions(merge: true),
-          )
-          .catchError((e) => debugPrint('Error updating analytics: $e'));
+      // Update analytics: decrement
+      await decrementUserAnalytics(userId, videoDuration ~/ 60, noteCategory);
 
       return true;
     } catch (e) {
@@ -209,5 +195,221 @@ class DatabaseService {
               )
               .toList();
         });
+  }
+
+  // Initialize empty analytics document for a new user
+  Future<void> initializeUserAnalytics(String userId) async {
+    try {
+      await _firestore.collection('analytics').doc(userId).set({
+        'totalVideos': 0,
+        'totalMinutes': 0,
+        'totalSavedHours': 0.0,
+        'favoriteCategory': 'None',
+        'currentStreak': 0,
+        'thisWeekVideos': 0,
+        'thisMonthSavedHours': 0.0,
+        'categoryCount': <String, int>{},
+        'lastUpdated': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Error initializing analytics: $e');
+    }
+  }
+
+  // Update user analytics concurrently when a new note is saved
+  Future<void> updateUserAnalytics(String userId, VideoNote newNote) async {
+    final docRef = _firestore.collection('analytics').doc(userId);
+
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final docSnapshot = await transaction.get(docRef);
+        
+        AnalyticsModel analytics;
+        if (docSnapshot.exists) {
+          analytics = AnalyticsModel.fromFirestore(docSnapshot);
+        } else {
+          analytics = AnalyticsModel(userId: userId);
+        }
+
+        final now = DateTime.now();
+        final newTotalVideos = analytics.totalVideos + 1;
+        final newTotalMinutes = analytics.totalMinutes + newNote.durationMinutes;
+        final newTotalSavedHours = newTotalMinutes / 60.0;
+
+        // Update categoryCount
+        final newCategoryCount = Map<String, int>.from(analytics.categoryCount);
+        final noteCategory = newNote.category;
+        newCategoryCount[noteCategory] = (newCategoryCount[noteCategory] ?? 0) + 1;
+
+        // Recalculate favoriteCategory
+        String newFavoriteCategory = analytics.favoriteCategory;
+        if (newCategoryCount.isNotEmpty) {
+          String bestCat = analytics.favoriteCategory;
+          int maxCount = -1;
+          newCategoryCount.forEach((cat, count) {
+            if (count > maxCount) {
+              maxCount = count;
+              bestCat = cat;
+            }
+          });
+          newFavoriteCategory = bestCat;
+        }
+
+        // Reset logic for thisMonthSavedHours
+        double newThisMonthSavedHours = analytics.thisMonthSavedHours;
+        if (analytics.lastUpdated == null ||
+            now.year != analytics.lastUpdated!.year ||
+            now.month != analytics.lastUpdated!.month) {
+          newThisMonthSavedHours = newNote.durationMinutes / 60.0;
+        } else {
+          newThisMonthSavedHours += newNote.durationMinutes / 60.0;
+        }
+
+        // Reset logic for thisWeekVideos
+        int newThisWeekVideos = analytics.thisWeekVideos;
+        bool weekChanged = false;
+        if (analytics.lastUpdated == null) {
+          weekChanged = true;
+        } else {
+          final startOfNowWeek = DateTime(now.year, now.month, now.day)
+              .subtract(Duration(days: now.weekday - 1));
+          final startOfLastWeek = DateTime(
+                  analytics.lastUpdated!.year,
+                  analytics.lastUpdated!.month,
+                  analytics.lastUpdated!.day)
+              .subtract(Duration(days: analytics.lastUpdated!.weekday - 1));
+          if (startOfNowWeek != startOfLastWeek) {
+            weekChanged = true;
+          }
+        }
+
+        if (weekChanged) {
+          newThisWeekVideos = 1;
+        } else {
+          newThisWeekVideos += 1;
+        }
+
+        // Calculate currentStreak
+        int newStreak = analytics.currentStreak;
+        if (analytics.lastUpdated == null) {
+          newStreak = 1;
+        } else {
+          final lastDate = DateTime(analytics.lastUpdated!.year,
+              analytics.lastUpdated!.month, analytics.lastUpdated!.day);
+          final nowDate = DateTime(now.year, now.month, now.day);
+          final difference = nowDate.difference(lastDate).inDays;
+
+          if (difference == 1) {
+            newStreak += 1;
+          } else if (difference > 1) {
+            newStreak = 1;
+          } else if (difference == 0) {
+            if (newStreak == 0) {
+              newStreak = 1;
+            }
+          }
+        }
+
+        final updatedData = {
+          'totalVideos': newTotalVideos,
+          'totalMinutes': newTotalMinutes,
+          'totalSavedHours': newTotalSavedHours,
+          'favoriteCategory': newFavoriteCategory,
+          'currentStreak': newStreak,
+          'thisWeekVideos': newThisWeekVideos,
+          'thisMonthSavedHours': newThisMonthSavedHours,
+          'categoryCount': newCategoryCount,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
+
+        transaction.set(docRef, updatedData, SetOptions(merge: true));
+      }).timeout(const Duration(seconds: 15));
+    } catch (e) {
+      debugPrint('Error updating user analytics: $e');
+    }
+  }
+
+  // Decrement user analytics when a note is deleted to ensure consistency
+  Future<void> decrementUserAnalytics(
+      String userId, int durationMinutes, String category) async {
+    final docRef = _firestore.collection('analytics').doc(userId);
+
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final docSnapshot = await transaction.get(docRef);
+        if (!docSnapshot.exists) return;
+
+        final analytics = AnalyticsModel.fromFirestore(docSnapshot);
+        final now = DateTime.now();
+
+        final newTotalVideos = analytics.totalVideos > 0 ? analytics.totalVideos - 1 : 0;
+        final newTotalMinutes =
+            analytics.totalMinutes >= durationMinutes ? analytics.totalMinutes - durationMinutes : 0;
+        final newTotalSavedHours = newTotalMinutes / 60.0;
+
+        final newCategoryCount = Map<String, int>.from(analytics.categoryCount);
+        if (newCategoryCount.containsKey(category)) {
+          newCategoryCount[category] = (newCategoryCount[category] ?? 0) - 1;
+          if (newCategoryCount[category]! <= 0) {
+            newCategoryCount.remove(category);
+          }
+        }
+
+        String newFavoriteCategory = 'None';
+        if (newCategoryCount.isNotEmpty) {
+          String bestCat = 'None';
+          int maxCount = -1;
+          newCategoryCount.forEach((cat, count) {
+            if (count > maxCount) {
+              maxCount = count;
+              bestCat = cat;
+            }
+          });
+          newFavoriteCategory = bestCat;
+        }
+
+        double newThisMonthSavedHours = analytics.thisMonthSavedHours;
+        if (analytics.lastUpdated != null &&
+            now.year == analytics.lastUpdated!.year &&
+            now.month == analytics.lastUpdated!.month) {
+          final decHours = durationMinutes / 60.0;
+          newThisMonthSavedHours =
+              newThisMonthSavedHours >= decHours ? newThisMonthSavedHours - decHours : 0.0;
+        }
+
+        int newThisWeekVideos = analytics.thisWeekVideos;
+        bool sameWeek = false;
+        if (analytics.lastUpdated != null) {
+          final startOfNowWeek = DateTime(now.year, now.month, now.day)
+              .subtract(Duration(days: now.weekday - 1));
+          final startOfLastWeek = DateTime(
+                  analytics.lastUpdated!.year,
+                  analytics.lastUpdated!.month,
+                  analytics.lastUpdated!.day)
+              .subtract(Duration(days: analytics.lastUpdated!.weekday - 1));
+          if (startOfNowWeek == startOfLastWeek) {
+            sameWeek = true;
+          }
+        }
+        if (sameWeek) {
+          newThisWeekVideos = newThisWeekVideos > 0 ? newThisWeekVideos - 1 : 0;
+        }
+
+        final updatedData = {
+          'totalVideos': newTotalVideos,
+          'totalMinutes': newTotalMinutes,
+          'totalSavedHours': newTotalSavedHours,
+          'favoriteCategory': newFavoriteCategory,
+          'thisWeekVideos': newThisWeekVideos,
+          'thisMonthSavedHours': newThisMonthSavedHours,
+          'categoryCount': newCategoryCount,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
+
+        transaction.set(docRef, updatedData, SetOptions(merge: true));
+      }).timeout(const Duration(seconds: 15));
+    } catch (e) {
+      debugPrint('Error decrementing analytics: $e');
+    }
   }
 }

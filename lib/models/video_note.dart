@@ -176,4 +176,8 @@ class VideoNote {
       videoDuration: videoDuration ?? this.videoDuration,
     );
   }
+
+  // Getters for analytics mapping
+  int get durationMinutes => videoDuration ~/ 60;
+  String get category => categories.isNotEmpty ? categories.first : 'Technology & AI';
 }

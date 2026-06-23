@@ -114,6 +114,9 @@ class NotesProvider extends ChangeNotifier {
         // the UI updates immediately. The Firestore snapshots() listener
         // will eventually replace this with the server-confirmed version.
         final savedNote = note.copyWith(id: noteId);
+        // Update user analytics concurrently
+        unawaited(_databaseService.updateUserAnalytics(note.userId, savedNote));
+
         if (!_notes.any((n) => n.id == noteId)) {
           _notes.insert(0, savedNote);
         }

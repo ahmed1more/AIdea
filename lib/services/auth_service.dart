@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
+import 'database_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -71,10 +72,7 @@ class AuthService {
         }
 
         // Initialize analytics document for the new user
-        _firestore.collection('analytics').doc(user.uid).set(
-          {'notesCount': 0, 'hoursSaved': 0.0},
-          SetOptions(merge: true),
-        ).catchError((e) => debugPrint('Error initializing analytics: $e'));
+        DatabaseService().initializeUserAnalytics(user.uid);
 
         // Cache the user locally
         cacheUser(newUser);
@@ -220,10 +218,7 @@ class AuthService {
         });
 
         // Initialize analytics document for the new user
-        _firestore.collection('analytics').doc(user.uid).set(
-          {'notesCount': 0, 'hoursSaved': 0.0},
-          SetOptions(merge: true),
-        ).catchError((e) => debugPrint('Error initializing analytics: $e'));
+        DatabaseService().initializeUserAnalytics(user.uid);
 
         await cacheUser(newUser);
         return newUser;
