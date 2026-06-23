@@ -246,9 +246,9 @@ class DatabaseService {
         if (newCategoryCount.isNotEmpty) {
           String bestCat = analytics.favoriteCategory;
           int maxCount = -1;
-          newCategoryCount.forEach((cat, count) {
-            if (count > maxCount) {
-              maxCount = count;
+          newCategoryCount.forEach((cat, catCount) {
+            if (catCount > maxCount) {
+              maxCount = catCount;
               bestCat = cat;
             }
           });
@@ -359,9 +359,9 @@ class DatabaseService {
         if (newCategoryCount.isNotEmpty) {
           String bestCat = 'None';
           int maxCount = -1;
-          newCategoryCount.forEach((cat, count) {
-            if (count > maxCount) {
-              maxCount = count;
+          newCategoryCount.forEach((cat, catCount) {
+            if (catCount > maxCount) {
+              maxCount = catCount;
               bestCat = cat;
             }
           });
