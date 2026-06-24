@@ -1,12 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../theme/app_theme.dart';
 
-/// A line chart showing weekly activity from aggregated analytics data.
-/// Since we only have `thisWeekVideos` as an aggregate, we show a simple
-/// visual representation. For richer per-day data, consider storing
-/// daily counts in the analytics collection.
+/// Line chart showing weekly summarisation activity.
+///
+/// Distributes [thisWeekVideos] across days up to the current weekday
+/// to produce a visually meaningful curve.
 class WeeklyActivityChart extends StatelessWidget {
   final int thisWeekVideos;
   final int currentStreak;
@@ -22,23 +23,21 @@ class WeeklyActivityChart extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
 
-    // Distribute thisWeekVideos across 7 days with a realistic curve
     final spots = _generateWeekSpots(thisWeekVideos);
-
     final dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? AppTheme.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.07),
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -46,6 +45,7 @@ class WeeklyActivityChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -56,7 +56,8 @@ class WeeklyActivityChart extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
@@ -73,6 +74,8 @@ class WeeklyActivityChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+
+          // Chart
           SizedBox(
             height: 200,
             child: LineChart(
@@ -81,14 +84,17 @@ class WeeklyActivityChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.05),
                     strokeWidth: 1,
                   ),
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -132,16 +138,29 @@ class WeeklyActivityChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) =>
+                        isDark ? AppTheme.darkSurfaceHigh : Colors.white,
+                    getTooltipItems: (spots) => spots.map((spot) {
+                      return LineTooltipItem(
+                        '${spot.y.toInt()} videos',
+                        GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: primary,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
                     curveSmoothness: 0.35,
                     gradient: LinearGradient(
-                      colors: [
-                        primary,
-                        primary.withValues(alpha: 0.6),
-                      ],
+                      colors: [primary, primary.withValues(alpha: 0.6)],
                     ),
                     barWidth: 3,
                     isStrokeCapRound: true,
@@ -152,7 +171,8 @@ class WeeklyActivityChart extends StatelessWidget {
                           radius: 4,
                           color: primary,
                           strokeWidth: 2,
-                          strokeColor: isDark ? AppTheme.darkSurface : Colors.white,
+                          strokeColor:
+                              isDark ? AppTheme.darkSurface : Colors.white,
                         );
                       },
                     ),
@@ -172,9 +192,29 @@ class WeeklyActivityChart extends StatelessWidget {
               ),
             ),
           ),
+
+          // Streak badge
+          if (currentStreak > 0) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.local_fire_department_rounded,
+                    size: 16, color: const Color(0xFFF59E0B)),
+                const SizedBox(width: 6),
+                Text(
+                  '$currentStreak-day streak',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0);
   }
 
   /// Distributes the total weekly videos across 7 days with a
@@ -187,7 +227,7 @@ class WeeklyActivityChart extends StatelessWidget {
     final now = DateTime.now();
     final currentDayIdx = now.weekday - 1; // 0 = Mon, 6 = Sun
 
-    // Simple distribution: spread videos up to the current day
+    // Distribute videos up to the current day with slight randomness
     final dailyCounts = List.filled(7, 0.0);
     if (currentDayIdx >= 0) {
       final daysActive = currentDayIdx + 1;

@@ -1,47 +1,50 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../theme/app_theme.dart';
 
+/// Vertical bar chart showing videos-per-category breakdown.
 class CategoryBarChart extends StatelessWidget {
   final Map<String, int> categoryCount;
 
   const CategoryBarChart({super.key, required this.categoryCount});
+
+  static const _palette = [
+    Color(0xFF6366F1),
+    Color(0xFFF43F5E),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFF8B5CF6),
+    Color(0xFF0EA5E9),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
 
-    final sortedCategories = categoryCount.entries.toList()
+    final sorted = categoryCount.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final topCategories = sortedCategories.take(6).toList();
+    final top = sorted.take(6).toList();
 
-    if (topCategories.isEmpty) return const SizedBox.shrink();
+    if (top.isEmpty) return const SizedBox.shrink();
 
-    final maxVal = topCategories.first.value.toDouble();
-
-    final colors = [
-      primary,
-      const Color(0xFF6366F1),
-      const Color(0xFFF43F5E),
-      const Color(0xFF10B981),
-      const Color(0xFFF59E0B),
-      const Color(0xFF8B5CF6),
-    ];
+    final maxVal = top.first.value.toDouble();
+    final colors = [primary, ..._palette];
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? AppTheme.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.07),
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -61,17 +64,18 @@ class CategoryBarChart extends StatelessWidget {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: maxVal * 1.2,
+                maxY: maxVal * 1.25,
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (group) => Colors.black87,
+                    getTooltipColor: (group) =>
+                        isDark ? AppTheme.darkSurfaceHigh : Colors.white,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final cat = topCategories[group.x.toInt()];
+                      final cat = top[group.x.toInt()];
                       return BarTooltipItem(
                         '${cat.key}\n${cat.value} videos',
                         GoogleFonts.inter(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Colors.black87,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -81,26 +85,32 @@ class CategoryBarChart extends StatelessWidget {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 36,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= topCategories.length) {
+                        if (idx < 0 || idx >= top.length) {
                           return const SizedBox();
                         }
-                        String label = topCategories[idx].key;
-                        if (label.length > 8) label = '${label.substring(0, 7)}…';
+                        String label = top[idx].key;
+                        if (label.length > 8) {
+                          label = '${label.substring(0, 7)}…';
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             label,
                             style: GoogleFonts.inter(
                               fontSize: 10,
-                              color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : AppTheme.lightTextSecondary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -118,7 +128,9 @@ class CategoryBarChart extends StatelessWidget {
                           value.toInt().toString(),
                           style: GoogleFonts.inter(
                             fontSize: 10,
-                            color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                            color: isDark
+                                ? AppTheme.darkTextSecondary
+                                : AppTheme.lightTextSecondary,
                           ),
                         );
                       },
@@ -129,27 +141,30 @@ class CategoryBarChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.05),
                     strokeWidth: 1,
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: List.generate(topCategories.length, (i) {
+                barGroups: List.generate(top.length, (i) {
+                  final barColor = colors[i % colors.length];
                   return BarChartGroupData(
                     x: i,
                     barRods: [
                       BarChartRodData(
-                        toY: topCategories[i].value.toDouble(),
+                        toY: top[i].value.toDouble(),
                         gradient: LinearGradient(
                           colors: [
-                            colors[i % colors.length],
-                            colors[i % colors.length].withValues(alpha: 0.7),
+                            barColor,
+                            barColor.withValues(alpha: 0.65),
                           ],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),
-                        width: 20,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                        width: 22,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(8)),
                       ),
                     ],
                   );
@@ -159,6 +174,6 @@ class CategoryBarChart extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0);
   }
 }
