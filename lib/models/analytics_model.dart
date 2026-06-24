@@ -31,7 +31,12 @@ class AnalyticsModel {
 
   Map<String, dynamic> toMap() {
     return {
+<<<<<<< HEAD
       'notesCount': notesCount,
+=======
+      'userId': userId,
+      'totalVideos': totalVideos,
+>>>>>>> 17b0fa43a279a9158f921fe5e1a944e9829db677
       'totalMinutes': totalMinutes,
       'totalSavedHours': totalSavedHours,
       'favoriteCategory': favoriteCategory,
@@ -66,8 +71,13 @@ class AnalyticsModel {
     }
 
     return AnalyticsModel(
+<<<<<<< HEAD
       userId: doc.id,
       notesCount: (data['notesCount'] as num?)?.toInt() ?? (data['totalVideos'] as num?)?.toInt() ?? 0,
+=======
+      userId: data['userId'] as String? ?? doc.id,
+      totalVideos: (data['totalVideos'] as num?)?.toInt() ?? 0,
+>>>>>>> 17b0fa43a279a9158f921fe5e1a944e9829db677
       totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
       totalSavedHours: (data['totalSavedHours'] as num?)?.toDouble() ?? 0.0,
       favoriteCategory: data['favoriteCategory'] as String? ?? 'None',
