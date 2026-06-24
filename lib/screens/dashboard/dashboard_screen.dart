@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../providers/notes_provider.dart';
+import '../../../providers/analytics_provider.dart';
 import '../../../theme/app_theme.dart';
 import 'widgets/stat_card.dart';
 import 'widgets/category_pie_chart.dart';
-import 'widgets/activity_line_chart.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -13,10 +12,10 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final notesProvider = context.watch<NotesProvider>();
-    final notes = notesProvider.allNotes;
+    final analyticsProvider = context.watch<AnalyticsProvider>();
+    final analytics = analyticsProvider.analytics;
 
-    if (notes.isEmpty) {
+    if (analytics == null || analytics.notesCount == 0) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -55,12 +54,11 @@ class DashboardScreen extends StatelessWidget {
       );
     }
 
-    // Calculate Stats
-    final totalNotes = notes.length;
-    final totalCategories =
-        notesProvider.availableCategories.length - 1; // Subtract 'All'
-    final favoriteNotes = notes.where((n) => n.isFavorite).length;
-    final totalKeyPoints = notes.fold(0, (sum, n) => sum + n.keyPoints.length);
+    // Extract Stats from Analytics Model
+    final totalNotes = analytics.notesCount;
+    final totalCategories = analytics.categoryCount.length;
+    final favoriteNotes = analytics.favoriteNotesCount;
+    final totalKeyPoints = analytics.totalKeyPoints;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -116,9 +114,10 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Charts
-            ActivityLineChart(notes: notes),
-            const SizedBox(height: 24),
-            CategoryPieChart(notes: notes),
+            CategoryPieChart(
+              categoryCount: analytics.categoryCount,
+              totalCount: analytics.notesCount,
+            ),
             const SizedBox(height: 24),
           ],
         ),

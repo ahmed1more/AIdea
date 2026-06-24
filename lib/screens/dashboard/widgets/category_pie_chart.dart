@@ -4,24 +4,17 @@ import '../../../models/video_note.dart';
 import '../../../theme/app_theme.dart';
 
 class CategoryPieChart extends StatelessWidget {
-  final List<VideoNote> notes;
+  final Map<String, int> categoryCount;
+  final int totalCount;
 
-  const CategoryPieChart({super.key, required this.notes});
+  const CategoryPieChart({super.key, required this.categoryCount, required this.totalCount});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    // Count notes by category
-    final categoryCounts = <String, int>{};
-    for (final note in notes) {
-      for (final cat in note.categories) {
-        categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
-      }
-    }
-
     // Sort by count and take top 5
-    final sortedCategories = categoryCounts.entries.toList()
+    final sortedCategories = categoryCount.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     
     final topCategories = sortedCategories.take(5).toList();
@@ -67,7 +60,8 @@ class CategoryPieChart extends StatelessWidget {
                 centerSpaceRadius: 40,
                 sections: List.generate(topCategories.length, (i) {
                   final category = topCategories[i];
-                  final percentage = (category.value / notes.length * 100).toStringAsFixed(1);
+                  final safeTotal = totalCount > 0 ? totalCount : 1;
+                  final percentage = (category.value / safeTotal * 100).toStringAsFixed(1);
                   
                   return PieChartSectionData(
                     color: colors[i % colors.length],

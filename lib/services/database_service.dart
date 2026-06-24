@@ -110,14 +110,37 @@ class DatabaseService {
   // Toggle favorite status
   Future<bool> toggleFavorite(String noteId, bool currentStatus) async {
     try {
-      await _firestore
-          .collection('notes')
-          .doc(noteId)
+      final docRef = _firestore.collection('notes').doc(noteId);
+      final docSnap = await docRef.get();
+      if (!docSnap.exists) return false;
+      final data = docSnap.data();
+      final userId = data?['userId'] as String?;
+
+      await docRef
           .update({
             'isFavorite': !currentStatus,
             'updatedAt': Timestamp.fromDate(DateTime.now()),
           })
           .timeout(const Duration(seconds: 30));
+
+      if (userId != null) {
+        final analyticsRef = _firestore.collection('analytics').doc(userId);
+        try {
+          await _firestore.runTransaction((transaction) async {
+            final analyticsSnap = await transaction.get(analyticsRef);
+            if (analyticsSnap.exists) {
+              final analytics = AnalyticsModel.fromFirestore(analyticsSnap);
+              final newFavCount = currentStatus
+                  ? (analytics.favoriteNotesCount > 0 ? analytics.favoriteNotesCount - 1 : 0)
+                  : analytics.favoriteNotesCount + 1;
+              transaction.update(analyticsRef, {'favoriteNotesCount': newFavCount});
+            }
+          });
+        } catch (e) {
+          debugPrint('Error updating favorite analytics: $e');
+        }
+      }
+
       return true;
     } catch (e) {
       debugPrint('Error toggling favorite: $e');
@@ -128,15 +151,25 @@ class DatabaseService {
   // Delete a note
   Future<bool> deleteNote(String noteId, String userId) async {
     try {
-      // Fetch the note first to retrieve its videoDuration and category for analytics
+      // Fetch the note first to retrieve its details for analytics
       int videoDuration = 0;
       String noteCategory = 'Technology & AI';
+      bool isFavorite = false;
+      int keyPointsCount = 0;
+      
       try {
         final noteDoc = await _firestore.collection('notes').doc(noteId).get();
         if (noteDoc.exists) {
           final data = noteDoc.data();
           if (data != null) {
             videoDuration = data['videoDuration'] ?? data['video_duration'] ?? 0;
+            isFavorite = data['isFavorite'] ?? false;
+            
+            final keyPointsData = data['keyPoints'] ?? data['key_points'];
+            if (keyPointsData is List) {
+              keyPointsCount = keyPointsData.length;
+            }
+
             // Fallback: parse duration from markdown content
             if (videoDuration == 0) {
               final notesContent = data['notes'] ?? data['summary_content'] ?? '';
@@ -158,7 +191,7 @@ class DatabaseService {
           }
         }
       } catch (e) {
-        debugPrint('Error fetching note for duration: $e');
+        debugPrint('Error fetching note for analytics decrement: $e');
       }
 
       await _firestore
@@ -168,7 +201,7 @@ class DatabaseService {
           .timeout(const Duration(seconds: 30));
 
       // Update analytics: decrement
-      await decrementUserAnalytics(userId, videoDuration ~/ 60, noteCategory);
+      await decrementUserAnalytics(userId, videoDuration ~/ 60, noteCategory, isFavorite, keyPointsCount);
 
       return true;
     } catch (e) {
@@ -197,11 +230,25 @@ class DatabaseService {
         });
   }
 
+  // Get user analytics stream
+  Stream<AnalyticsModel?> getUserAnalytics(String userId) {
+    return _firestore
+        .collection('analytics')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.exists) {
+        return AnalyticsModel.fromFirestore(snapshot);
+      }
+      return null;
+    });
+  }
+
   // Initialize empty analytics document for a new user
   Future<void> initializeUserAnalytics(String userId) async {
     try {
       await _firestore.collection('analytics').doc(userId).set({
-        'totalVideos': 0,
+        'notesCount': 0,
         'totalMinutes': 0,
         'totalSavedHours': 0.0,
         'favoriteCategory': 'None',
@@ -209,6 +256,8 @@ class DatabaseService {
         'thisWeekVideos': 0,
         'thisMonthSavedHours': 0.0,
         'categoryCount': <String, int>{},
+        'favoriteNotesCount': 0,
+        'totalKeyPoints': 0,
         'lastUpdated': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
@@ -232,9 +281,11 @@ class DatabaseService {
         }
 
         final now = DateTime.now();
-        final newTotalVideos = analytics.totalVideos + 1;
+        final newNotesCount = analytics.notesCount + 1;
         final newTotalMinutes = analytics.totalMinutes + newNote.durationMinutes;
         final newTotalSavedHours = newTotalMinutes / 60.0;
+        final newFavCount = analytics.favoriteNotesCount + (newNote.isFavorite ? 1 : 0);
+        final newKeyPoints = analytics.totalKeyPoints + newNote.keyPoints.length;
 
         // Update categoryCount
         final newCategoryCount = Map<String, int>.from(analytics.categoryCount);
@@ -311,7 +362,7 @@ class DatabaseService {
         }
 
         final updatedData = {
-          'totalVideos': newTotalVideos,
+          'notesCount': newNotesCount,
           'totalMinutes': newTotalMinutes,
           'totalSavedHours': newTotalSavedHours,
           'favoriteCategory': newFavoriteCategory,
@@ -319,6 +370,8 @@ class DatabaseService {
           'thisWeekVideos': newThisWeekVideos,
           'thisMonthSavedHours': newThisMonthSavedHours,
           'categoryCount': newCategoryCount,
+          'favoriteNotesCount': newFavCount,
+          'totalKeyPoints': newKeyPoints,
           'lastUpdated': FieldValue.serverTimestamp(),
         };
 
@@ -331,7 +384,7 @@ class DatabaseService {
 
   // Decrement user analytics when a note is deleted to ensure consistency
   Future<void> decrementUserAnalytics(
-      String userId, int durationMinutes, String category) async {
+      String userId, int durationMinutes, String category, bool isFavorite, int keyPointsCount) async {
     final docRef = _firestore.collection('analytics').doc(userId);
 
     try {
@@ -342,10 +395,18 @@ class DatabaseService {
         final analytics = AnalyticsModel.fromFirestore(docSnapshot);
         final now = DateTime.now();
 
-        final newTotalVideos = analytics.totalVideos > 0 ? analytics.totalVideos - 1 : 0;
+        final newNotesCount = analytics.notesCount > 0 ? analytics.notesCount - 1 : 0;
         final newTotalMinutes =
             analytics.totalMinutes >= durationMinutes ? analytics.totalMinutes - durationMinutes : 0;
         final newTotalSavedHours = newTotalMinutes / 60.0;
+        
+        final newFavCount = isFavorite 
+            ? (analytics.favoriteNotesCount > 0 ? analytics.favoriteNotesCount - 1 : 0)
+            : analytics.favoriteNotesCount;
+            
+        final newKeyPoints = analytics.totalKeyPoints >= keyPointsCount 
+            ? analytics.totalKeyPoints - keyPointsCount 
+            : 0;
 
         final newCategoryCount = Map<String, int>.from(analytics.categoryCount);
         if (newCategoryCount.containsKey(category)) {
@@ -396,13 +457,15 @@ class DatabaseService {
         }
 
         final updatedData = {
-          'totalVideos': newTotalVideos,
+          'notesCount': newNotesCount,
           'totalMinutes': newTotalMinutes,
           'totalSavedHours': newTotalSavedHours,
           'favoriteCategory': newFavoriteCategory,
           'thisWeekVideos': newThisWeekVideos,
           'thisMonthSavedHours': newThisMonthSavedHours,
           'categoryCount': newCategoryCount,
+          'favoriteNotesCount': newFavCount,
+          'totalKeyPoints': newKeyPoints,
           'lastUpdated': FieldValue.serverTimestamp(),
         };
 

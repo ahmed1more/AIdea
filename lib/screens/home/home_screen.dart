@@ -12,6 +12,7 @@ import '../../models/video_note.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notes_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/analytics_provider.dart';
 import '../../theme/app_theme.dart';
 import 'add_note_screen.dart';
 import '../../widgets/note_card.dart';
@@ -100,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userId != null && mounted) {
       notesProvider.loadUserNotes(userId);
       notesProvider.loadFavoriteNotes(userId);
+      Provider.of<AnalyticsProvider>(context, listen: false).loadUserAnalytics(userId);
     }
 
     if (mounted) {

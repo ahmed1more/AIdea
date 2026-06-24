@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AnalyticsModel {
   final String userId;
-  final int totalVideos;
+  final int notesCount;
   final int totalMinutes;
   final double totalSavedHours;
   final String favoriteCategory;
@@ -10,11 +10,13 @@ class AnalyticsModel {
   final int thisWeekVideos;
   final double thisMonthSavedHours;
   final Map<String, int> categoryCount;
+  final int favoriteNotesCount;
+  final int totalKeyPoints;
   final DateTime? lastUpdated;
 
   AnalyticsModel({
     required this.userId,
-    this.totalVideos = 0,
+    this.notesCount = 0,
     this.totalMinutes = 0,
     this.totalSavedHours = 0.0,
     this.favoriteCategory = 'None',
@@ -22,12 +24,14 @@ class AnalyticsModel {
     this.thisWeekVideos = 0,
     this.thisMonthSavedHours = 0.0,
     Map<String, int>? categoryCount,
+    this.favoriteNotesCount = 0,
+    this.totalKeyPoints = 0,
     this.lastUpdated,
   }) : categoryCount = categoryCount ?? const {};
 
   Map<String, dynamic> toMap() {
     return {
-      'totalVideos': totalVideos,
+      'notesCount': notesCount,
       'totalMinutes': totalMinutes,
       'totalSavedHours': totalSavedHours,
       'favoriteCategory': favoriteCategory,
@@ -35,6 +39,8 @@ class AnalyticsModel {
       'thisWeekVideos': thisWeekVideos,
       'thisMonthSavedHours': thisMonthSavedHours,
       'categoryCount': categoryCount,
+      'favoriteNotesCount': favoriteNotesCount,
+      'totalKeyPoints': totalKeyPoints,
       'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
     };
   }
@@ -61,7 +67,7 @@ class AnalyticsModel {
 
     return AnalyticsModel(
       userId: doc.id,
-      totalVideos: (data['totalVideos'] as num?)?.toInt() ?? 0,
+      notesCount: (data['notesCount'] as num?)?.toInt() ?? (data['totalVideos'] as num?)?.toInt() ?? 0,
       totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
       totalSavedHours: (data['totalSavedHours'] as num?)?.toDouble() ?? 0.0,
       favoriteCategory: data['favoriteCategory'] as String? ?? 'None',
@@ -69,6 +75,8 @@ class AnalyticsModel {
       thisWeekVideos: (data['thisWeekVideos'] as num?)?.toInt() ?? 0,
       thisMonthSavedHours: (data['thisMonthSavedHours'] as num?)?.toDouble() ?? 0.0,
       categoryCount: categoryCount,
+      favoriteNotesCount: (data['favoriteNotesCount'] as num?)?.toInt() ?? 0,
+      totalKeyPoints: (data['totalKeyPoints'] as num?)?.toInt() ?? 0,
       lastUpdated: lastUpdatedDate,
     );
   }

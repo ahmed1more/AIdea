@@ -11,6 +11,7 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/notes_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/analytics_provider.dart';
 
 import 'screens/main_shell.dart';
 import 'screens/auth/login_screen.dart';
@@ -52,6 +53,7 @@ class AIdea extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => NotesProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
