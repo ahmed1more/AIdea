@@ -248,12 +248,8 @@ class DatabaseService {
   Future<void> initializeUserAnalytics(String userId) async {
     try {
       await _firestore.collection('analytics').doc(userId).set({
-<<<<<<< HEAD
-        'notesCount': 0,
-=======
         'userId': userId,
-        'totalVideos': 0,
->>>>>>> 17b0fa43a279a9158f921fe5e1a944e9829db677
+        'notesCount': 0,
         'totalMinutes': 0,
         'totalSavedHours': 0.0,
         'favoriteCategory': 'None',
