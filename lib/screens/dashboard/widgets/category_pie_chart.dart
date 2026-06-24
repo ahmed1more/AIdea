@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
 
 class CategoryPieChart extends StatelessWidget {
@@ -24,6 +24,8 @@ class CategoryPieChart extends StatelessWidget {
       topCategories.add(MapEntry('Others', othersCount));
     }
 
+    if (topCategories.isEmpty) return const SizedBox.shrink();
+
     final colors = [
       Theme.of(context).colorScheme.primary,
       const Color(0xFF6366F1),
@@ -39,15 +41,22 @@ class CategoryPieChart extends StatelessWidget {
         color: isDark ? AppTheme.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Categories Distribution',
-            style: AppTheme.headline3(
+            style: AppTheme.titleLarge(
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -56,19 +65,19 @@ class CategoryPieChart extends StatelessWidget {
             height: 200,
             child: PieChart(
               PieChartData(
-                sectionsSpace: 4,
-                centerSpaceRadius: 40,
+                sectionsSpace: 3,
+                centerSpaceRadius: 42,
                 sections: List.generate(topCategories.length, (i) {
                   final category = topCategories[i];
                   final safeTotal = totalCount > 0 ? totalCount : 1;
-                  final percentage = (category.value / safeTotal * 100).toStringAsFixed(1);
+                  final percentage = (category.value / safeTotal * 100).toStringAsFixed(0);
                   
                   return PieChartSectionData(
                     color: colors[i % colors.length],
                     value: category.value.toDouble(),
                     title: '$percentage%',
                     radius: 50,
-                    titleStyle: const TextStyle(
+                    titleStyle: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -87,17 +96,18 @@ class CategoryPieChart extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 12,
-                    height: 12,
+                    width: 10,
+                    height: 10,
                     decoration: BoxDecoration(
                       color: colors[i % colors.length],
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(3),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Text(
                     topCategories[i].key,
-                    style: AppTheme.bodySmall(
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
                       color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
                     ),
                   ),
