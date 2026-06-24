@@ -8,19 +8,27 @@ class AnalyticsProvider extends ChangeNotifier {
 
   AnalyticsModel? _analytics;
   StreamSubscription? _analyticsSubscription;
+  bool _isLoading = false;
 
   AnalyticsModel? get analytics => _analytics;
+  bool get isLoading => _isLoading;
 
   // Load user analytics
   void loadUserAnalytics(String userId) {
     _analyticsSubscription?.cancel();
+    _isLoading = true;
+    notifyListeners();
+
     _analyticsSubscription = _databaseService.getUserAnalytics(userId).listen(
       (analyticsData) {
         _analytics = analyticsData;
+        _isLoading = false;
         notifyListeners();
       },
       onError: (error) {
         debugPrint('Analytics stream error: $error');
+        _isLoading = false;
+        notifyListeners();
       },
     );
   }
@@ -29,6 +37,13 @@ class AnalyticsProvider extends ChangeNotifier {
   void clear() {
     _analyticsSubscription?.cancel();
     _analytics = null;
+    _isLoading = false;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _analyticsSubscription?.cancel();
+    super.dispose();
   }
 }

@@ -22,6 +22,30 @@ class DashboardScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 900;
 
+    // ── Loading state ──
+    if (analyticsProvider.isLoading && analytics == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading analytics…',
+              style: AppTheme.bodyMedium(
+                color: isDark
+                    ? AppTheme.darkTextSecondary
+                    : AppTheme.lightTextSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── Empty state (no notes yet) ──
     if (analytics == null || analytics.notesCount == 0) {
       return Center(
         child: Column(
@@ -66,88 +90,88 @@ class DashboardScreen extends StatelessWidget {
         ? '${analytics.totalSavedHours.toStringAsFixed(0)}h'
         : '${analytics.totalMinutes}m';
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(isWide ? 28 : 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──
-            Text(
-              'Dashboard',
-              style: AppTheme.headline2(
-                color: isDark ? Colors.white : Colors.black,
+    // ── Populated dashboard ──
+    // Returns content directly (no nested Scaffold) so it composes
+    // cleanly inside the HomeScreen's own Scaffold body.
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isWide ? 28 : 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ──
+          Text(
+            'Dashboard',
+            style: AppTheme.headline2(
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Your learning analytics at a glance',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: isDark
+                  ? AppTheme.darkTextSecondary
+                  : AppTheme.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // ── KPI Cards ──
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: isWide ? 4 : 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: isWide ? 1.3 : 1.15,
+            children: [
+              KpiCard(
+                title: 'Videos',
+                value: analytics.notesCount.toString(),
+                subtitle: '${analytics.thisWeekVideos} this week',
+                icon: FontAwesomeIcons.video,
+                color: Theme.of(context).colorScheme.primary,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Your learning analytics at a glance',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: isDark
-                    ? AppTheme.darkTextSecondary
-                    : AppTheme.lightTextSecondary,
+              KpiCard(
+                title: 'Hours Saved',
+                value: hoursStr,
+                subtitle: '${analytics.thisMonthSavedHours.toStringAsFixed(1)}h this month',
+                icon: FontAwesomeIcons.clock,
+                color: const Color(0xFF10B981),
               ),
-            ),
-            const SizedBox(height: 24),
+              KpiCard(
+                title: 'Streak',
+                value: analytics.currentStreak.toString(),
+                subtitle: analytics.currentStreak > 0 ? 'days 🔥' : 'Start today!',
+                icon: FontAwesomeIcons.fire,
+                color: const Color(0xFFF59E0B),
+              ),
+              KpiCard(
+                title: 'Favorite',
+                value: _truncate(analytics.favoriteCategory, 12),
+                subtitle: '${analytics.categoryCount[analytics.favoriteCategory] ?? 0} videos',
+                icon: FontAwesomeIcons.heart,
+                color: const Color(0xFFF43F5E),
+              ),
+            ],
+          ),
 
-            // ── KPI Cards ──
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: isWide ? 4 : 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: isWide ? 1.3 : 1.15,
-              children: [
-                KpiCard(
-                  title: 'Videos',
-                  value: analytics.notesCount.toString(),
-                  subtitle: '${analytics.thisWeekVideos} this week',
-                  icon: FontAwesomeIcons.video,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                KpiCard(
-                  title: 'Hours Saved',
-                  value: hoursStr,
-                  subtitle: '${analytics.thisMonthSavedHours.toStringAsFixed(1)}h this month',
-                  icon: FontAwesomeIcons.clock,
-                  color: const Color(0xFF10B981),
-                ),
-                KpiCard(
-                  title: 'Streak',
-                  value: analytics.currentStreak.toString(),
-                  subtitle: analytics.currentStreak > 0 ? 'days 🔥' : 'Start today!',
-                  icon: FontAwesomeIcons.fire,
-                  color: const Color(0xFFF59E0B),
-                ),
-                KpiCard(
-                  title: 'Favorite',
-                  value: _truncate(analytics.favoriteCategory, 12),
-                  subtitle: '${analytics.categoryCount[analytics.favoriteCategory] ?? 0} videos',
-                  icon: FontAwesomeIcons.heart,
-                  color: const Color(0xFFF43F5E),
-                ),
-              ],
-            ),
+          const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
+          // ── Charts Section ──
+          if (isWide)
+            _buildWideCharts(analytics, isDark)
+          else
+            _buildNarrowCharts(analytics, isDark),
 
-            // ── Charts Section ──
-            if (isWide)
-              _buildWideCharts(analytics, isDark)
-            else
-              _buildNarrowCharts(analytics, isDark),
+          const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
+          // ── Insights ──
+          InsightsCard(analytics: analytics),
 
-            // ── Insights ──
-            InsightsCard(analytics: analytics),
-
-            const SizedBox(height: 32),
-          ],
-        ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
