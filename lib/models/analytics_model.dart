@@ -27,6 +27,7 @@ class AnalyticsModel {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': userId,
       'totalVideos': totalVideos,
       'totalMinutes': totalMinutes,
       'totalSavedHours': totalSavedHours,
@@ -60,7 +61,7 @@ class AnalyticsModel {
     }
 
     return AnalyticsModel(
-      userId: doc.id,
+      userId: data['userId'] as String? ?? doc.id,
       totalVideos: (data['totalVideos'] as num?)?.toInt() ?? 0,
       totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
       totalSavedHours: (data['totalSavedHours'] as num?)?.toDouble() ?? 0.0,
