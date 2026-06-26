@@ -14,7 +14,8 @@ class AnalyticsModel {
   final int totalKeyPoints;
   final DateTime? lastUpdated;
 
-  /// Alias for [notesCount] to match the Firestore migration field name.
+  /// Migrated Firestore field name. Internally kept as notesCount for
+  /// compatibility with older analytics writes.
   int get totalVideos => notesCount;
 
   AnalyticsModel({
@@ -35,6 +36,7 @@ class AnalyticsModel {
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
+      'totalVideos': totalVideos,
       'notesCount': notesCount,
       'totalMinutes': totalMinutes,
       'totalSavedHours': totalSavedHours,
@@ -45,13 +47,15 @@ class AnalyticsModel {
       'categoryCount': categoryCount,
       'favoriteNotesCount': favoriteNotesCount,
       'totalKeyPoints': totalKeyPoints,
-      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
+      'lastUpdated': lastUpdated != null
+          ? Timestamp.fromDate(lastUpdated!)
+          : null,
     };
   }
 
   factory AnalyticsModel.fromFirestore(DocumentSnapshot doc) {
     final Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
-    
+
     // Safely parse categoryCount
     final Map<String, int> categoryCount = {};
     if (data['categoryCount'] is Map) {
@@ -71,13 +75,17 @@ class AnalyticsModel {
 
     return AnalyticsModel(
       userId: data['userId'] as String? ?? doc.id,
-      notesCount: (data['totalVideos'] as num?)?.toInt() ?? (data['notesCount'] as num?)?.toInt() ?? 0,
+      notesCount:
+          (data['totalVideos'] as num?)?.toInt() ??
+          (data['notesCount'] as num?)?.toInt() ??
+          0,
       totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
       totalSavedHours: (data['totalSavedHours'] as num?)?.toDouble() ?? 0.0,
       favoriteCategory: data['favoriteCategory'] as String? ?? 'None',
       currentStreak: (data['currentStreak'] as num?)?.toInt() ?? 0,
       thisWeekVideos: (data['thisWeekVideos'] as num?)?.toInt() ?? 0,
-      thisMonthSavedHours: (data['thisMonthSavedHours'] as num?)?.toDouble() ?? 0.0,
+      thisMonthSavedHours:
+          (data['thisMonthSavedHours'] as num?)?.toDouble() ?? 0.0,
       categoryCount: categoryCount,
       favoriteNotesCount: (data['favoriteNotesCount'] as num?)?.toInt() ?? 0,
       totalKeyPoints: (data['totalKeyPoints'] as num?)?.toInt() ?? 0,

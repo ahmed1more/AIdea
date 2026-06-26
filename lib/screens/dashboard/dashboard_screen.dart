@@ -1,62 +1,300 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../providers/analytics_provider.dart';
-import '../../../theme/app_theme.dart';
-import 'widgets/kpi_card.dart';
-import 'widgets/category_pie_chart.dart';
-import 'widgets/category_bar_chart.dart';
-import 'widgets/weekly_activity_chart.dart';
+import 'package:provider/provider.dart';
+
+import '../../models/analytics_model.dart';
+import '../../providers/analytics_provider.dart';
+import '../../theme/app_theme.dart';
+import 'widgets/categories_distribution_chart.dart';
 import 'widgets/hours_saved_chart.dart';
 import 'widgets/insights_card.dart';
+import 'widgets/kpi_card.dart';
+import 'widgets/videos_per_category_chart.dart';
+import 'widgets/weekly_activity_chart.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final analyticsProvider = context.watch<AnalyticsProvider>();
     final analytics = analyticsProvider.analytics;
-    final size = MediaQuery.of(context).size;
-    final isWide = size.width > 900;
 
-    // ── Loading state ──
-    if (analyticsProvider.isLoading && analytics == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    if (analyticsProvider.isLoading) {
+      return const _DashboardLoadingState();
+    }
+
+    if (analytics == null || analytics.totalVideos == 0) {
+      return const _DashboardEmptyState();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+        final horizontalPadding = isWide ? 28.0 : 20.0;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            24,
+            horizontalPadding,
+            32,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DashboardHeader(analytics: analytics),
+              const SizedBox(height: 24),
+              _KpiCards(analytics: analytics),
+              const SizedBox(height: 24),
+              _DashboardCharts(analytics: analytics, isWide: isWide),
+              const SizedBox(height: 24),
+              InsightsCard(analytics: analytics),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardHeader extends StatelessWidget {
+  final AnalyticsModel analytics;
+
+  const _DashboardHeader({required this.analytics});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Dashboard',
+          style: AppTheme.headline2(
+            color: isDark
+                ? AppTheme.darkTextPrimary
+                : AppTheme.lightTextPrimary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Your learning analytics at a glance',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: isDark
+                ? AppTheme.darkTextSecondary
+                : AppTheme.lightTextSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _KpiCards extends StatelessWidget {
+  final AnalyticsModel analytics;
+
+  const _KpiCards({required this.analytics});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 12.0;
+        final columns = constraints.maxWidth >= 1100
+            ? 4
+            : constraints.maxWidth >= 640
+            ? 2
+            : 1;
+        final cardWidth =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
           children: [
-            CircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
+            SizedBox(
+              width: cardWidth,
+              height: 150,
+              child: KpiCard(
+                title: 'Total Videos',
+                value: analytics.totalVideos.toString(),
+                subtitle: '${analytics.thisWeekVideos} this week',
+                icon: FontAwesomeIcons.video,
+                color: Theme.of(context).colorScheme.primary,
+                animationIndex: 0,
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Loading analytics…',
-              style: AppTheme.bodyMedium(
-                color: isDark
-                    ? AppTheme.darkTextSecondary
-                    : AppTheme.lightTextSecondary,
+            SizedBox(
+              width: cardWidth,
+              height: 150,
+              child: KpiCard(
+                title: 'Hours Saved',
+                value: _formatHours(analytics.totalSavedHours),
+                subtitle:
+                    '${_formatHours(analytics.thisMonthSavedHours)} this month',
+                icon: FontAwesomeIcons.clock,
+                color: const Color(0xFF10B981),
+                animationIndex: 1,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              height: 150,
+              child: KpiCard(
+                title: 'Current Streak',
+                value: analytics.currentStreak.toString(),
+                subtitle: analytics.currentStreak == 1
+                    ? '1 day active'
+                    : '${analytics.currentStreak} days active',
+                icon: FontAwesomeIcons.fire,
+                color: const Color(0xFFF59E0B),
+                animationIndex: 2,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              height: 150,
+              child: KpiCard(
+                title: 'Favorite Category',
+                value: _fallbackCategory(analytics.favoriteCategory),
+                subtitle:
+                    '${analytics.categoryCount[analytics.favoriteCategory] ?? 0} videos',
+                icon: FontAwesomeIcons.heart,
+                color: const Color(0xFFF43F5E),
+                animationIndex: 3,
               ),
             ),
           ],
-        ),
+        );
+      },
+    );
+  }
+
+  String _formatHours(double hours) {
+    if (hours <= 0) return '0h';
+    if (hours < 1) return '${(hours * 60).round()}m';
+    if (hours < 10) return '${hours.toStringAsFixed(1)}h';
+    return '${hours.round()}h';
+  }
+
+  String _fallbackCategory(String category) {
+    if (category.trim().isEmpty || category == 'None') return 'None yet';
+    return category;
+  }
+}
+
+class _DashboardCharts extends StatelessWidget {
+  final AnalyticsModel analytics;
+  final bool isWide;
+
+  const _DashboardCharts({required this.analytics, required this.isWide});
+
+  @override
+  Widget build(BuildContext context) {
+    final charts = [
+      WeeklyActivityChart(
+        thisWeekVideos: analytics.thisWeekVideos,
+        currentStreak: analytics.currentStreak,
+      ),
+      CategoriesDistributionChart(
+        categoryCount: analytics.categoryCount,
+        totalVideos: analytics.totalVideos,
+      ),
+      VideosPerCategoryChart(categoryCount: analytics.categoryCount),
+      HoursSavedChart(
+        totalSavedHours: analytics.totalSavedHours,
+        thisMonthSavedHours: analytics.thisMonthSavedHours,
+      ),
+    ];
+
+    if (!isWide) {
+      return Column(
+        children: [
+          for (var i = 0; i < charts.length; i++) ...[
+            charts[i],
+            if (i != charts.length - 1) const SizedBox(height: 16),
+          ],
+        ],
       );
     }
 
-    // ── Empty state (no notes yet) ──
-    if (analytics == null || analytics.notesCount == 0) {
-      return Center(
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: charts[0]),
+            const SizedBox(width: 16),
+            Expanded(child: charts[1]),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: charts[2]),
+            const SizedBox(width: 16),
+            Expanded(child: charts[3]),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DashboardLoadingState extends StatelessWidget {
+  const _DashboardLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading analytics...',
+            style: AppTheme.bodyMedium(
+              color: isDark
+                  ? AppTheme.darkTextSecondary
+                  : AppTheme.lightTextSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardEmptyState extends StatelessWidget {
+  const _DashboardEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark
+        ? AppTheme.darkTextSecondary
+        : AppTheme.lightTextSecondary;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             FaIcon(
               FontAwesomeIcons.chartLine,
               size: 64,
-              color: (isDark ? Colors.white : Colors.black).withValues(
-                alpha: 0.2,
-              ),
+              color: color.withValues(alpha: 0.35),
             ),
             const SizedBox(height: 24),
             Text(
@@ -68,186 +306,14 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                'Analytics and Recommendations will appear here once you start creating notes.',
-                textAlign: TextAlign.center,
-                style: AppTheme.bodyMedium(
-                  color: isDark
-                      ? AppTheme.darkTextSecondary
-                      : AppTheme.lightTextSecondary,
-                ),
-              ),
+            Text(
+              'Analytics and recommendations will appear here once you summarize your first video.',
+              textAlign: TextAlign.center,
+              style: AppTheme.bodyMedium(color: color),
             ),
           ],
         ),
-      );
-    }
-
-    // Format hours for display
-    final hoursStr = analytics.totalSavedHours >= 1
-        ? '${analytics.totalSavedHours.toStringAsFixed(0)}h'
-        : '${analytics.totalMinutes}m';
-
-    // ── Populated dashboard ──
-    // Returns content directly (no nested Scaffold) so it composes
-    // cleanly inside the HomeScreen's own Scaffold body.
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isWide ? 28 : 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ──
-          Text(
-            'Dashboard',
-            style: AppTheme.headline2(
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Your learning analytics at a glance',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: isDark
-                  ? AppTheme.darkTextSecondary
-                  : AppTheme.lightTextSecondary,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // ── KPI Cards ──
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: isWide ? 4 : 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: isWide ? 1.3 : 1.15,
-            children: [
-              KpiCard(
-                title: 'Videos',
-                value: analytics.notesCount.toString(),
-                subtitle: '${analytics.thisWeekVideos} this week',
-                icon: FontAwesomeIcons.video,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              KpiCard(
-                title: 'Hours Saved',
-                value: hoursStr,
-                subtitle: '${analytics.thisMonthSavedHours.toStringAsFixed(1)}h this month',
-                icon: FontAwesomeIcons.clock,
-                color: const Color(0xFF10B981),
-              ),
-              KpiCard(
-                title: 'Streak',
-                value: analytics.currentStreak.toString(),
-                subtitle: analytics.currentStreak > 0 ? 'days 🔥' : 'Start today!',
-                icon: FontAwesomeIcons.fire,
-                color: const Color(0xFFF59E0B),
-              ),
-              KpiCard(
-                title: 'Favorite',
-                value: _truncate(analytics.favoriteCategory, 12),
-                subtitle: '${analytics.categoryCount[analytics.favoriteCategory] ?? 0} videos',
-                icon: FontAwesomeIcons.heart,
-                color: const Color(0xFFF43F5E),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Charts Section ──
-          if (isWide)
-            _buildWideCharts(analytics, isDark)
-          else
-            _buildNarrowCharts(analytics, isDark),
-
-          const SizedBox(height: 24),
-
-          // ── Insights ──
-          InsightsCard(analytics: analytics),
-
-          const SizedBox(height: 32),
-        ],
       ),
     );
-  }
-
-  /// Desktop: 2-column grid for charts
-  Widget _buildWideCharts(dynamic analytics, bool isDark) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: WeeklyActivityChart(
-                thisWeekVideos: analytics.thisWeekVideos,
-                currentStreak: analytics.currentStreak,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: CategoryPieChart(
-                categoryCount: analytics.categoryCount,
-                totalCount: analytics.notesCount,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: CategoryBarChart(
-                categoryCount: analytics.categoryCount,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: HoursSavedChart(
-                totalSavedHours: analytics.totalSavedHours,
-                thisMonthSavedHours: analytics.thisMonthSavedHours,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Mobile: stacked vertically
-  Widget _buildNarrowCharts(dynamic analytics, bool isDark) {
-    return Column(
-      children: [
-        WeeklyActivityChart(
-          thisWeekVideos: analytics.thisWeekVideos,
-          currentStreak: analytics.currentStreak,
-        ),
-        const SizedBox(height: 16),
-        CategoryPieChart(
-          categoryCount: analytics.categoryCount,
-          totalCount: analytics.notesCount,
-        ),
-        const SizedBox(height: 16),
-        CategoryBarChart(
-          categoryCount: analytics.categoryCount,
-        ),
-        const SizedBox(height: 16),
-        HoursSavedChart(
-          totalSavedHours: analytics.totalSavedHours,
-          thisMonthSavedHours: analytics.thisMonthSavedHours,
-        ),
-      ],
-    );
-  }
-
-  String _truncate(String text, int maxLen) {
-    if (text.length <= maxLen) return text;
-    return '${text.substring(0, maxLen - 1)}…';
   }
 }

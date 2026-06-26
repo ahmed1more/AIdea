@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../../../models/analytics_model.dart';
+import '../../../theme/app_theme.dart';
 
 class InsightsCard extends StatelessWidget {
   final AnalyticsModel analytics;
@@ -13,7 +14,6 @@ class InsightsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
-
     final insights = _generateInsights();
 
     if (insights.isEmpty) return const SizedBox.shrink();
@@ -23,21 +23,13 @@ class InsightsCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [
-                  primary.withValues(alpha: 0.15),
-                  AppTheme.darkSurface,
-                ]
-              : [
-                  primary.withValues(alpha: 0.08),
-                  Colors.white,
-                ],
+              ? [primary.withValues(alpha: 0.15), AppTheme.darkSurface]
+              : [primary.withValues(alpha: 0.08), Colors.white],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: primary.withValues(alpha: 0.2),
-        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: primary.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: primary.withValues(alpha: 0.08),
@@ -65,7 +57,7 @@ class InsightsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Insights',
+                'AI Insights',
                 style: AppTheme.titleLarge(
                   color: isDark ? Colors.white : Colors.black,
                 ),
@@ -73,32 +65,30 @@ class InsightsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ...insights.map((insight) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FaIcon(
-                      insight.icon,
-                      size: 14,
-                      color: insight.color,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        insight.text,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          height: 1.5,
-                          color: isDark
-                              ? AppTheme.darkTextPrimary
-                              : AppTheme.lightTextPrimary,
-                        ),
+          ...insights.map(
+            (insight) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FaIcon(insight.icon, size: 14, color: insight.color),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      insight.text,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: isDark
+                            ? AppTheme.darkTextPrimary
+                            : AppTheme.lightTextPrimary,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -106,54 +96,67 @@ class InsightsCard extends StatelessWidget {
 
   List<_Insight> _generateInsights() {
     final insights = <_Insight>[];
+    final totalVideos = analytics.totalVideos;
 
-    // Hours saved this month
     if (analytics.thisMonthSavedHours > 0) {
-      insights.add(_Insight(
-        text: 'You saved ${analytics.thisMonthSavedHours.toStringAsFixed(1)} hours this month by using AI summaries.',
-        icon: FontAwesomeIcons.clock,
-        color: const Color(0xFF10B981),
-      ));
+      insights.add(
+        _Insight(
+          text:
+              'You saved ${analytics.thisMonthSavedHours.toStringAsFixed(1)} hours this month.',
+          icon: FontAwesomeIcons.clock,
+          color: const Color(0xFF10B981),
+        ),
+      );
     }
 
-    // Favorite category percentage
-    if (analytics.favoriteCategory != 'None' && analytics.notesCount > 0) {
-      final favCount = analytics.categoryCount[analytics.favoriteCategory] ?? 0;
-      if (favCount > 0) {
-        final pct = (favCount / analytics.notesCount * 100).round();
-        insights.add(_Insight(
-          text: '$pct% of your summaries are ${analytics.favoriteCategory} videos.',
-          icon: FontAwesomeIcons.chartPie,
-          color: const Color(0xFF6366F1),
-        ));
+    if (analytics.favoriteCategory != 'None' && totalVideos > 0) {
+      final favoriteCount =
+          analytics.categoryCount[analytics.favoriteCategory] ?? 0;
+
+      if (favoriteCount > 0) {
+        final percentage = (favoriteCount / totalVideos * 100).round();
+        insights.add(
+          _Insight(
+            text:
+                '$percentage% of your summaries are ${analytics.favoriteCategory} videos.',
+            icon: FontAwesomeIcons.chartPie,
+            color: const Color(0xFF6366F1),
+          ),
+        );
       }
     }
 
-    // Streak
     if (analytics.currentStreak > 1) {
-      insights.add(_Insight(
-        text: 'You\'re on a ${analytics.currentStreak}-day learning streak! Keep it up! 🔥',
-        icon: FontAwesomeIcons.fire,
-        color: const Color(0xFFF59E0B),
-      ));
+      insights.add(
+        _Insight(
+          text:
+              'You are on a ${analytics.currentStreak}-day learning streak. Keep it going.',
+          icon: FontAwesomeIcons.fire,
+          color: const Color(0xFFF59E0B),
+        ),
+      );
     }
 
-    // Weekly activity
     if (analytics.thisWeekVideos > 0) {
-      insights.add(_Insight(
-        text: 'You summarized ${analytics.thisWeekVideos} video${analytics.thisWeekVideos > 1 ? 's' : ''} this week.',
-        icon: FontAwesomeIcons.video,
-        color: const Color(0xFFF43F5E),
-      ));
+      insights.add(
+        _Insight(
+          text:
+              'You summarized ${analytics.thisWeekVideos} video${analytics.thisWeekVideos == 1 ? '' : 's'} this week.',
+          icon: FontAwesomeIcons.video,
+          color: const Color(0xFFF43F5E),
+        ),
+      );
     }
 
-    // Total hours saved
     if (analytics.totalSavedHours > 1) {
-      insights.add(_Insight(
-        text: 'Total time saved: ${analytics.totalSavedHours.toStringAsFixed(1)} hours across ${analytics.notesCount} videos.',
-        icon: FontAwesomeIcons.hourglass,
-        color: const Color(0xFF8B5CF6),
-      ));
+      insights.add(
+        _Insight(
+          text:
+              'Total time saved: ${analytics.totalSavedHours.toStringAsFixed(1)} hours across $totalVideos videos.',
+          icon: FontAwesomeIcons.hourglass,
+          color: const Color(0xFF8B5CF6),
+        ),
+      );
     }
 
     return insights.take(4).toList();
