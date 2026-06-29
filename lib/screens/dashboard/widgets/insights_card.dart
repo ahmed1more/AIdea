@@ -96,7 +96,7 @@ class InsightsCard extends StatelessWidget {
 
   List<_Insight> _generateInsights() {
     final insights = <_Insight>[];
-    final totalVideos = analytics.totalVideos;
+    final totalVideos = analytics.notesCount;
 
     if (analytics.thisMonthSavedHours > 0) {
       insights.add(

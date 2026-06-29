@@ -25,7 +25,8 @@ class DashboardScreen extends StatelessWidget {
       return const _DashboardLoadingState();
     }
 
-    if (analytics == null || analytics.totalVideos == 0) {
+    // FIX: totalVideos removed — use notesCount directly
+    if (analytics == null || analytics.notesCount == 0) {
       return const _DashboardEmptyState();
     }
 
@@ -121,7 +122,8 @@ class _KpiCards extends StatelessWidget {
               height: 150,
               child: KpiCard(
                 title: 'Total Videos',
-                value: analytics.totalVideos.toString(),
+                // FIX: was analytics.totalVideos
+                value: analytics.notesCount.toString(),
                 subtitle: '${analytics.thisWeekVideos} this week',
                 icon: FontAwesomeIcons.video,
                 color: Theme.of(context).colorScheme.primary,
@@ -202,7 +204,8 @@ class _DashboardCharts extends StatelessWidget {
       ),
       CategoriesDistributionChart(
         categoryCount: analytics.categoryCount,
-        totalVideos: analytics.totalVideos,
+        // FIX: was analytics.totalVideos
+        totalVideos: analytics.notesCount,
       ),
       VideosPerCategoryChart(categoryCount: analytics.categoryCount),
       HoursSavedChart(

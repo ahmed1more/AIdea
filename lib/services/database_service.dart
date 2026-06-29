@@ -6,13 +6,18 @@ import '../models/analytics_model.dart';
 class DatabaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Create a new video note
+  // ─── Notes ────────────────────────────────────────────────────────────────
+
+  // Create a new video note and update analytics
   Future<String?> createNote(VideoNote note) async {
     try {
       DocumentReference docRef = await _firestore
           .collection('notes')
           .add(note.toMap())
           .timeout(const Duration(seconds: 30));
+
+      // FIX: was missing — this is why all analytics stayed at 0
+      await updateUserAnalytics(note.userId, note);
 
       return docRef.id;
     } catch (e) {
@@ -155,7 +160,6 @@ class DatabaseService {
   // Delete a note
   Future<bool> deleteNote(String noteId, String userId) async {
     try {
-      // Fetch the note first to retrieve its details for analytics
       int videoDuration = 0;
       String noteCategory = 'Technology & AI';
       bool isFavorite = false;
@@ -175,7 +179,6 @@ class DatabaseService {
               keyPointsCount = keyPointsData.length;
             }
 
-            // Fallback: parse duration from markdown content
             if (videoDuration == 0) {
               final notesContent =
                   data['notes'] ?? data['summary_content'] ?? '';
@@ -187,7 +190,7 @@ class DatabaseService {
                 videoDuration = (minutes * 60) + seconds;
               }
             }
-            // Parse category from note data
+
             final catData =
                 data['category'] ??
                 data['categories'] ??
@@ -209,7 +212,6 @@ class DatabaseService {
           .delete()
           .timeout(const Duration(seconds: 30));
 
-      // Update analytics: decrement
       await decrementUserAnalytics(
         userId,
         videoDuration ~/ 60,
@@ -245,6 +247,8 @@ class DatabaseService {
         });
   }
 
+  // ─── Analytics ────────────────────────────────────────────────────────────
+
   // Get user analytics stream
   Stream<AnalyticsModel?> getUserAnalytics(String userId) {
     return _firestore.collection('analytics').doc(userId).snapshots().asyncMap((
@@ -254,7 +258,7 @@ class DatabaseService {
         return AnalyticsModel.fromFirestore(snapshot);
       }
 
-      // Analytics doc missing — rebuild from notes
+      // Analytics doc missing — rebuild from existing notes
       final notesSnap = await _firestore
           .collection('notes')
           .where('userId', isEqualTo: userId)
@@ -262,14 +266,15 @@ class DatabaseService {
 
       if (notesSnap.docs.isEmpty) return null;
 
-      // Create and save the analytics doc, then it will stream back next tick
       await initializeUserAnalytics(userId);
       for (final doc in notesSnap.docs) {
         final note = VideoNote.fromFirestore(doc);
         await updateUserAnalytics(userId, note);
       }
 
-      return null; // Will emit again with real data after Firestore writes
+      // Return null here — Firestore will emit the real document on the next
+      // snapshot tick after the writes above complete.
+      return null;
     });
   }
 
@@ -295,7 +300,7 @@ class DatabaseService {
     }
   }
 
-  // Update user analytics concurrently when a new note is saved
+  // Update user analytics when a new note is saved
   Future<void> updateUserAnalytics(String userId, VideoNote newNote) async {
     final docRef = _firestore.collection('analytics').doc(userId);
 
@@ -332,7 +337,7 @@ class DatabaseService {
             // Recalculate favoriteCategory
             String newFavoriteCategory = analytics.favoriteCategory;
             if (newCategoryCount.isNotEmpty) {
-              String bestCat = analytics.favoriteCategory;
+              String bestCat = newFavoriteCategory;
               int maxCount = -1;
               newCategoryCount.forEach((cat, catCount) {
                 if (catCount > maxCount) {
@@ -343,7 +348,7 @@ class DatabaseService {
               newFavoriteCategory = bestCat;
             }
 
-            // Reset logic for thisMonthSavedHours
+            // thisMonthSavedHours — reset on new month
             double newThisMonthSavedHours = analytics.thisMonthSavedHours;
             if (analytics.lastUpdated == null ||
                 now.year != analytics.lastUpdated!.year ||
@@ -353,7 +358,7 @@ class DatabaseService {
               newThisMonthSavedHours += newNote.durationMinutes / 60.0;
             }
 
-            // Reset logic for thisWeekVideos
+            // thisWeekVideos — reset on new week
             int newThisWeekVideos = analytics.thisWeekVideos;
             bool weekChanged = false;
             if (analytics.lastUpdated == null) {
@@ -369,18 +374,11 @@ class DatabaseService {
                 analytics.lastUpdated!.month,
                 analytics.lastUpdated!.day,
               ).subtract(Duration(days: analytics.lastUpdated!.weekday - 1));
-              if (startOfNowWeek != startOfLastWeek) {
-                weekChanged = true;
-              }
+              weekChanged = startOfNowWeek != startOfLastWeek;
             }
+            newThisWeekVideos = weekChanged ? 1 : newThisWeekVideos + 1;
 
-            if (weekChanged) {
-              newThisWeekVideos = 1;
-            } else {
-              newThisWeekVideos += 1;
-            }
-
-            // Calculate currentStreak
+            // currentStreak
             int newStreak = analytics.currentStreak;
             if (analytics.lastUpdated == null) {
               newStreak = 1;
@@ -397,14 +395,12 @@ class DatabaseService {
                 newStreak += 1;
               } else if (difference > 1) {
                 newStreak = 1;
-              } else if (difference == 0) {
-                if (newStreak == 0) {
-                  newStreak = 1;
-                }
+              } else if (difference == 0 && newStreak == 0) {
+                newStreak = 1;
               }
             }
 
-            final updatedData = {
+            transaction.set(docRef, {
               'notesCount': newNotesCount,
               'totalMinutes': newTotalMinutes,
               'totalSavedHours': newTotalSavedHours,
@@ -416,9 +412,8 @@ class DatabaseService {
               'favoriteNotesCount': newFavCount,
               'totalKeyPoints': newKeyPoints,
               'lastUpdated': FieldValue.serverTimestamp(),
-            };
-
-            transaction.set(docRef, updatedData, SetOptions(merge: true));
+              'userId': userId,
+            }, SetOptions(merge: true));
           })
           .timeout(const Duration(seconds: 15));
     } catch (e) {
@@ -426,7 +421,7 @@ class DatabaseService {
     }
   }
 
-  // Decrement user analytics when a note is deleted to ensure consistency
+  // Decrement user analytics when a note is deleted
   Future<void> decrementUserAnalytics(
     String userId,
     int durationMinutes,
@@ -498,7 +493,6 @@ class DatabaseService {
             }
 
             int newThisWeekVideos = analytics.thisWeekVideos;
-            bool sameWeek = false;
             if (analytics.lastUpdated != null) {
               final startOfNowWeek = DateTime(
                 now.year,
@@ -511,16 +505,13 @@ class DatabaseService {
                 analytics.lastUpdated!.day,
               ).subtract(Duration(days: analytics.lastUpdated!.weekday - 1));
               if (startOfNowWeek == startOfLastWeek) {
-                sameWeek = true;
+                newThisWeekVideos = newThisWeekVideos > 0
+                    ? newThisWeekVideos - 1
+                    : 0;
               }
             }
-            if (sameWeek) {
-              newThisWeekVideos = newThisWeekVideos > 0
-                  ? newThisWeekVideos - 1
-                  : 0;
-            }
 
-            final updatedData = {
+            transaction.set(docRef, {
               'notesCount': newNotesCount,
               'totalMinutes': newTotalMinutes,
               'totalSavedHours': newTotalSavedHours,
@@ -531,9 +522,8 @@ class DatabaseService {
               'favoriteNotesCount': newFavCount,
               'totalKeyPoints': newKeyPoints,
               'lastUpdated': FieldValue.serverTimestamp(),
-            };
-
-            transaction.set(docRef, updatedData, SetOptions(merge: true));
+              'userId': userId,
+            }, SetOptions(merge: true));
           })
           .timeout(const Duration(seconds: 15));
     } catch (e) {

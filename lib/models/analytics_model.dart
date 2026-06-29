@@ -14,10 +14,6 @@ class AnalyticsModel {
   final int totalKeyPoints;
   final DateTime? lastUpdated;
 
-  /// Migrated Firestore field name. Internally kept as notesCount for
-  /// compatibility with older analytics writes.
-  int get totalVideos => notesCount;
-
   AnalyticsModel({
     required this.userId,
     this.notesCount = 0,
@@ -36,7 +32,6 @@ class AnalyticsModel {
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
-      'totalVideos': totalVideos,
       'notesCount': notesCount,
       'totalMinutes': totalMinutes,
       'totalSavedHours': totalSavedHours,
@@ -75,9 +70,11 @@ class AnalyticsModel {
 
     return AnalyticsModel(
       userId: data['userId'] as String? ?? doc.id,
+      // FIX: Read only notesCount. Also accepts legacy 'totalVideos' field
+      // from old documents so existing data isn't lost.
       notesCount:
-          (data['totalVideos'] as num?)?.toInt() ??
           (data['notesCount'] as num?)?.toInt() ??
+          (data['totalVideos'] as num?)?.toInt() ??
           0,
       totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
       totalSavedHours: (data['totalSavedHours'] as num?)?.toDouble() ?? 0.0,
