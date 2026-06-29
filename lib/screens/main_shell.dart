@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
+import '../providers/analytics_provider.dart';
 import 'home/home_screen.dart';
 import 'favorites/favorites_tab.dart';
 import 'account/account_tab.dart';
+import 'dashboard/dashboard_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -17,8 +21,22 @@ class MainShellState extends State<MainShell> {
   final List<Widget> _tabs = const [
     HomeScreen(),
     FavoritesTab(),
+    DashboardScreen(),
     AccountTab(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      Future.microtask(() {
+        if (mounted) {
+          context.read<AnalyticsProvider>().loadUserAnalytics(user.uid);
+        }
+      });
+    }
+  }
 
   /// Public method so child widgets can switch tabs
   void switchToTab(int index) {
@@ -47,10 +65,4 @@ class MainShellState extends State<MainShell> {
       bottomNavigationBar: null,
     );
   }
-
-
 }
-
-
-// Removed redundant navigation items as main_shell no longer manages its own bottom bar.
-

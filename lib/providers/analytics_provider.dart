@@ -19,18 +19,23 @@ class AnalyticsProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _analyticsSubscription = _databaseService.getUserAnalytics(userId).listen(
-      (analyticsData) {
-        _analytics = analyticsData;
-        _isLoading = false;
-        notifyListeners();
-      },
-      onError: (error) {
-        debugPrint('Analytics stream error: $error');
-        _isLoading = false;
-        notifyListeners();
-      },
-    );
+    _analyticsSubscription = _databaseService
+        .getUserAnalytics(userId)
+        .listen(
+          (analyticsData) {
+            debugPrint(
+              'Analytics received: ${analyticsData?.notesCount}',
+            ); // ADD THIS
+            _analytics = analyticsData;
+            _isLoading = false;
+            notifyListeners();
+          },
+          onError: (error) {
+            debugPrint('Analytics stream error: $error');
+            _isLoading = false;
+            notifyListeners();
+          },
+        );
   }
 
   // Clear data (on logout)
